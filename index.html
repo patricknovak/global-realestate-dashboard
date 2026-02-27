@@ -1365,7 +1365,7 @@
     <!-- Header -->
     <div class="header">
         <h1>Real Estate Investment Dashboard</h1>
-        <p>Find deals, analyze neighborhoods, and generate offers — no realtor required</p>
+        <p>Find deals, analyze neighborhoods, and generate offers — no realtor required <span id="streetViewIndicator" style="margin-left:12px;"></span></p>
     </div>
     
     <!-- Stats Bar -->
@@ -1421,8 +1421,8 @@
             <h3>Price Range ($)</h3>
             <div class="filter-group">
                 <div class="input-pair">
-                    <input type="number" id="priceMin" placeholder="Min">
-                    <input type="number" id="priceMax" placeholder="Max">
+                    <input type="number" id="priceMin" placeholder="Min" oninput="debouncedApply()">
+                    <input type="number" id="priceMax" placeholder="Max" oninput="debouncedApply()">
                 </div>
             </div>
             
@@ -1433,7 +1433,7 @@
             
             <h3>Bedrooms (Minimum)</h3>
             <div class="filter-group">
-                <select id="bedroomMin">
+                <select id="bedroomMin" onchange="applyFilters()">
                     <option value="">Any</option>
                     <option value="1">1+</option>
                     <option value="2">2+</option>
@@ -1446,7 +1446,7 @@
             
             <h3>Bathrooms (Minimum)</h3>
             <div class="filter-group">
-                <select id="bathroomMin">
+                <select id="bathroomMin" onchange="applyFilters()">
                     <option value="">Any</option>
                     <option value="1">1+</option>
                     <option value="2">2+</option>
@@ -1459,16 +1459,16 @@
             <h3>Days on Market</h3>
             <div class="filter-group">
                 <div class="input-pair">
-                    <input type="number" id="domMin" placeholder="Min">
-                    <input type="number" id="domMax" placeholder="Max">
+                    <input type="number" id="domMin" placeholder="Min" oninput="debouncedApply()">
+                    <input type="number" id="domMax" placeholder="Max" oninput="debouncedApply()">
                 </div>
             </div>
             
             <h3>Year Built</h3>
             <div class="filter-group">
                 <div class="input-pair">
-                    <input type="number" id="yearMin" placeholder="Min">
-                    <input type="number" id="yearMax" placeholder="Max">
+                    <input type="number" id="yearMin" placeholder="Min" oninput="debouncedApply()">
+                    <input type="number" id="yearMax" placeholder="Max" oninput="debouncedApply()">
                 </div>
             </div>
             
@@ -1476,11 +1476,11 @@
             <div class="filter-group">
                 <div class="checkbox-group">
                     <div class="checkbox-item">
-                        <input type="checkbox" id="filterWaterView">
+                        <input type="checkbox" id="filterWaterView" onchange="applyFilters()">
                         <label for="filterWaterView">Water View</label>
                     </div>
                     <div class="checkbox-item">
-                        <input type="checkbox" id="filterHasLot">
+                        <input type="checkbox" id="filterHasLot" onchange="applyFilters()">
                         <label for="filterHasLot">Has Lot Size Info</label>
                     </div>
                 </div>
@@ -1489,8 +1489,8 @@
             <h3>Deal Score</h3>
             <div class="filter-group">
                 <div class="input-pair">
-                    <input type="number" id="scoreMin" placeholder="Min" min="0" max="100">
-                    <input type="number" id="scoreMax" placeholder="Max" min="0" max="100">
+                    <input type="number" id="scoreMin" placeholder="Min" min="0" max="100" oninput="debouncedApply()">
+                    <input type="number" id="scoreMax" placeholder="Max" min="0" max="100" oninput="debouncedApply()">
                 </div>
             </div>
 
@@ -1505,7 +1505,7 @@
             
             <h3>Sort By</h3>
             <div class="filter-group">
-                <select id="sortBy">
+                <select id="sortBy" onchange="applyFilters()">
                     <option value="score-desc">Score (Best Deals)</option>
                     <option value="dom-desc">DOM (Most Stale)</option>
                     <option value="price-asc">Price Low → High</option>
@@ -1515,9 +1515,10 @@
                 </select>
             </div>
             
+            <div style="text-align:center;font-size:10px;color:#999;margin-bottom:4px;">Filters apply automatically</div>
             <div class="button-group">
-                <button class="btn-primary" onclick="applyFilters()">Apply Filters</button>
-                <button class="btn-secondary" onclick="resetFilters()">Reset</button>
+                <button class="btn-secondary" onclick="applyFilters()" style="font-size:12px;">Refresh</button>
+                <button class="btn-secondary" onclick="resetFilters()">Reset All</button>
             </div>
             <div class="button-group" style="margin-top:4px;">
                 <button class="btn-secondary" onclick="saveFilterPreset()" style="font-size:11px;">Save Preset</button>
@@ -1587,7 +1588,16 @@
             
             <!-- Tab 3: Neighborhood Analysis -->
             <div id="neighborhood" class="tab-content" style="overflow: auto;">
-                <h2 style="margin-bottom: 20px; color: var(--primary);">Neighborhood Comparison</h2>
+                <h2 style="margin-bottom: 8px; color: var(--primary);">Neighborhood Comparison</h2>
+                <div style="background: #e7f3ff; border: 1px solid #b8daff; border-radius: 6px; padding: 12px 16px; margin-bottom: 16px; font-size: 12px; color: #004085; line-height: 1.6;">
+                    <strong>Data Sources &amp; Disclaimer:</strong> Market trend data approximated from
+                    <a href="https://www.fvreb.bc.ca/" target="_blank" rel="noopener" style="color:#004085;">FVREB</a>,
+                    <a href="https://vireb.com/" target="_blank" rel="noopener" style="color:#004085;">VIREB</a>,
+                    <a href="https://www.bcrea.bc.ca/" target="_blank" rel="noopener" style="color:#004085;">BCREA</a> monthly statistics and
+                    <a href="https://www.bcassessment.ca/" target="_blank" rel="noopener" style="color:#004085;">BC Assessment</a> 2026 notices.
+                    Figures are estimates for informational purposes only &mdash; always verify with current MLS data before making decisions.
+                    <br><span style="color:#666;">Last updated: February 2026 &bull; Avg price and score are computed from listing data; YoY, Sale/List, and Inventory are sourced estimates.</span>
+                </div>
                 <div style="overflow-x: auto;">
                     <table class="neighborhood-table" id="neighborhoodTable">
                         <thead>
@@ -1967,6 +1977,35 @@
                 <p style="color: #666; margin-bottom: 24px;">Learn how to use the Real Estate Investment Dashboard to find deals, analyze markets, and generate professional offers.</p>
 
                 <div class="guide-section">
+                    <button class="guide-accordion" onclick="toggleAccordion(this)">Settings &mdash; Google Street View Images</button>
+                    <div class="guide-panel">
+                        <p>To display real street-level photos of each property instead of map tiles, configure a <strong>Google Maps API key</strong> with the Street View Static API enabled.</p>
+                        <div style="background:var(--light-gray);padding:16px;border-radius:6px;margin:12px 0;">
+                            <div class="form-group" style="margin-bottom:12px;">
+                                <label style="font-weight:600;">Google Maps API Key</label>
+                                <div style="display:flex;gap:8px;">
+                                    <input type="text" id="googleApiKeyInput" placeholder="Enter your Google Maps API key" style="flex:1;padding:8px 12px;border:1px solid var(--border-gray);border-radius:4px;font-size:13px;">
+                                    <button class="btn-primary" onclick="saveGoogleApiKey()" style="white-space:nowrap;">Save Key</button>
+                                    <button class="btn-secondary" onclick="clearGoogleApiKey()" style="white-space:nowrap;">Clear</button>
+                                </div>
+                            </div>
+                            <div id="apiKeyStatus" style="font-size:12px;margin-top:8px;"></div>
+                        </div>
+                        <p style="font-size:13px;color:#666;"><strong>How to get a free API key:</strong></p>
+                        <ol style="font-size:13px;line-height:2;padding-left:20px;color:#555;">
+                            <li>Go to <a href="https://console.cloud.google.com/" target="_blank" rel="noopener">Google Cloud Console</a></li>
+                            <li>Create a new project (or select an existing one)</li>
+                            <li>Navigate to <strong>APIs &amp; Services &rarr; Library</strong></li>
+                            <li>Search for and enable <strong>Street View Static API</strong></li>
+                            <li>Go to <strong>APIs &amp; Services &rarr; Credentials</strong></li>
+                            <li>Click <strong>Create Credentials &rarr; API Key</strong></li>
+                            <li>Copy the key and paste it above</li>
+                        </ol>
+                        <p style="font-size:12px;color:#888;margin-top:8px;">Google provides $200/month in free credits (~28,000 Street View requests). Your key is stored locally in your browser and never sent to any server except Google.</p>
+                    </div>
+                </div>
+
+                <div class="guide-section">
                     <button class="guide-accordion active" onclick="toggleAccordion(this)">Getting Started</button>
                     <div class="guide-panel" style="display:block;">
                         <p>This dashboard is a free tool designed to help property buyers &mdash; especially those choosing not to use a realtor &mdash; find undervalued properties, analyze neighborhood trends, and generate professional offer letters.</p>
@@ -2003,7 +2042,7 @@
                             <tr><td style="padding:8px;border-bottom:1px solid #eee;">Price vs. Benchmark</td><td style="padding:8px;border-bottom:1px solid #eee;">How the price compares to the neighborhood median for that property type</td><td style="padding:8px;border-bottom:1px solid #eee;">Major</td></tr>
                             <tr><td style="padding:8px;border-bottom:1px solid #eee;">Days on Market</td><td style="padding:8px;border-bottom:1px solid #eee;">Longer DOM suggests more negotiating power</td><td style="padding:8px;border-bottom:1px solid #eee;">Moderate</td></tr>
                             <tr><td style="padding:8px;border-bottom:1px solid #eee;">Price per Square Foot</td><td style="padding:8px;border-bottom:1px solid #eee;">Below-average $/sqft indicates potential value</td><td style="padding:8px;border-bottom:1px solid #eee;">Moderate</td></tr>
-                            <tr><td style="padding:8px;border-bottom:1px solid #eee;">Neighborhood Trend</td><td style="padding:8px;border-bottom:1px solid #eee;">Areas with rising values get a bonus</td><td style="padding:8px;border-bottom:1px solid #eee;">Minor</td></tr>
+                            <tr><td style="padding:8px;border-bottom:1px solid #eee;">Neighborhood Trend</td><td style="padding:8px;border-bottom:1px solid #eee;">Areas with declining prices or high inventory get a bonus (better buying opportunity)</td><td style="padding:8px;border-bottom:1px solid #eee;">Minor</td></tr>
                             <tr><td style="padding:8px;">Water View</td><td style="padding:8px;">Premium amenity factor</td><td style="padding:8px;">Minor</td></tr>
                         </table>
                         <p><strong>Score ranges:</strong> 70+ = Hot Deal (red), 50-69 = Good Opportunity (orange), 30-49 = Fair Value (blue), Under 30 = Market Priced (grey)</p>
@@ -2140,36 +2179,42 @@
             'Campbell River': { 'House': 650000, 'Townhouse': 500000, 'Apt/Condo': 350000, 'Land/Lot': 300000, 'Duplex': 550000, 'Mfd Home': 280000 },
         };
         
+        // Trend bonus reflects buying opportunity (higher = more room for deals)
+        // South Surrey/White Rock: strong buyer's market with declining prices = high bonus
+        // Vancouver Island: stable/modest growth = moderate bonus
         const trendBonus = {
-            'White Rock': 8, 'Crescent Beach': 7, 'Ocean Park': 7, 'Elgin Chantrell': 6,
-            'Sunnyside Park': 6, 'Morgan Creek': 5, 'Grandview Heights': 4,
-            'King George Corridor': 4, 'Pacific Douglas': 3, 'Hazelmere': 3,
-            'Parksville': 6, 'Qualicum Beach': 6, 'Nanoose Bay': 5, 'Lantzville': 5,
-            'Nanaimo': 4, 'Courtenay': 5, 'Comox': 5, 'Cumberland': 4, 'Campbell River': 4
+            'White Rock': 9, 'Crescent Beach': 8, 'Ocean Park': 8, 'Elgin Chantrell': 8,
+            'Sunnyside Park': 8, 'Morgan Creek': 7, 'Grandview Heights': 7,
+            'King George Corridor': 7, 'Pacific Douglas': 7, 'Hazelmere': 9,
+            'Parksville': 5, 'Qualicum Beach': 5, 'Nanoose Bay': 5, 'Lantzville': 5,
+            'Nanaimo': 6, 'Courtenay': 4, 'Comox': 4, 'Cumberland': 4, 'Campbell River': 5
         };
 
+        // Market trends based on FVREB Dec 2025, VIREB Jan 2026, BC Assessment 2026 data
+        // South Surrey/White Rock: significant decline (-4% to -7%), decade-high inventory
+        // Vancouver Island: mostly flat to modest growth (+1% to +3%)
         const marketTrends = {
-            'White Rock': { yoyChange: 3.2, medianDOM: 28, inventory: 'low', avgSaleToList: 0.98, recentSales: 45 },
-            'Crescent Beach': { yoyChange: 4.1, medianDOM: 35, inventory: 'low', avgSaleToList: 0.97, recentSales: 12 },
-            'Morgan Creek': { yoyChange: 1.8, medianDOM: 32, inventory: 'balanced', avgSaleToList: 0.96, recentSales: 22 },
-            'Grandview Heights': { yoyChange: 2.5, medianDOM: 25, inventory: 'low', avgSaleToList: 0.98, recentSales: 38 },
-            'King George Corridor': { yoyChange: 1.2, medianDOM: 30, inventory: 'balanced', avgSaleToList: 0.95, recentSales: 28 },
-            'Pacific Douglas': { yoyChange: 0.8, medianDOM: 40, inventory: 'balanced', avgSaleToList: 0.94, recentSales: 10 },
-            'Elgin Chantrell': { yoyChange: 2.0, medianDOM: 45, inventory: 'low', avgSaleToList: 0.96, recentSales: 8 },
-            'Sunnyside Park': { yoyChange: 2.8, medianDOM: 30, inventory: 'low', avgSaleToList: 0.97, recentSales: 15 },
-            'Ocean Park': { yoyChange: 3.5, medianDOM: 33, inventory: 'low', avgSaleToList: 0.97, recentSales: 18 },
-            'Hazelmere': { yoyChange: -0.5, medianDOM: 55, inventory: 'high', avgSaleToList: 0.93, recentSales: 6 },
-            'Semiahmoo': { yoyChange: 2.2, medianDOM: 28, inventory: 'low', avgSaleToList: 0.97, recentSales: 20 },
-            'South Surrey': { yoyChange: 1.5, medianDOM: 32, inventory: 'balanced', avgSaleToList: 0.95, recentSales: 25 },
-            'Parksville': { yoyChange: 5.2, medianDOM: 22, inventory: 'low', avgSaleToList: 0.99, recentSales: 30 },
-            'Qualicum Beach': { yoyChange: 4.8, medianDOM: 25, inventory: 'low', avgSaleToList: 0.98, recentSales: 20 },
-            'Nanoose Bay': { yoyChange: 3.5, medianDOM: 30, inventory: 'low', avgSaleToList: 0.97, recentSales: 12 },
-            'Lantzville': { yoyChange: 4.0, medianDOM: 28, inventory: 'low', avgSaleToList: 0.97, recentSales: 10 },
-            'Nanaimo': { yoyChange: 3.8, medianDOM: 20, inventory: 'balanced', avgSaleToList: 0.98, recentSales: 55 },
-            'Courtenay': { yoyChange: 4.5, medianDOM: 22, inventory: 'low', avgSaleToList: 0.98, recentSales: 35 },
-            'Comox': { yoyChange: 3.9, medianDOM: 24, inventory: 'low', avgSaleToList: 0.97, recentSales: 25 },
-            'Cumberland': { yoyChange: 5.5, medianDOM: 18, inventory: 'low', avgSaleToList: 1.01, recentSales: 15 },
-            'Campbell River': { yoyChange: 3.2, medianDOM: 26, inventory: 'balanced', avgSaleToList: 0.96, recentSales: 28 }
+            'White Rock': { yoyChange: -6.6, medianDOM: 42, inventory: 'high', avgSaleToList: 0.94, recentSales: 28 },
+            'Crescent Beach': { yoyChange: -5.8, medianDOM: 48, inventory: 'high', avgSaleToList: 0.93, recentSales: 6 },
+            'Morgan Creek': { yoyChange: -4.2, medianDOM: 38, inventory: 'high', avgSaleToList: 0.94, recentSales: 14 },
+            'Grandview Heights': { yoyChange: -3.5, medianDOM: 35, inventory: 'high', avgSaleToList: 0.95, recentSales: 22 },
+            'King George Corridor': { yoyChange: -3.8, medianDOM: 36, inventory: 'high', avgSaleToList: 0.94, recentSales: 18 },
+            'Pacific Douglas': { yoyChange: -4.5, medianDOM: 52, inventory: 'high', avgSaleToList: 0.93, recentSales: 5 },
+            'Elgin Chantrell': { yoyChange: -5.0, medianDOM: 55, inventory: 'high', avgSaleToList: 0.92, recentSales: 4 },
+            'Sunnyside Park': { yoyChange: -4.8, medianDOM: 40, inventory: 'high', avgSaleToList: 0.94, recentSales: 8 },
+            'Ocean Park': { yoyChange: -5.2, medianDOM: 44, inventory: 'high', avgSaleToList: 0.93, recentSales: 10 },
+            'Hazelmere': { yoyChange: -6.0, medianDOM: 65, inventory: 'high', avgSaleToList: 0.91, recentSales: 3 },
+            'Semiahmoo': { yoyChange: -4.0, medianDOM: 38, inventory: 'high', avgSaleToList: 0.94, recentSales: 12 },
+            'South Surrey': { yoyChange: -4.5, medianDOM: 40, inventory: 'high', avgSaleToList: 0.94, recentSales: 16 },
+            'Parksville': { yoyChange: 2.8, medianDOM: 32, inventory: 'balanced', avgSaleToList: 0.97, recentSales: 18 },
+            'Qualicum Beach': { yoyChange: 2.5, medianDOM: 36, inventory: 'balanced', avgSaleToList: 0.96, recentSales: 12 },
+            'Nanoose Bay': { yoyChange: 1.5, medianDOM: 38, inventory: 'balanced', avgSaleToList: 0.96, recentSales: 7 },
+            'Lantzville': { yoyChange: 0.5, medianDOM: 35, inventory: 'balanced', avgSaleToList: 0.96, recentSales: 6 },
+            'Nanaimo': { yoyChange: -1.0, medianDOM: 30, inventory: 'balanced', avgSaleToList: 0.97, recentSales: 40 },
+            'Courtenay': { yoyChange: 2.0, medianDOM: 32, inventory: 'balanced', avgSaleToList: 0.97, recentSales: 22 },
+            'Comox': { yoyChange: 1.8, medianDOM: 34, inventory: 'balanced', avgSaleToList: 0.96, recentSales: 16 },
+            'Cumberland': { yoyChange: 1.0, medianDOM: 30, inventory: 'balanced', avgSaleToList: 0.98, recentSales: 8 },
+            'Campbell River': { yoyChange: 0.8, medianDOM: 34, inventory: 'balanced', avgSaleToList: 0.95, recentSales: 18 }
         };
         
         let filteredListings = [];
@@ -2184,6 +2229,7 @@
             loadShortlist();
             initializeFilters();
             applyFilters();
+            updateApiKeyStatus();
             loadFilterPresetList();
             calcMortgage();
 
@@ -2234,6 +2280,13 @@
             renderCurrentTab();
         }
         
+        // Debounce utility for number inputs
+        var _debounceTimer = null;
+        function debouncedApply() {
+            clearTimeout(_debounceTimer);
+            _debounceTimer = setTimeout(function() { applyFilters(); }, 350);
+        }
+
         function initializeFilters() {
             // Initialize region filters
             const regions = [...new Set(rawListings.map(l => l.region))].sort();
@@ -2281,6 +2334,11 @@
                     </div>
                 `;
             });
+
+            // Auto-apply filters when dynamic checkboxes change
+            regionContainer.addEventListener('change', function() { applyFilters(); });
+            neighborhoodContainer.addEventListener('change', function() { applyFilters(); });
+            typeContainer.addEventListener('change', function() { applyFilters(); });
         }
         
         function getScoreWeights() {
@@ -2654,7 +2712,41 @@
 
         // Google Maps API key for Street View imagery
         // Set this to your Google Maps Static API key to enable Street View fallback
-        var GOOGLE_MAPS_API_KEY = '';
+        var GOOGLE_MAPS_API_KEY = localStorage.getItem('googleMapsApiKey') || '';
+
+        function saveGoogleApiKey() {
+            var key = document.getElementById('googleApiKeyInput').value.trim();
+            if (!key) { alert('Please enter an API key.'); return; }
+            localStorage.setItem('googleMapsApiKey', key);
+            GOOGLE_MAPS_API_KEY = key;
+            updateApiKeyStatus();
+            // Refresh card view to use new images
+            if (typeof renderCardGrid === 'function' && currentListingView === 'cards') renderCardGrid();
+            alert('API key saved! Property card images will now use Google Street View.');
+        }
+
+        function clearGoogleApiKey() {
+            localStorage.removeItem('googleMapsApiKey');
+            GOOGLE_MAPS_API_KEY = '';
+            document.getElementById('googleApiKeyInput').value = '';
+            updateApiKeyStatus();
+            if (typeof renderCardGrid === 'function' && currentListingView === 'cards') renderCardGrid();
+        }
+
+        function updateApiKeyStatus() {
+            var statusEl = document.getElementById('apiKeyStatus');
+            var headerIndicator = document.getElementById('streetViewIndicator');
+            if (GOOGLE_MAPS_API_KEY) {
+                if (statusEl) statusEl.innerHTML = '<span style="color:#28a745;">\u2713 API key configured. Street View images are active.</span>';
+                if (headerIndicator) headerIndicator.innerHTML = '<span style="color:#28a745;font-size:11px;">\u2713 Street View Active</span>';
+            } else {
+                if (statusEl) statusEl.innerHTML = '<span style="color:#999;">No API key configured. Using map tile thumbnails.</span>';
+                if (headerIndicator) headerIndicator.innerHTML = '<span style="color:#999;font-size:11px;">Street View: Not configured</span>';
+            }
+            // Also populate the input field
+            var input = document.getElementById('googleApiKeyInput');
+            if (input && GOOGLE_MAPS_API_KEY && !input.value) input.value = GOOGLE_MAPS_API_KEY;
+        }
 
         // Map tile thumbnail URL generator (OSM fallback)
         function getMapThumbnailUrl(lat, lng, zoom) {
@@ -2672,9 +2764,9 @@
             if (listing.imageUrl) return listing.imageUrl;
             // 2. Use Google Street View if API key is configured
             if (GOOGLE_MAPS_API_KEY) {
-                return 'https://maps.googleapis.com/maps/api/streetview?size=400x250&location=' +
+                return 'https://maps.googleapis.com/maps/api/streetview?size=600x400&location=' +
                     listing.latitude + ',' + listing.longitude +
-                    '&fov=90&pitch=10&key=' + GOOGLE_MAPS_API_KEY;
+                    '&fov=90&pitch=10&source=outdoor&key=' + GOOGLE_MAPS_API_KEY;
             }
             // 3. Fallback to OSM map tile
             return getMapThumbnailUrl(listing.latitude, listing.longitude, 15);
@@ -2851,7 +2943,7 @@
                 banner.style.display = 'block';
                 bannerContent.innerHTML = '<div><strong>' + avgYoy.toFixed(1) + '%</strong><br>Avg YoY Price Change</div>' +
                     '<div><strong>' + lowInv + '/' + totalNbrs + '</strong><br>Low Inventory Areas</div>' +
-                    (hottest ? '<div><strong>' + hottest.nbr + '</strong><br>Fastest Appreciation (' + hottest.trends.yoyChange + '%)</div>' : '') +
+                    (hottest ? '<div><strong>' + hottest.nbr + '</strong><br>' + (hottest.trends.yoyChange >= 0 ? 'Fastest Appreciation' : 'Smallest Decline') + ' (' + (hottest.trends.yoyChange >= 0 ? '+' : '') + hottest.trends.yoyChange + '%)</div>' : '') +
                     '<div><strong>' + filteredListings.length + '</strong><br>Active Listings</div>';
             } else {
                 banner.style.display = 'none';
