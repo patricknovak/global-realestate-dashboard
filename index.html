@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BC Real Estate Investment Dashboard</title>
+    <title>Real Estate Investment Dashboard</title>
     
     <!-- External Libraries -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
@@ -1101,6 +1101,39 @@
             margin-bottom: 8px;
             color: #666;
         }
+        /* Accordion / Guide Styles */
+        .guide-section { margin-bottom: 4px; }
+        .guide-accordion {
+            background: var(--light-gray);
+            color: var(--primary);
+            cursor: pointer;
+            padding: 14px 20px;
+            width: 100%;
+            border: none;
+            text-align: left;
+            outline: none;
+            font-size: 14px;
+            font-weight: 700;
+            border-radius: 6px;
+            transition: background 0.2s;
+        }
+        .guide-accordion:hover { background: #dde3ea; }
+        .guide-accordion::after { content: '+'; float: right; font-weight: 700; font-size: 18px; }
+        .guide-accordion.active { border-radius: 6px 6px 0 0; background: var(--primary); color: white; }
+        .guide-accordion.active::after { content: '\2212'; }
+        .guide-panel {
+            display: none;
+            padding: 16px 20px;
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-top: none;
+            border-radius: 0 0 6px 6px;
+            line-height: 1.7;
+            font-size: 13px;
+        }
+        .guide-panel p { margin: 8px 0; }
+        .guide-panel a { color: var(--primary); text-decoration: underline; }
+
         /* Mobile Filter Toggle */
         .filter-toggle {
             display: none;
@@ -1267,8 +1300,8 @@
 <body>
     <!-- Header -->
     <div class="header">
-        <h1>BC Real Estate Investment Dashboard</h1>
-        <p>Liogon Holdings Ltd. / Patrick Novak — Multi-Region Deal Finder (South Surrey/White Rock & Vancouver Island)</p>
+        <h1>Real Estate Investment Dashboard</h1>
+        <p>Find deals, analyze neighborhoods, and generate offers — no realtor required</p>
     </div>
     
     <!-- Stats Bar -->
@@ -1420,6 +1453,8 @@
                 <button class="tab-button" onclick="switchTab('deals')">Deal Analysis</button>
                 <button class="tab-button" onclick="switchTab('offers')">Offer Generator</button>
                 <button class="tab-button" onclick="switchTab('shortlist')">Shortlist</button>
+                <button class="tab-button" onclick="switchTab('norealtorguide')">No-Realtor Guide</button>
+                <button class="tab-button" onclick="switchTab('help')">Help</button>
             </div>
             
             <!-- Tab 1: All Listings -->
@@ -1467,22 +1502,34 @@
                         <thead>
                             <tr>
                                 <th>Neighborhood</th>
-                                <th># Properties</th>
+                                <th># Listed</th>
                                 <th>Avg Price</th>
                                 <th>Median Price</th>
                                 <th>Avg $/SqFt</th>
                                 <th>Avg DOM</th>
+                                <th>YoY Change</th>
+                                <th>Sale/List</th>
+                                <th>Inventory</th>
                                 <th>Avg Score</th>
-                                <th>Best Deal</th>
                             </tr>
                         </thead>
                         <tbody id="neighborhoodTableBody">
                         </tbody>
                     </table>
                 </div>
-                <div class="chart-container">
-                    <div class="chart-title">Average Price by Neighborhood</div>
-                    <canvas id="neighborhoodChart"></canvas>
+                <div id="marketSummaryBanner" style="background: linear-gradient(135deg, #1B3A5C 0%, #2E75B6 100%); color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; display: none;">
+                    <h3 style="margin: 0 0 12px 0; font-size: 16px;">Market Conditions Summary</h3>
+                    <div id="marketSummaryContent" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; font-size: 13px;"></div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div class="chart-container">
+                        <div class="chart-title">Average Price by Neighborhood</div>
+                        <canvas id="neighborhoodChart"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <div class="chart-title">Year-over-Year Price Change (%)</div>
+                        <canvas id="yoyChart"></canvas>
+                    </div>
                 </div>
             </div>
             
@@ -1523,11 +1570,16 @@
                     </div>
                     
                     <div class="form-group">
-                        <label>Purchaser</label>
-                        <select id="purchaser">
-                            <option value="Liogon Holdings Ltd.">Liogon Holdings Ltd.</option>
-                            <option value="Patrick Novak">Patrick Novak</option>
-                        </select>
+                        <label>Your Full Name *</label>
+                        <input type="text" id="buyerName" placeholder="Enter your full name" required onchange="saveBuyerInfo()">
+                    </div>
+                    <div class="form-group">
+                        <label>Your Email *</label>
+                        <input type="email" id="buyerEmail" placeholder="Enter your email address" required onchange="saveBuyerInfo()">
+                    </div>
+                    <div class="form-group">
+                        <label>Company Name (optional)</label>
+                        <input type="text" id="buyerCompany" placeholder="Enter company name if purchasing through a company" onchange="saveBuyerInfo()">
                     </div>
                     
                     <div class="form-group">
@@ -1578,9 +1630,270 @@
                     <p>Click the ★ icon on properties to add them to your shortlist</p>
                 </div>
             </div>
+
+            <!-- Tab 7: No-Realtor Guide -->
+            <div id="norealtorguide" class="tab-content" style="overflow: auto; padding: 20px;">
+                <h2 style="margin-bottom: 8px; color: var(--primary);">Buying Property Without a Realtor</h2>
+                <p style="color: #666; margin-bottom: 24px;">A comprehensive guide for unrepresented buyers in British Columbia. Save thousands in commission while staying protected.</p>
+
+                <div class="guide-section">
+                    <button class="guide-accordion" onclick="toggleAccordion(this)">Why Buy Without a Realtor?</button>
+                    <div class="guide-panel">
+                        <p><strong>Potential savings:</strong> Buyer agent commissions in BC typically range from 2.5% to 3.5% of the purchase price. On a $900,000 property, that is $22,500 to $31,500.</p>
+                        <p><strong>Direct communication:</strong> Negotiate directly with the seller's agent, reducing miscommunication and delays.</p>
+                        <p><strong>Full control:</strong> You decide the offer strategy, timeline, and conditions without pressure from a third party.</p>
+                        <p><strong>More leverage:</strong> Some sellers prefer unrepresented buyers because it reduces their total commission costs, which can make your offer more attractive.</p>
+                        <p style="background: #fff3cd; padding: 12px; border-radius: 6px; border-left: 4px solid #ffc107; margin-top: 12px;"><strong>Important:</strong> Always engage a real estate lawyer or notary to review your Contract of Purchase and Sale before signing. This is non-negotiable regardless of whether you have a realtor.</p>
+                    </div>
+                </div>
+
+                <div class="guide-section">
+                    <button class="guide-accordion" onclick="toggleAccordion(this)">The BC Purchase Process Step-by-Step</button>
+                    <div class="guide-panel">
+                        <ol style="line-height: 2; padding-left: 20px;">
+                            <li><strong>Research &amp; shortlist</strong> &mdash; Use this dashboard to find and compare properties. Analyze deal scores, neighborhood trends, and price benchmarks.</li>
+                            <li><strong>View properties</strong> &mdash; Contact the listing agent directly to arrange viewings. You have the right to view any listed property.</li>
+                            <li><strong>Prepare your offer</strong> &mdash; Use the Offer Generator tab to create a professional offer letter with appropriate pricing based on our deal analysis.</li>
+                            <li><strong>Submit the offer</strong> &mdash; Send your offer to the listing agent via email (use our Email to Agent feature). Include subject clauses to protect yourself.</li>
+                            <li><strong>Negotiate</strong> &mdash; The seller may accept, reject, or counter. Be prepared to negotiate on price, dates, and conditions.</li>
+                            <li><strong>Subject removal</strong> &mdash; Complete your due diligence (inspection, financing, title search) within the subject period (typically 7-14 days).</li>
+                            <li><strong>Deposit</strong> &mdash; Deliver your deposit (typically 5% of purchase price) to the trust account specified in the contract.</li>
+                            <li><strong>Completion &amp; possession</strong> &mdash; Your lawyer/notary handles the title transfer, mortgage registration, and key exchange on completion day.</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="guide-section">
+                    <button class="guide-accordion" onclick="toggleAccordion(this)">Essential Documents Checklist</button>
+                    <div class="guide-panel">
+                        <table style="width:100%; border-collapse:collapse; font-size: 13px;">
+                            <tr style="background: var(--light-gray);"><th style="padding:8px; text-align:left;">Document</th><th style="padding:8px; text-align:left;">Purpose</th><th style="padding:8px; text-align:left;">Where to Get It</th></tr>
+                            <tr><td style="padding:8px; border-bottom:1px solid #eee;">Contract of Purchase and Sale</td><td style="padding:8px; border-bottom:1px solid #eee;">The legally binding offer document</td><td style="padding:8px; border-bottom:1px solid #eee;">Generated by this tool or from BCREA</td></tr>
+                            <tr><td style="padding:8px; border-bottom:1px solid #eee;">Property Disclosure Statement</td><td style="padding:8px; border-bottom:1px solid #eee;">Seller discloses known defects</td><td style="padding:8px; border-bottom:1px solid #eee;">Request from listing agent</td></tr>
+                            <tr><td style="padding:8px; border-bottom:1px solid #eee;">Title Search</td><td style="padding:8px; border-bottom:1px solid #eee;">Confirms ownership and encumbrances</td><td style="padding:8px; border-bottom:1px solid #eee;">BC Land Title Office (ltsa.ca)</td></tr>
+                            <tr><td style="padding:8px; border-bottom:1px solid #eee;">Survey Certificate</td><td style="padding:8px; border-bottom:1px solid #eee;">Shows property boundaries</td><td style="padding:8px; border-bottom:1px solid #eee;">Request from seller or order new survey</td></tr>
+                            <tr><td style="padding:8px; border-bottom:1px solid #eee;">Home Inspection Report</td><td style="padding:8px; border-bottom:1px solid #eee;">Professional assessment of condition</td><td style="padding:8px; border-bottom:1px solid #eee;">Hire a certified home inspector</td></tr>
+                            <tr><td style="padding:8px;">Strata Documents (if applicable)</td><td style="padding:8px;">Strata bylaws, minutes, financials</td><td style="padding:8px;">Request Form B from strata council</td></tr>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="guide-section">
+                    <button class="guide-accordion" onclick="toggleAccordion(this)">Due Diligence Checklist</button>
+                    <div class="guide-panel">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 13px;">
+                            <label style="display:flex;align-items:center;gap:6px;padding:6px;background:var(--light-gray);border-radius:4px;cursor:pointer"><input type="checkbox"> Title search (check for liens, easements)</label>
+                            <label style="display:flex;align-items:center;gap:6px;padding:6px;background:var(--light-gray);border-radius:4px;cursor:pointer"><input type="checkbox"> Professional home inspection</label>
+                            <label style="display:flex;align-items:center;gap:6px;padding:6px;background:var(--light-gray);border-radius:4px;cursor:pointer"><input type="checkbox"> Mortgage pre-approval / financing</label>
+                            <label style="display:flex;align-items:center;gap:6px;padding:6px;background:var(--light-gray);border-radius:4px;cursor:pointer"><input type="checkbox"> Property tax assessment review</label>
+                            <label style="display:flex;align-items:center;gap:6px;padding:6px;background:var(--light-gray);border-radius:4px;cursor:pointer"><input type="checkbox"> Zoning and permitted use check</label>
+                            <label style="display:flex;align-items:center;gap:6px;padding:6px;background:var(--light-gray);border-radius:4px;cursor:pointer"><input type="checkbox"> Environmental assessment (if rural/lot)</label>
+                            <label style="display:flex;align-items:center;gap:6px;padding:6px;background:var(--light-gray);border-radius:4px;cursor:pointer"><input type="checkbox"> Strata documents review (if strata)</label>
+                            <label style="display:flex;align-items:center;gap:6px;padding:6px;background:var(--light-gray);border-radius:4px;cursor:pointer"><input type="checkbox"> Insurance quote obtained</label>
+                            <label style="display:flex;align-items:center;gap:6px;padding:6px;background:var(--light-gray);border-radius:4px;cursor:pointer"><input type="checkbox"> Lawyer/notary retained</label>
+                            <label style="display:flex;align-items:center;gap:6px;padding:6px;background:var(--light-gray);border-radius:4px;cursor:pointer"><input type="checkbox"> Property Transfer Tax calculated</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="guide-section">
+                    <button class="guide-accordion" onclick="toggleAccordion(this)">Free Tools &amp; Resources</button>
+                    <div class="guide-panel">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 13px;">
+                            <div style="background:var(--light-gray);padding:12px;border-radius:6px;">
+                                <strong>BC Land Title &amp; Survey Authority</strong><br>
+                                <a href="https://ltsa.ca" target="_blank" rel="noopener">ltsa.ca</a><br>
+                                Title searches, ownership records, legal descriptions
+                            </div>
+                            <div style="background:var(--light-gray);padding:12px;border-radius:6px;">
+                                <strong>BC Assessment</strong><br>
+                                <a href="https://www.bcassessment.ca" target="_blank" rel="noopener">bcassessment.ca</a><br>
+                                Property assessed values, tax information, comparables
+                            </div>
+                            <div style="background:var(--light-gray);padding:12px;border-radius:6px;">
+                                <strong>CMHC Mortgage Calculator</strong><br>
+                                <a href="https://www.cmhc-schl.gc.ca/consumers/home-buying/calculators" target="_blank" rel="noopener">cmhc-schl.gc.ca</a><br>
+                                Mortgage affordability, payment calculations
+                            </div>
+                            <div style="background:var(--light-gray);padding:12px;border-radius:6px;">
+                                <strong>BC Property Transfer Tax Calculator</strong><br>
+                                <a href="https://www2.gov.bc.ca/gov/content/taxes/property-taxes/property-transfer-tax" target="_blank" rel="noopener">gov.bc.ca</a><br>
+                                Calculate your Property Transfer Tax
+                            </div>
+                            <div style="background:var(--light-gray);padding:12px;border-radius:6px;">
+                                <strong>BC Residential Tenancy Branch</strong><br>
+                                <a href="https://www2.gov.bc.ca/gov/content/housing-tenancy" target="_blank" rel="noopener">gov.bc.ca</a><br>
+                                Tenant rights if purchasing a tenanted property
+                            </div>
+                            <div style="background:var(--light-gray);padding:12px;border-radius:6px;">
+                                <strong>BC Housing Law</strong><br>
+                                <a href="https://www.bclaws.gov.bc.ca" target="_blank" rel="noopener">bclaws.gov.bc.ca</a><br>
+                                Real Estate Services Act, Property Law Act, Strata Property Act
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="guide-section">
+                    <button class="guide-accordion" onclick="toggleAccordion(this)">Common Pitfalls to Avoid</button>
+                    <div class="guide-panel">
+                        <div style="display:grid;gap:8px;font-size:13px;">
+                            <div style="background:#f8d7da;padding:10px 14px;border-radius:6px;border-left:4px solid #dc3545;"><strong>Waiving subjects:</strong> Never remove subject clauses (especially inspection and financing) to "win" a bidding war. The risk far outweighs the reward.</div>
+                            <div style="background:#f8d7da;padding:10px 14px;border-radius:6px;border-left:4px solid #dc3545;"><strong>Skipping the title search:</strong> Hidden liens, easements, or rights-of-way can dramatically affect property value and your rights.</div>
+                            <div style="background:#f8d7da;padding:10px 14px;border-radius:6px;border-left:4px solid #dc3545;"><strong>Not budgeting for closing costs:</strong> Property Transfer Tax, legal fees, inspection, appraisal, and insurance can add 1.5%-3% to your purchase price.</div>
+                            <div style="background:#f8d7da;padding:10px 14px;border-radius:6px;border-left:4px solid #dc3545;"><strong>Ignoring strata documents:</strong> For condos/townhouses, review the last 2 years of strata minutes for upcoming special levies, litigation, or major repairs.</div>
+                            <div style="background:#f8d7da;padding:10px 14px;border-radius:6px;border-left:4px solid #dc3545;"><strong>Emotional bidding:</strong> Set a maximum price before you offer and stick to it. Use our Deal Score to stay objective.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="guide-section">
+                    <button class="guide-accordion" onclick="toggleAccordion(this)">When You Should Get Professional Help</button>
+                    <div class="guide-panel">
+                        <p style="margin-bottom:12px;">Even without a realtor, you should always hire:</p>
+                        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;font-size:13px;">
+                            <div style="background:#d4edda;padding:14px;border-radius:6px;text-align:center;">
+                                <strong style="font-size:15px;">Real Estate Lawyer / Notary</strong><br><br>
+                                Reviews contracts, handles title transfer, holds deposits in trust. Budget $1,500-$2,500.
+                                <br><br><strong>ALWAYS required.</strong>
+                            </div>
+                            <div style="background:#d4edda;padding:14px;border-radius:6px;text-align:center;">
+                                <strong style="font-size:15px;">Home Inspector</strong><br><br>
+                                Professional assessment of structure, systems, and defects. Budget $400-$700.
+                                <br><br><strong>Highly recommended.</strong>
+                            </div>
+                            <div style="background:#d4edda;padding:14px;border-radius:6px;text-align:center;">
+                                <strong style="font-size:15px;">Mortgage Broker</strong><br><br>
+                                Compares rates from multiple lenders. Usually free to the buyer (paid by lender).
+                                <br><br><strong>Recommended.</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="guide-section">
+                    <button class="guide-accordion" onclick="toggleAccordion(this)">Cost Breakdown: What You Save vs. What You Pay</button>
+                    <div class="guide-panel">
+                        <table style="width:100%; border-collapse:collapse; font-size: 13px;">
+                            <tr style="background: #d4edda;"><th style="padding:10px; text-align:left;">Cost Saved</th><th style="padding:10px; text-align:right;">Typical Amount ($900K property)</th></tr>
+                            <tr><td style="padding:8px; border-bottom:1px solid #eee;">Buyer agent commission (3%)</td><td style="padding:8px; text-align:right; border-bottom:1px solid #eee; color: #28a745; font-weight: 700;">+ $27,000 saved</td></tr>
+                            <tr style="background: var(--light-gray);"><th style="padding:10px; text-align:left;">Costs You Still Pay</th><th style="padding:10px; text-align:right;">Typical Amount</th></tr>
+                            <tr><td style="padding:8px; border-bottom:1px solid #eee;">Real estate lawyer / notary</td><td style="padding:8px; text-align:right; border-bottom:1px solid #eee;">$1,500 - $2,500</td></tr>
+                            <tr><td style="padding:8px; border-bottom:1px solid #eee;">Home inspection</td><td style="padding:8px; text-align:right; border-bottom:1px solid #eee;">$400 - $700</td></tr>
+                            <tr><td style="padding:8px; border-bottom:1px solid #eee;">Property Transfer Tax</td><td style="padding:8px; text-align:right; border-bottom:1px solid #eee;">$16,000 (on $900K)</td></tr>
+                            <tr><td style="padding:8px; border-bottom:1px solid #eee;">Title search &amp; insurance</td><td style="padding:8px; text-align:right; border-bottom:1px solid #eee;">$200 - $500</td></tr>
+                            <tr><td style="padding:8px; border-bottom:1px solid #eee;">Appraisal (if required by lender)</td><td style="padding:8px; text-align:right; border-bottom:1px solid #eee;">$300 - $500</td></tr>
+                            <tr style="font-weight:700; background: #e7f3ff;"><td style="padding:10px;">Net savings (approximate)</td><td style="padding:10px; text-align:right; color: #28a745;">~$22,000 - $24,000</td></tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 8: Help -->
+            <div id="help" class="tab-content" style="overflow: auto; padding: 20px;">
+                <h2 style="margin-bottom: 8px; color: var(--primary);">Help &amp; Getting Started</h2>
+                <p style="color: #666; margin-bottom: 24px;">Learn how to use the Real Estate Investment Dashboard to find deals, analyze markets, and generate professional offers.</p>
+
+                <div class="guide-section">
+                    <button class="guide-accordion active" onclick="toggleAccordion(this)">Getting Started</button>
+                    <div class="guide-panel" style="display:block;">
+                        <p>This dashboard is a free tool designed to help property buyers &mdash; especially those choosing not to use a realtor &mdash; find undervalued properties, analyze neighborhood trends, and generate professional offer letters.</p>
+                        <p><strong>Here is how to get started:</strong></p>
+                        <ol style="line-height: 1.8; padding-left: 20px;">
+                            <li>Use the <strong>sidebar filters</strong> on the left to narrow down by region, price range, property type, and more.</li>
+                            <li>Browse properties in <strong>All Listings</strong> (table or card view) and click any property for details.</li>
+                            <li>Star properties you like to add them to your <strong>Shortlist</strong>.</li>
+                            <li>When ready, go to the <strong>Offer Generator</strong> to create a professional offer letter.</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="guide-section">
+                    <button class="guide-accordion" onclick="toggleAccordion(this)">How to Use Each Tab</button>
+                    <div class="guide-panel">
+                        <div style="display:grid;gap:10px;font-size:13px;">
+                            <div style="background:var(--light-gray);padding:12px;border-radius:6px;"><strong>All Listings:</strong> Browse all properties with sorting and filtering. Toggle between table and card view. Click any property for detailed analysis.</div>
+                            <div style="background:var(--light-gray);padding:12px;border-radius:6px;"><strong>Map View:</strong> See properties plotted on an interactive map. Clustered markers expand as you zoom in. Click a marker to see property details.</div>
+                            <div style="background:var(--light-gray);padding:12px;border-radius:6px;"><strong>Neighborhood Analysis:</strong> Compare neighborhoods side-by-side with price data, market trends, year-over-year changes, and inventory levels. Click a neighborhood row to filter to that area.</div>
+                            <div style="background:var(--light-gray);padding:12px;border-radius:6px;"><strong>Deal Analysis:</strong> See the top 10 best deals, score distribution, property type breakdown, and price distribution charts.</div>
+                            <div style="background:var(--light-gray);padding:12px;border-radius:6px;"><strong>Offer Generator:</strong> Select a property, enter your buyer details, customize offer terms, and generate a professional PDF offer letter. Download it or email it directly to the listing agent.</div>
+                            <div style="background:var(--light-gray);padding:12px;border-radius:6px;"><strong>Shortlist:</strong> Your saved properties. Export to CSV for your records. See total investment summary and aggressive offer totals.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="guide-section">
+                    <button class="guide-accordion" onclick="toggleAccordion(this)">How the Deal Score Works</button>
+                    <div class="guide-panel">
+                        <p>Every property receives a <strong>Deal Score from 0 to 100</strong> based on multiple factors:</p>
+                        <table style="width:100%;border-collapse:collapse;font-size:13px;margin:12px 0;">
+                            <tr style="background:var(--light-gray);"><th style="padding:8px;text-align:left;">Factor</th><th style="padding:8px;text-align:left;">What It Measures</th><th style="padding:8px;text-align:left;">Impact</th></tr>
+                            <tr><td style="padding:8px;border-bottom:1px solid #eee;">Price vs. Benchmark</td><td style="padding:8px;border-bottom:1px solid #eee;">How the price compares to the neighborhood median for that property type</td><td style="padding:8px;border-bottom:1px solid #eee;">Major</td></tr>
+                            <tr><td style="padding:8px;border-bottom:1px solid #eee;">Days on Market</td><td style="padding:8px;border-bottom:1px solid #eee;">Longer DOM suggests more negotiating power</td><td style="padding:8px;border-bottom:1px solid #eee;">Moderate</td></tr>
+                            <tr><td style="padding:8px;border-bottom:1px solid #eee;">Price per Square Foot</td><td style="padding:8px;border-bottom:1px solid #eee;">Below-average $/sqft indicates potential value</td><td style="padding:8px;border-bottom:1px solid #eee;">Moderate</td></tr>
+                            <tr><td style="padding:8px;border-bottom:1px solid #eee;">Neighborhood Trend</td><td style="padding:8px;border-bottom:1px solid #eee;">Areas with rising values get a bonus</td><td style="padding:8px;border-bottom:1px solid #eee;">Minor</td></tr>
+                            <tr><td style="padding:8px;">Water View</td><td style="padding:8px;">Premium amenity factor</td><td style="padding:8px;">Minor</td></tr>
+                        </table>
+                        <p><strong>Score ranges:</strong> 70+ = Hot Deal (red), 50-69 = Good Opportunity (orange), 30-49 = Fair Value (blue), Under 30 = Market Priced (grey)</p>
+                    </div>
+                </div>
+
+                <div class="guide-section">
+                    <button class="guide-accordion" onclick="toggleAccordion(this)">Generating Offers Step-by-Step</button>
+                    <div class="guide-panel">
+                        <ol style="line-height: 2; padding-left: 20px;">
+                            <li>Go to the <strong>Offer Generator</strong> tab.</li>
+                            <li>Enter your <strong>full name</strong>, <strong>email</strong>, and optional <strong>company name</strong>. These are saved automatically for future sessions.</li>
+                            <li>Select a property from the dropdown (filtered to your current search results).</li>
+                            <li>Review the three offer tiers: <strong>Aggressive Lowball</strong>, <strong>Strategic Value</strong>, and <strong>Competitive</strong>.</li>
+                            <li>Click <strong>Generate Offer Summary</strong> to see the full offer details.</li>
+                            <li>Customize the offer price, deposit, dates, and conditions as needed.</li>
+                            <li>Optionally draw your signature using the signature pad.</li>
+                            <li>Click <strong>Download PDF</strong> to save the offer letter.</li>
+                            <li>Use <strong>Email to Agent</strong> to open your email client with a pre-drafted message.</li>
+                        </ol>
+                        <p style="background: #e7f3ff; padding: 12px; border-radius: 6px; margin-top: 12px;">The generated offer follows BC real estate conventions and includes standard subject clauses. Always have a lawyer review before submitting a binding offer.</p>
+                    </div>
+                </div>
+
+                <hr style="border: none; border-top: 2px solid var(--light-gray); margin: 30px 0;">
+
+                <h3 style="color: var(--primary); margin-bottom: 16px;">Suggestions &amp; Feedback</h3>
+                <p style="margin-bottom: 16px; color: #666;">Help us improve this tool! Submit bug reports, feature requests, or general feedback.</p>
+
+                <form id="feedbackForm" action="https://formspree.io/f/YOUR_FORM_ID" method="POST" style="max-width: 600px;">
+                    <div class="form-group">
+                        <label>Your Name</label>
+                        <input type="text" name="name" placeholder="Enter your name" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Your Email</label>
+                        <input type="email" name="email" placeholder="Enter your email" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Feedback Type</label>
+                        <select name="type" required>
+                            <option value="">Select type...</option>
+                            <option value="Bug Report">Bug Report</option>
+                            <option value="Feature Request">Feature Request</option>
+                            <option value="New Region Request">New Region / Listing Request</option>
+                            <option value="General Feedback">General Feedback</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Message</label>
+                        <textarea name="message" rows="5" placeholder="Describe your suggestion, bug, or feedback..." required></textarea>
+                    </div>
+                    <input type="hidden" name="_subject" value="Real Estate Dashboard Feedback">
+                    <button type="submit" class="btn-primary" style="width: auto;">Submit Feedback</button>
+                    <div id="feedbackStatus" style="margin-top: 12px; font-size: 13px;"></div>
+                </form>
+
+                <p style="margin-top: 20px; font-size: 12px; color: #999;">Feedback is sent via Formspree. To activate, replace <code>YOUR_FORM_ID</code> in the source with your Formspree endpoint. <a href="https://formspree.io" target="_blank" rel="noopener">Create a free form at formspree.io</a>.</p>
+            </div>
         </div>
     </div>
-    
+
     <!-- Offer Builder Modal -->
     <div id="offerModal" class="modal" onclick="if(event.target===this)closeOfferModal()">
         <div class="modal-content" style="max-width: 820px; max-height: 92vh;">
@@ -1588,6 +1901,22 @@
             <div id="offerModalBody"></div>
         </div>
     </div>
+
+    <!-- Footer -->
+    <footer style="background: #1B3A5C; color: rgba(255,255,255,0.8); padding: 24px 30px; text-align: center; font-size: 12px; line-height: 1.8;">
+        <div style="max-width: 900px; margin: 0 auto;">
+            <div style="font-size: 14px; font-weight: 600; color: white; margin-bottom: 8px;">Real Estate Investment Dashboard</div>
+            <div>An open-source tool for unrepresented property buyers.</div>
+            <div style="margin: 8px 0;">
+                <a href="#" onclick="switchTab('help');window.scrollTo(0,0);return false;" style="color: #90CAF9; text-decoration: underline;">Help &amp; Getting Started</a>
+                &nbsp;&middot;&nbsp;
+                <a href="#" onclick="switchTab('norealtorguide');window.scrollTo(0,0);return false;" style="color: #90CAF9; text-decoration: underline;">No-Realtor Guide</a>
+                &nbsp;&middot;&nbsp;
+                <a href="#" onclick="switchTab('help');setTimeout(function(){document.getElementById('feedbackForm').scrollIntoView({behavior:'smooth'})},100);return false;" style="color: #90CAF9; text-decoration: underline;">Submit Feedback</a>
+            </div>
+            <div style="margin-top: 12px; color: rgba(255,255,255,0.5); font-size: 11px;">This tool provides general information only and does not constitute legal, financial, or real estate advice. Always consult a qualified real estate lawyer before entering into any property transaction.</div>
+        </div>
+    </footer>
 
     <!-- Detail Modal -->
     <div id="detailModal" class="modal" onclick="if(event.target===this)closeDetailModal()">
@@ -1637,6 +1966,30 @@
             'Parksville': 6, 'Qualicum Beach': 6, 'Nanoose Bay': 5, 'Lantzville': 5,
             'Nanaimo': 4, 'Courtenay': 5, 'Comox': 5, 'Cumberland': 4, 'Campbell River': 4
         };
+
+        const marketTrends = {
+            'White Rock': { yoyChange: 3.2, medianDOM: 28, inventory: 'low', avgSaleToList: 0.98, recentSales: 45 },
+            'Crescent Beach': { yoyChange: 4.1, medianDOM: 35, inventory: 'low', avgSaleToList: 0.97, recentSales: 12 },
+            'Morgan Creek': { yoyChange: 1.8, medianDOM: 32, inventory: 'balanced', avgSaleToList: 0.96, recentSales: 22 },
+            'Grandview Heights': { yoyChange: 2.5, medianDOM: 25, inventory: 'low', avgSaleToList: 0.98, recentSales: 38 },
+            'King George Corridor': { yoyChange: 1.2, medianDOM: 30, inventory: 'balanced', avgSaleToList: 0.95, recentSales: 28 },
+            'Pacific Douglas': { yoyChange: 0.8, medianDOM: 40, inventory: 'balanced', avgSaleToList: 0.94, recentSales: 10 },
+            'Elgin Chantrell': { yoyChange: 2.0, medianDOM: 45, inventory: 'low', avgSaleToList: 0.96, recentSales: 8 },
+            'Sunnyside Park': { yoyChange: 2.8, medianDOM: 30, inventory: 'low', avgSaleToList: 0.97, recentSales: 15 },
+            'Ocean Park': { yoyChange: 3.5, medianDOM: 33, inventory: 'low', avgSaleToList: 0.97, recentSales: 18 },
+            'Hazelmere': { yoyChange: -0.5, medianDOM: 55, inventory: 'high', avgSaleToList: 0.93, recentSales: 6 },
+            'Semiahmoo': { yoyChange: 2.2, medianDOM: 28, inventory: 'low', avgSaleToList: 0.97, recentSales: 20 },
+            'South Surrey': { yoyChange: 1.5, medianDOM: 32, inventory: 'balanced', avgSaleToList: 0.95, recentSales: 25 },
+            'Parksville': { yoyChange: 5.2, medianDOM: 22, inventory: 'low', avgSaleToList: 0.99, recentSales: 30 },
+            'Qualicum Beach': { yoyChange: 4.8, medianDOM: 25, inventory: 'low', avgSaleToList: 0.98, recentSales: 20 },
+            'Nanoose Bay': { yoyChange: 3.5, medianDOM: 30, inventory: 'low', avgSaleToList: 0.97, recentSales: 12 },
+            'Lantzville': { yoyChange: 4.0, medianDOM: 28, inventory: 'low', avgSaleToList: 0.97, recentSales: 10 },
+            'Nanaimo': { yoyChange: 3.8, medianDOM: 20, inventory: 'balanced', avgSaleToList: 0.98, recentSales: 55 },
+            'Courtenay': { yoyChange: 4.5, medianDOM: 22, inventory: 'low', avgSaleToList: 0.98, recentSales: 35 },
+            'Comox': { yoyChange: 3.9, medianDOM: 24, inventory: 'low', avgSaleToList: 0.97, recentSales: 25 },
+            'Cumberland': { yoyChange: 5.5, medianDOM: 18, inventory: 'low', avgSaleToList: 1.01, recentSales: 15 },
+            'Campbell River': { yoyChange: 3.2, medianDOM: 26, inventory: 'balanced', avgSaleToList: 0.96, recentSales: 28 }
+        };
         
         let filteredListings = [];
         let shortlistedIds = new Set();
@@ -1650,6 +2003,31 @@
             loadShortlist();
             initializeFilters();
             applyFilters();
+
+            // Formspree feedback form handler
+            var feedbackForm = document.getElementById('feedbackForm');
+            if (feedbackForm) {
+                feedbackForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    var status = document.getElementById('feedbackStatus');
+                    var formData = new FormData(feedbackForm);
+                    fetch(feedbackForm.action, { method: 'POST', body: formData, headers: { 'Accept': 'application/json' } })
+                    .then(function(r) {
+                        if (r.ok) {
+                            status.textContent = 'Thank you! Your feedback has been submitted.';
+                            status.style.color = '#28a745';
+                            feedbackForm.reset();
+                        } else {
+                            status.textContent = 'There was an error submitting. Please try again.';
+                            status.style.color = '#dc3545';
+                        }
+                    })
+                    .catch(function() {
+                        status.textContent = 'Network error. Please check your connection.';
+                        status.style.color = '#dc3545';
+                    });
+                });
+            }
         });
         
         function loadShortlist() {
@@ -1960,6 +2338,13 @@
             }
         }
         
+        function toggleAccordion(btn) {
+            var panel = btn.nextElementSibling;
+            var isActive = btn.classList.contains('active');
+            btn.classList.toggle('active');
+            panel.style.display = isActive ? 'none' : 'block';
+        }
+
         function renderCurrentTab() {
             const activeTab = document.querySelector('.tab-content.active');
             if (!activeTab) return;
@@ -2228,13 +2613,38 @@
                 const avgPrice = nbrListings.reduce((sum, l) => sum + l.price, 0) / nbrListings.length;
                 const avgDOM = nbrListings.reduce((sum, l) => sum + l.dom, 0) / nbrListings.length;
                 const avgScore = nbrListings.reduce((sum, l) => sum + l.score, 0) / nbrListings.length;
-                const bestScore = Math.max(...nbrListings.map(l => l.score));
-                
-                return { nbr, count: nbrListings.length, avgPrice, medianPrice, avgPpsf, avgDOM, avgScore, bestScore };
+                const trends = marketTrends[nbr] || {};
+
+                return { nbr, count: nbrListings.length, avgPrice, medianPrice, avgPpsf, avgDOM, avgScore, trends };
             });
-            
+
+            // Market summary banner
+            var lowInv = neighborhoodData.filter(d => d.trends.inventory === 'low').length;
+            var totalNbrs = neighborhoodData.length;
+            var avgYoy = neighborhoodData.filter(d => d.trends.yoyChange != null).reduce((s, d) => s + d.trends.yoyChange, 0) / (neighborhoodData.filter(d => d.trends.yoyChange != null).length || 1);
+            var hottest = neighborhoodData.filter(d => d.trends.yoyChange != null).sort((a, b) => b.trends.yoyChange - a.trends.yoyChange)[0];
+            var banner = document.getElementById('marketSummaryBanner');
+            var bannerContent = document.getElementById('marketSummaryContent');
+            if (totalNbrs > 0) {
+                banner.style.display = 'block';
+                bannerContent.innerHTML = '<div><strong>' + avgYoy.toFixed(1) + '%</strong><br>Avg YoY Price Change</div>' +
+                    '<div><strong>' + lowInv + '/' + totalNbrs + '</strong><br>Low Inventory Areas</div>' +
+                    (hottest ? '<div><strong>' + hottest.nbr + '</strong><br>Fastest Appreciation (' + hottest.trends.yoyChange + '%)</div>' : '') +
+                    '<div><strong>' + filteredListings.length + '</strong><br>Active Listings</div>';
+            } else {
+                banner.style.display = 'none';
+            }
+
             let tableHtml = '';
             neighborhoodData.forEach(data => {
+                var yoy = data.trends.yoyChange;
+                var yoyStr = yoy != null ? ((yoy >= 0 ? '+' : '') + yoy.toFixed(1) + '%') : 'N/A';
+                var yoyColor = yoy > 0 ? '#28a745' : (yoy < 0 ? '#dc3545' : '#666');
+                var yoyArrow = yoy > 0 ? '&#9650;' : (yoy < 0 ? '&#9660;' : '&#9644;');
+                var stl = data.trends.avgSaleToList;
+                var stlStr = stl ? (stl * 100).toFixed(0) + '%' : 'N/A';
+                var inv = data.trends.inventory || 'N/A';
+                var invColor = inv === 'low' ? '#dc3545' : (inv === 'high' ? '#28a745' : '#fd7e14');
                 tableHtml += `
                     <tr onclick="filterByNeighborhood('${data.nbr}')">
                         <td><span class="neighborhood-name">${data.nbr}</span></td>
@@ -2243,15 +2653,17 @@
                         <td>${formatPrice(data.medianPrice)}</td>
                         <td>${Math.round(data.avgPpsf)}</td>
                         <td>${Math.round(data.avgDOM)}</td>
+                        <td style="color:${yoyColor};font-weight:600"><span style="font-size:10px">${yoyArrow}</span> ${yoyStr}</td>
+                        <td>${stlStr}</td>
+                        <td><span style="background:${invColor};color:white;padding:2px 8px;border-radius:10px;font-size:11px;text-transform:capitalize">${inv}</span></td>
                         <td>${Math.round(data.avgScore)}</td>
-                        <td>${Math.round(data.bestScore)}</td>
                     </tr>
                 `;
             });
             document.getElementById('neighborhoodTableBody').innerHTML = tableHtml;
-            
+
             if (!chartsInitialized['neighborhood']) {
-                const ctx = document.getElementById('neighborhoodChart').getContext('2d');
+                var ctx = document.getElementById('neighborhoodChart').getContext('2d');
                 new Chart(ctx, {
                     type: 'bar',
                     data: {
@@ -2267,17 +2679,37 @@
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
-                        plugins: {
-                            legend: { display: false }
-                        },
+                        plugins: { legend: { display: false } },
                         scales: {
                             y: {
                                 beginAtZero: true,
-                                ticks: {
-                                    callback: function(value) {
-                                        return '$' + (value / 1000000).toFixed(1) + 'M';
-                                    }
-                                }
+                                ticks: { callback: function(value) { return '$' + (value / 1000000).toFixed(1) + 'M'; } }
+                            }
+                        }
+                    }
+                });
+
+                var ctx2 = document.getElementById('yoyChart').getContext('2d');
+                var yoyData = neighborhoodData.filter(d => d.trends.yoyChange != null);
+                new Chart(ctx2, {
+                    type: 'bar',
+                    data: {
+                        labels: yoyData.map(d => d.nbr),
+                        datasets: [{
+                            label: 'YoY Price Change %',
+                            data: yoyData.map(d => d.trends.yoyChange),
+                            backgroundColor: yoyData.map(d => d.trends.yoyChange >= 0 ? 'rgba(40, 167, 69, 0.7)' : 'rgba(220, 53, 69, 0.7)'),
+                            borderColor: yoyData.map(d => d.trends.yoyChange >= 0 ? '#28a745' : '#dc3545'),
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            y: {
+                                ticks: { callback: function(value) { return value + '%'; } }
                             }
                         }
                     }
@@ -2449,6 +2881,19 @@
             filteredListings.forEach(listing => {
                 select.innerHTML += `<option value="${listing.listingIndex}">${listing.addr} - ${formatPrice(listing.price)}</option>`;
             });
+            // Restore saved buyer info from localStorage
+            var savedName = localStorage.getItem('buyerName');
+            var savedEmail = localStorage.getItem('buyerEmail');
+            var savedCompany = localStorage.getItem('buyerCompany');
+            if (savedName) document.getElementById('buyerName').value = savedName;
+            if (savedEmail) document.getElementById('buyerEmail').value = savedEmail;
+            if (savedCompany) document.getElementById('buyerCompany').value = savedCompany;
+        }
+
+        function saveBuyerInfo() {
+            localStorage.setItem('buyerName', document.getElementById('buyerName').value);
+            localStorage.setItem('buyerEmail', document.getElementById('buyerEmail').value);
+            localStorage.setItem('buyerCompany', document.getElementById('buyerCompany').value);
         }
         
         function updateOfferPreview() {
@@ -3098,6 +3543,10 @@ Competitive: ${formatPrice(offers.competitive)}`;
             const subjectDate = document.getElementById('offerSubjectDate').value;
             const irrevocDate = document.getElementById('offerIrrevocDate').value;
             const agentName = document.getElementById('offerAgentName').value;
+            const buyerName = document.getElementById('buyerName').value.trim() || 'Buyer Name';
+            const buyerEmail = document.getElementById('buyerEmail').value.trim() || '';
+            const buyerCompany = document.getElementById('buyerCompany').value.trim();
+            const buyerDisplay = buyerCompany ? buyerCompany + ' (c/o ' + buyerName + ')' : buyerName;
             const sigImg = localStorage.getItem('offerSignatureImg');
 
             const subjects = [];
@@ -3172,7 +3621,7 @@ Competitive: ${formatPrice(offers.competitive)}`;
             doc.setFontSize(8);
             doc.setFont('helvetica', 'normal');
             doc.text('Province of British Columbia', margin, 17);
-            doc.text('Patrick Novak  |  patricknovak1@gmail.com', pageW - margin, 14, {align: 'right'});
+            doc.text(buyerName + (buyerEmail ? '  |  ' + buyerEmail : ''), pageW - margin, 14, {align: 'right'});
             y = 32;
 
             // ===== DATE & RECIPIENT =====
@@ -3189,7 +3638,7 @@ Competitive: ${formatPrice(offers.competitive)}`;
             // ===== PREAMBLE =====
             y = addText('Dear ' + agentName.split(' ')[0] + ',', margin, y, {fontSize: 10});
             y += 3;
-            const intro = 'I, Patrick Novak (the "Buyer"), hereby submit this written offer to purchase the below-described property. This offer is made in good faith, and I am financially prepared to close on terms acceptable to both parties. Please find the details of my offer below.';
+            const intro = 'I, ' + buyerDisplay + ' (the "Buyer"), hereby submit this written offer to purchase the below-described property. This offer is made in good faith, and I am financially prepared to close on terms acceptable to both parties. Please find the details of my offer below.';
             y = addText(intro, margin, y, {fontSize: 9.5});
             y += 5;
 
@@ -3202,8 +3651,8 @@ Competitive: ${formatPrice(offers.competitive)}`;
                 head: [['Term', 'Details']],
                 headStyles: { fillColor: [55, 90, 127], fontSize: 9, fontStyle: 'bold', textColor: [255,255,255] },
                 body: [
-                    ['Buyer (Purchaser)', 'Patrick Novak'],
-                    ['Buyer Contact', 'patricknovak1@gmail.com'],
+                    ['Buyer (Purchaser)', buyerDisplay],
+                    ['Buyer Contact', buyerEmail],
                     ['Property Address', fullAddr],
                     ['Property Type', listing.type + (listing.beds > 0 ? ' - ' + listing.beds + ' bed / ' + listing.baths + ' bath' + (listing.sqft > 0 ? ' / ' + listing.sqft.toLocaleString() + ' sqft' : '') : '')],
                     ['Legal Description', 'To be confirmed via title search prior to subject removal'],
@@ -3361,9 +3810,9 @@ Competitive: ${formatPrice(offers.competitive)}`;
             doc.setDrawColor(0);
             doc.line(margin, y, margin + 70, y);
             y += 4;
-            y = addText('Patrick Novak (Buyer)', margin, y, {fontSize: 10, bold: true});
+            y = addText(buyerDisplay + ' (Buyer)', margin, y, {fontSize: 10, bold: true});
             y = addText('Date: ' + dateStr, margin, y, {fontSize: 9});
-            y = addText('Email: patricknovak1@gmail.com', margin, y, {fontSize: 9, color: [100, 100, 100]});
+            if (buyerEmail) y = addText('Email: ' + buyerEmail, margin, y, {fontSize: 9, color: [100, 100, 100]});
 
             // ===== SELLER RESPONSE FORM (new page) =====
             doc.addPage();
@@ -3512,6 +3961,8 @@ Competitive: ${formatPrice(offers.competitive)}`;
             const agentEmail = document.getElementById('offerAgentEmail').value.trim();
             const agentName = document.getElementById('offerAgentName').value.trim();
             const offerPrice = parseFloat(document.getElementById('offerPrice').value);
+            const buyerName = document.getElementById('buyerName').value.trim() || 'Buyer';
+            const buyerEmail = document.getElementById('buyerEmail').value.trim() || '';
             const fmtCur = (n) => '$' + Number(n).toLocaleString('en-US');
 
             if (!agentEmail) {
@@ -3530,8 +3981,8 @@ Competitive: ${formatPrice(offers.competitive)}`;
                 'Please find the signed offer letter attached as a PDF.\n\n' +
                 'Thank you for your time.\n\n' +
                 'Best regards,\n' +
-                'Patrick Novak\n' +
-                'patricknovak1@gmail.com'
+                buyerName + '\n' +
+                buyerEmail
             );
 
             window.open('mailto:' + agentEmail + '?subject=' + subject + '&body=' + body, '_self');
