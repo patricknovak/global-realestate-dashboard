@@ -1989,28 +1989,19 @@
                 </div>
 
                 <div class="guide-section">
-                    <button class="guide-accordion" onclick="toggleAccordion(this)">Settings &mdash; Offer Tracking (Admin)</button>
+                    <button class="guide-accordion" onclick="toggleAccordion(this)">Settings &mdash; Offer Tracking</button>
                     <div class="guide-panel">
-                        <p>Configure an endpoint to silently track when offers are generated. This allows site administrators to see who is using the offer tool and for which properties.</p>
+                        <p>When the <strong>GitHub Feedback Integration</strong> is configured (below), offer generation events are automatically tracked as GitHub Issues with the <code>offer-tracking</code> label.</p>
                         <div style="background:var(--light-gray);padding:16px;border-radius:6px;margin:12px 0;">
-                            <div class="form-group" style="margin-bottom:12px;">
-                                <label style="font-weight:600;">Offer Tracking Endpoint (Formspree / Webhook URL)</label>
-                                <div style="display:flex;gap:8px;">
-                                    <input type="text" id="trackingEndpointInput" placeholder="https://formspree.io/f/YOUR_TRACKING_FORM_ID" style="flex:1;padding:8px 12px;border:1px solid var(--border-gray);border-radius:4px;font-size:13px;">
-                                    <button class="btn-primary" onclick="saveTrackingEndpoint()" style="white-space:nowrap;">Save</button>
-                                    <button class="btn-secondary" onclick="clearTrackingEndpoint()" style="white-space:nowrap;">Clear</button>
-                                </div>
-                            </div>
-                            <div id="trackingEndpointStatus" style="font-size:12px;margin-top:8px;"></div>
+                            <div id="offerTrackingGithubStatus" style="font-size:12px;"></div>
                         </div>
-                        <p style="font-size:13px;color:#666;"><strong>How to set up tracking:</strong></p>
-                        <ol style="font-size:13px;line-height:2;padding-left:20px;color:#555;">
-                            <li>Go to <a href="https://formspree.io" target="_blank" rel="noopener">Formspree.io</a> and create a free account</li>
-                            <li>Create a new form to receive offer tracking data</li>
-                            <li>Copy the form endpoint URL (e.g. <code>https://formspree.io/f/xabc1234</code>)</li>
-                            <li>Paste it above and click Save</li>
-                        </ol>
-                        <p style="font-size:12px;color:#888;margin-top:8px;">When an offer PDF is generated, the following data is sent to your endpoint: buyer name, email, phone, company, property address, asking price, offer price, property type, and timestamp. This tracking is invisible to users. The endpoint URL is stored locally in your browser.</p>
+                        <p style="font-size:13px;color:#666;"><strong>What gets tracked:</strong></p>
+                        <ul style="font-size:13px;line-height:2;padding-left:20px;color:#555;">
+                            <li>Buyer name, email, phone, and company</li>
+                            <li>Property address, asking price, and offer price</li>
+                            <li>Property type and timestamp</li>
+                        </ul>
+                        <p style="font-size:12px;color:#888;margin-top:8px;">Each offer creates a GitHub Issue in your configured repository. Configure your GitHub token and repo in the <strong>GitHub Feedback Integration</strong> section below to activate.</p>
                     </div>
                 </div>
 
@@ -2271,7 +2262,6 @@
             initializeFilters();
             applyFilters();
             updateApiKeyStatus();
-            updateTrackingEndpointStatus();
             loadFilterPresetList();
             calcMortgage();
 
@@ -2775,31 +2765,16 @@
             if (input && GOOGLE_MAPS_API_KEY && !input.value) input.value = GOOGLE_MAPS_API_KEY;
         }
 
-        // Offer tracking endpoint functions
-        function saveTrackingEndpoint() {
-            var endpoint = document.getElementById('trackingEndpointInput').value.trim();
-            if (!endpoint) { alert('Please enter a tracking endpoint URL.'); return; }
-            localStorage.setItem('offerTrackingEndpoint', endpoint);
-            updateTrackingEndpointStatus();
-            alert('Tracking endpoint saved! Offer generation data will now be sent to this endpoint.');
-        }
-
-        function clearTrackingEndpoint() {
-            localStorage.removeItem('offerTrackingEndpoint');
-            document.getElementById('trackingEndpointInput').value = '';
-            updateTrackingEndpointStatus();
-        }
-
-        function updateTrackingEndpointStatus() {
-            var statusEl = document.getElementById('trackingEndpointStatus');
-            var endpoint = localStorage.getItem('offerTrackingEndpoint');
-            if (endpoint) {
-                if (statusEl) statusEl.innerHTML = '<span style="color:#28a745;">\u2713 Tracking endpoint configured. Offer generation data will be recorded.</span>';
+        // Offer tracking status (uses GitHub config)
+        function updateOfferTrackingStatus() {
+            var statusEl = document.getElementById('offerTrackingGithubStatus');
+            var repo = localStorage.getItem('githubFeedbackRepo');
+            var token = localStorage.getItem('githubFeedbackToken');
+            if (repo && token) {
+                if (statusEl) statusEl.innerHTML = '<span style="color:#28a745;">\u2713 Offer tracking active. Events will be created as issues in <strong>' + repo.replace(/</g, '&lt;') + '</strong>.</span>';
             } else {
-                if (statusEl) statusEl.innerHTML = '<span style="color:#999;">No tracking endpoint configured. Offer generation will not be tracked.</span>';
+                if (statusEl) statusEl.innerHTML = '<span style="color:#999;">Offer tracking inactive. Configure GitHub integration below to activate.</span>';
             }
-            var input = document.getElementById('trackingEndpointInput');
-            if (input && endpoint && !input.value) input.value = endpoint;
         }
 
         // GitHub feedback integration functions
@@ -2836,6 +2811,7 @@
             }
             var repoInput = document.getElementById('githubRepoInput');
             if (repoInput && repo && !repoInput.value) repoInput.value = repo;
+            updateOfferTrackingStatus();
         }
 
         function submitFeedbackToGitHub(form) {
@@ -2913,25 +2889,32 @@
         }
 
         function trackOfferGeneration(data) {
-            var trackingEndpoint = localStorage.getItem('offerTrackingEndpoint');
-            if (!trackingEndpoint) return;
+            var repo = localStorage.getItem('githubFeedbackRepo');
+            var token = localStorage.getItem('githubFeedbackToken');
+            if (!repo || !token) return;
 
-            var formData = new FormData();
-            formData.append('timestamp', new Date().toISOString());
-            formData.append('buyerName', data.buyerName || '');
-            formData.append('buyerEmail', data.buyerEmail || '');
-            formData.append('buyerPhone', data.buyerPhone || '');
-            formData.append('buyerCompany', data.buyerCompany || '');
-            formData.append('propertyAddress', data.propertyAddress || '');
-            formData.append('askingPrice', data.askingPrice || '');
-            formData.append('offerPrice', data.offerPrice || '');
-            formData.append('propertyType', data.propertyType || '');
-            formData.append('_subject', 'Offer Generated: ' + (data.propertyAddress || 'Unknown'));
+            var address = data.propertyAddress || 'Unknown';
+            var title = '[Offer Tracking] ' + address;
+            var body = '## Offer Generated\n\n'
+                + '| Field | Value |\n|---|---|\n'
+                + '| **Property** | ' + address + ' |\n'
+                + '| **Type** | ' + (data.propertyType || 'N/A') + ' |\n'
+                + '| **Asking Price** | ' + (data.askingPrice || 'N/A') + ' |\n'
+                + '| **Offer Price** | ' + (data.offerPrice || 'N/A') + ' |\n'
+                + '| **Buyer** | ' + (data.buyerName || 'N/A') + ' |\n'
+                + '| **Email** | ' + (data.buyerEmail || 'N/A') + ' |\n'
+                + '| **Phone** | ' + (data.buyerPhone || 'N/A') + ' |\n'
+                + '| **Company** | ' + (data.buyerCompany || 'N/A') + ' |\n'
+                + '| **Timestamp** | ' + new Date().toISOString() + ' |\n';
 
-            fetch(trackingEndpoint, {
+            fetch('https://api.github.com/repos/' + repo + '/issues', {
                 method: 'POST',
-                body: formData,
-                headers: { 'Accept': 'application/json' }
+                headers: {
+                    'Authorization': 'Bearer ' + token,
+                    'Accept': 'application/vnd.github+json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ title: title, body: body, labels: ['offer-tracking'] })
             }).catch(function() {}); // Silently fail
         }
 
