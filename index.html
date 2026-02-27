@@ -2893,6 +2893,10 @@
                                 <a onclick="window.open('${getRealtorUrl(listing)}', '_blank')">REALTOR.ca</a>
                                 <a onclick="window.open('${getGoogleMapsUrl(listing)}', '_blank')">Maps</a>
                             </div>
+                            <div style="display:flex; gap:6px; margin-top:8px;">
+                                <button onclick="showDetailModal(${listing.listingIndex})" style="flex:1;padding:6px 8px;background:var(--primary);color:white;border:none;border-radius:4px;cursor:pointer;font-size:11px;font-weight:600;">View Details</button>
+                                <button onclick="switchTab('offers');setTimeout(function(){selectPropertyForOffer(${listing.listingIndex})},150);" style="flex:1;padding:6px 8px;background:var(--success);color:white;border:none;border-radius:4px;cursor:pointer;font-size:11px;font-weight:600;">Generate Offer</button>
+                            </div>
                         </div>
                     `;
                     
@@ -3213,6 +3217,32 @@
             localStorage.setItem('buyerCompany', document.getElementById('buyerCompany').value);
         }
         
+        function selectPropertyForOffer(listingIndex) {
+            // Set the property select dropdown to the given listing index
+            var select = document.getElementById('propertySelect');
+            // Make sure the option exists
+            var found = false;
+            for (var i = 0; i < select.options.length; i++) {
+                if (select.options[i].value == listingIndex) {
+                    select.value = listingIndex;
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                // The listing may not be in filtered results; add it temporarily
+                var listing = rawListings[listingIndex];
+                var opt = document.createElement('option');
+                opt.value = listingIndex;
+                opt.textContent = listing.addr + ' - ' + formatPrice(listing.price);
+                select.appendChild(opt);
+                select.value = listingIndex;
+            }
+            updateOfferPreview();
+            // Scroll the offer form into view
+            document.getElementById('offers').scrollTop = 0;
+        }
+
         function updateOfferPreview() {
             const selectedIdx = parseInt(document.getElementById('propertySelect').value);
             const infoDiv = document.getElementById('selectedPropertyInfo');
@@ -3291,69 +3321,142 @@
                 alert('Please select a property');
                 return;
             }
-            
+
             const listing = rawListings[selectedIdx];
             const offers = calculateOffers(listing);
-            const purchaser = document.getElementById('purchaser').value;
+            const buyerName = document.getElementById('buyerName').value.trim();
+            const buyerEmail = document.getElementById('buyerEmail').value.trim();
+            const buyerPhone = document.getElementById('buyerPhone').value.trim();
+            const buyerCompany = document.getElementById('buyerCompany').value.trim();
             const notes = document.getElementById('offerNotes').value;
-            const today = new Date().toLocaleDateString();
-            
+            const city = getCityForListing(listing);
+            const fullAddr = listing.addr + ', ' + city + ', BC';
+
+            currentOfferListingIndex = selectedIdx;
+            offerPdfGenerated = false;
+
+            const today = new Date();
+            const completionDate = new Date(today); completionDate.setDate(completionDate.getDate() + 30);
+            const subjectDate = new Date(today); subjectDate.setDate(subjectDate.getDate() + 14);
+            const irrevocDate = new Date(today); irrevocDate.setDate(irrevocDate.getDate() + 2);
+            const depositDate = new Date(today); depositDate.setDate(depositDate.getDate() + 2);
+            if (depositDate.getDay() === 0) depositDate.setDate(depositDate.getDate() + 1);
+            if (depositDate.getDay() === 6) depositDate.setDate(depositDate.getDate() + 2);
+            const fmtDate = (d) => d.toISOString().split('T')[0];
+            const savedSig = localStorage.getItem('offerSignatureImg') || '';
+
             const summaryHtml = `
-                <div class="offer-display">
-                    <h3 style="color: var(--primary); margin-bottom: 16px;">Offer Summary</h3>
-                    
-                    <div style="background: white; padding: 16px; border-radius: 4px; margin-bottom: 16px;">
-                        <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
-                            <span style="font-weight: 600;">Date:</span>
-                            <span>${today}</span>
-                        </div>
-                        <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
-                            <span style="font-weight: 600;">Property:</span>
-                            <span>${listing.addr}</span>
-                        </div>
-                        <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
-                            <span style="font-weight: 600;">Purchaser:</span>
-                            <span>${purchaser}</span>
-                        </div>
-                        <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
-                            <span style="font-weight: 600;">Asking Price:</span>
-                            <span>${formatPrice(listing.price)}</span>
+                <div class="offer-display" style="max-width:100%;">
+                    <h3 style="color:var(--primary);margin-bottom:4px;">Complete Offer Builder</h3>
+                    <p style="color:#666;font-size:13px;margin-bottom:16px;">${fullAddr}</p>
+
+                    <div style="background:var(--light-gray);padding:16px;border-radius:6px;margin-bottom:16px;">
+                        <h4 style="margin:0 0 10px 0;color:var(--primary);">Property Summary</h4>
+                        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;font-size:13px;">
+                            <div><span style="color:#666;">Asking Price:</span> <strong>${formatPrice(listing.price)}</strong></div>
+                            <div><span style="color:#666;">Type:</span> <strong>${listing.type}</strong></div>
+                            <div><span style="color:#666;">Beds/Baths:</span> <strong>${listing.beds}/${listing.baths}</strong></div>
+                            <div><span style="color:#666;">SqFt:</span> <strong>${listing.sqft > 0 ? listing.sqft.toLocaleString() : 'N/A'}</strong></div>
+                            <div><span style="color:#666;">DOM:</span> <strong>${listing.dom} days</strong></div>
+                            <div><span style="color:#666;">Agent:</span> <strong>${listing.agent}</strong></div>
                         </div>
                     </div>
-                    
-                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 16px;">
-                        <div class="offer-tier-modal">
-                            <div class="offer-label">Aggressive Lowball</div>
-                            <div class="offer-value">${formatPrice(offers.aggressive)}</div>
-                            <div style="font-size: 11px; color: #666; margin-top: 4px;">
-                                Discount: ${formatPrice(listing.price - offers.aggressive)}
-                            </div>
-                        </div>
-                        <div class="offer-tier-modal">
-                            <div class="offer-label">Strategic Value</div>
-                            <div class="offer-value">${formatPrice(offers.strategic)}</div>
-                            <div style="font-size: 11px; color: #666; margin-top: 4px;">
-                                Discount: ${formatPrice(listing.price - offers.strategic)}
-                            </div>
-                        </div>
-                        <div class="offer-tier-modal">
-                            <div class="offer-label">Competitive</div>
-                            <div class="offer-value">${formatPrice(offers.competitive)}</div>
-                            <div style="font-size: 11px; color: #666; margin-top: 4px;">
-                                Discount: ${formatPrice(listing.price - offers.competitive)}
-                            </div>
+
+                    <div style="background:#e8f5e9;padding:16px;border-radius:6px;margin-bottom:16px;">
+                        <h4 style="margin:0 0 10px 0;color:var(--primary);">Buyer Information</h4>
+                        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;font-size:13px;">
+                            <div><span style="color:#666;">Name:</span> <strong>${buyerName}</strong></div>
+                            <div><span style="color:#666;">Email:</span> <strong>${buyerEmail}</strong></div>
+                            <div><span style="color:#666;">Phone:</span> <strong>${buyerPhone}</strong></div>
+                            ${buyerCompany ? '<div><span style="color:#666;">Company:</span> <strong>' + buyerCompany + '</strong></div>' : ''}
                         </div>
                     </div>
-                    
-                    ${notes ? `<div style="background: #f9f9f9; padding: 12px; border-radius: 4px; border-left: 4px solid var(--secondary);">
-                        <div style="font-weight: 600; color: var(--primary); margin-bottom: 8px;">Conditions:</div>
-                        <div style="font-size: 13px; white-space: pre-wrap;">${notes}</div>
-                    </div>` : ''}
+
+                    <div style="background:white;padding:16px;border:1px solid var(--border-gray);border-radius:6px;margin-bottom:16px;">
+                        <h4 style="margin:0 0 12px 0;color:var(--primary);">Select Offer Price</h4>
+                        <div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap;">
+                            <div class="offer-tier-btn" onclick="selectOfferTier(this,${offers.aggressive})" style="flex:1;min-width:140px;padding:12px;border:2px solid #dc3545;border-radius:6px;cursor:pointer;text-align:center;">
+                                <div style="font-weight:700;color:#dc3545;font-size:12px;">Aggressive</div>
+                                <div style="font-weight:800;font-size:16px;margin:4px 0;">${formatPrice(offers.aggressive)}</div>
+                                <div style="font-size:11px;color:#666;">${Math.round((listing.price - offers.aggressive) / listing.price * 100)}% below asking</div>
+                            </div>
+                            <div class="offer-tier-btn" onclick="selectOfferTier(this,${offers.strategic})" style="flex:1;min-width:140px;padding:12px;border:2px solid #fd7e14;border-radius:6px;cursor:pointer;text-align:center;">
+                                <div style="font-weight:700;color:#fd7e14;font-size:12px;">Strategic</div>
+                                <div style="font-weight:800;font-size:16px;margin:4px 0;">${formatPrice(offers.strategic)}</div>
+                                <div style="font-size:11px;color:#666;">${Math.round((listing.price - offers.strategic) / listing.price * 100)}% below asking</div>
+                            </div>
+                            <div class="offer-tier-btn" onclick="selectOfferTier(this,${offers.competitive})" style="flex:1;min-width:140px;padding:12px;border:2px solid #28a745;border-radius:6px;cursor:pointer;text-align:center;">
+                                <div style="font-weight:700;color:#28a745;font-size:12px;">Competitive</div>
+                                <div style="font-weight:800;font-size:16px;margin:4px 0;">${formatPrice(offers.competitive)}</div>
+                                <div style="font-size:11px;color:#666;">${Math.round((listing.price - offers.competitive) / listing.price * 100)}% below asking</div>
+                            </div>
+                        </div>
+                        <div class="offer-input-group">
+                            <label style="font-size:12px;font-weight:600;color:#555;margin-bottom:4px;display:block;">Custom Offer Amount ($)</label>
+                            <input type="number" id="offerPrice" value="${offers.strategic}" min="1" onchange="updateDeposit()" style="padding:8px 12px;border:1px solid var(--border-gray);border-radius:4px;width:100%;font-size:14px;">
+                        </div>
+                    </div>
+
+                    <div style="background:white;padding:16px;border:1px solid var(--border-gray);border-radius:6px;margin-bottom:16px;">
+                        <h4 style="margin:0 0 12px 0;color:var(--primary);">Offer Terms &amp; Dates</h4>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                            <div class="offer-input-group"><label style="font-size:12px;font-weight:600;color:#555;margin-bottom:4px;display:block;">Deposit Amount ($)</label><input type="number" id="offerDeposit" value="${Math.round(offers.strategic * 0.05)}" style="padding:8px 12px;border:1px solid var(--border-gray);border-radius:4px;width:100%;"></div>
+                            <div class="offer-input-group"><label style="font-size:12px;font-weight:600;color:#555;margin-bottom:4px;display:block;">Deposit Held By</label><input type="text" id="offerDepositTrustee" value="Buyer's solicitor in trust" style="padding:8px 12px;border:1px solid var(--border-gray);border-radius:4px;width:100%;"></div>
+                            <div class="offer-input-group"><label style="font-size:12px;font-weight:600;color:#555;margin-bottom:4px;display:block;">Deposit Delivery Date</label><input type="date" id="offerDepositDate" value="${fmtDate(depositDate)}" style="padding:8px 12px;border:1px solid var(--border-gray);border-radius:4px;width:100%;"></div>
+                            <div class="offer-input-group"><label style="font-size:12px;font-weight:600;color:#555;margin-bottom:4px;display:block;">Completion Date</label><input type="date" id="offerCompletionDate" value="${fmtDate(completionDate)}" style="padding:8px 12px;border:1px solid var(--border-gray);border-radius:4px;width:100%;"></div>
+                            <div class="offer-input-group"><label style="font-size:12px;font-weight:600;color:#555;margin-bottom:4px;display:block;">Possession Date</label><input type="date" id="offerPossessionDate" value="${fmtDate(completionDate)}" style="padding:8px 12px;border:1px solid var(--border-gray);border-radius:4px;width:100%;"></div>
+                            <div class="offer-input-group"><label style="font-size:12px;font-weight:600;color:#555;margin-bottom:4px;display:block;">Subject Removal Date</label><input type="date" id="offerSubjectDate" value="${fmtDate(subjectDate)}" style="padding:8px 12px;border:1px solid var(--border-gray);border-radius:4px;width:100%;"></div>
+                            <div class="offer-input-group"><label style="font-size:12px;font-weight:600;color:#555;margin-bottom:4px;display:block;">Irrevocable Until</label><input type="date" id="offerIrrevocDate" value="${fmtDate(irrevocDate)}" style="padding:8px 12px;border:1px solid var(--border-gray);border-radius:4px;width:100%;"></div>
+                        </div>
+                    </div>
+
+                    <div style="background:white;padding:16px;border:1px solid var(--border-gray);border-radius:6px;margin-bottom:16px;">
+                        <h4 style="margin:0 0 12px 0;color:var(--primary);">Subject Conditions</h4>
+                        <div class="subject-checks" style="display:grid;gap:8px;font-size:13px;">
+                            <label style="display:flex;align-items:flex-start;gap:8px;"><input type="checkbox" class="subject-cb" value="Subject to satisfactory home inspection by a qualified inspector at Buyer's expense, to be completed within the subject removal period." checked> Home Inspection</label>
+                            <label style="display:flex;align-items:flex-start;gap:8px;"><input type="checkbox" class="subject-cb" value="Subject to Buyer arranging satisfactory financing within the subject removal period."> Financing</label>
+                            <label style="display:flex;align-items:flex-start;gap:8px;"><input type="checkbox" class="subject-cb" value="Subject to Buyer's solicitor approval of title search within the subject removal period." checked> Title Review</label>
+                            <label style="display:flex;align-items:flex-start;gap:8px;"><input type="checkbox" class="subject-cb" value="Subject to Buyer's lawyer reviewing and approving the Contract of Purchase and Sale within the subject removal period."> Lawyer Review</label>
+                            ${listing.type === 'Apt/Condo' || listing.type === 'Townhouse' ? '<label style="display:flex;align-items:flex-start;gap:8px;"><input type="checkbox" class="subject-cb" value="Subject to Buyer\\\'s review and approval of strata documents including minutes, bylaws, financials, depreciation report, and Form B within the subject removal period." checked> Strata Docs Review</label><label style="display:flex;align-items:flex-start;gap:8px;"><input type="checkbox" class="subject-cb" value="Subject to Buyer\\\'s review and approval of the strata corporation\\\'s current insurance and coverage."> Strata Insurance</label>' : ''}
+                            <label style="display:flex;align-items:flex-start;gap:8px;"><input type="checkbox" class="subject-cb" value="Subject to Buyer's review and approval of a current property appraisal."> Property Appraisal</label>
+                            <label style="display:flex;align-items:flex-start;gap:8px;"><input type="checkbox" class="subject-cb" value="Subject to satisfactory environmental assessment at Buyer's expense."> Environmental Assessment</label>
+                        </div>
+                        <div class="offer-input-group" style="margin-top:10px;">
+                            <label style="font-size:12px;font-weight:600;color:#555;margin-bottom:4px;display:block;">Additional Conditions (one per line)</label>
+                            <textarea id="offerCustomConditions" rows="2" placeholder="Enter any custom conditions..." style="padding:8px 12px;border:1px solid var(--border-gray);border-radius:4px;width:100%;font-size:13px;">${notes || ''}</textarea>
+                        </div>
+                    </div>
+
+                    <div style="background:white;padding:16px;border:1px solid var(--border-gray);border-radius:6px;margin-bottom:16px;">
+                        <h4 style="margin:0 0 12px 0;color:var(--primary);">Listing Agent Contact</h4>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                            <div class="offer-input-group"><label style="font-size:12px;font-weight:600;color:#555;margin-bottom:4px;display:block;">Agent Name</label><input type="text" id="offerAgentName" value="${listing.agent.split(',')[0].trim()}" style="padding:8px 12px;border:1px solid var(--border-gray);border-radius:4px;width:100%;"></div>
+                            <div class="offer-input-group"><label style="font-size:12px;font-weight:600;color:#555;margin-bottom:4px;display:block;">Agent Email</label><input type="email" id="offerAgentEmail" placeholder="agent@brokerage.com" style="padding:8px 12px;border:1px solid var(--border-gray);border-radius:4px;width:100%;"></div>
+                        </div>
+                    </div>
+
+                    <div style="background:white;padding:16px;border:1px solid var(--border-gray);border-radius:6px;margin-bottom:16px;">
+                        <h4 style="margin:0 0 12px 0;color:var(--primary);">Your Signature</h4>
+                        <div id="sigPreview" style="border:2px dashed var(--border-gray);border-radius:6px;padding:20px;text-align:center;margin-bottom:10px;">
+                            ${savedSig ? '<img src="' + savedSig + '" alt="Signature" style="max-height:60px;">' : '<span style="color:#999;">No signature uploaded. Click below to upload.</span>'}
+                        </div>
+                        <div style="display:flex;gap:10px;">
+                            <label style="padding:8px 16px;background:#f0f0f0;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;text-align:center;">Upload Signature Image<input type="file" accept="image/*" onchange="handleSigUpload(event)" style="display:none;"></label>
+                            ${savedSig ? '<button onclick="clearSignature()" style="padding:8px 16px;background:none;border:1px solid #dc3545;color:#dc3545;border-radius:6px;cursor:pointer;font-size:13px;">Clear</button>' : ''}
+                        </div>
+                    </div>
+
+                    <div style="display:flex;gap:12px;margin-top:20px;">
+                        <button onclick="generateOfferPDF()" style="flex:1;padding:14px;background:var(--primary);color:white;border:none;border-radius:6px;font-size:15px;font-weight:700;cursor:pointer;">Generate PDF Offer</button>
+                        <button id="emailAgentBtn" onclick="emailOfferToAgent()" style="flex:1;padding:14px;background:var(--secondary);color:white;border:none;border-radius:6px;font-size:15px;font-weight:700;cursor:pointer;opacity:0.5;" disabled title="Generate PDF first">Email to Agent</button>
+                    </div>
+                    <p id="offerStatus" style="text-align:center;margin-top:10px;font-size:13px;color:#666;"></p>
                 </div>
             `;
-            
+
             document.getElementById('offerSummary').innerHTML = summaryHtml;
             document.getElementById('offerSummary').style.display = 'block';
+            document.getElementById('offerSummary').scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
         
         function initializeShortlistTab() {
@@ -4256,6 +4359,12 @@ Competitive: ${formatPrice(offers.competitive)}`;
             subjectDate.setDate(subjectDate.getDate() + 14);
             const irrevocDate = new Date(today);
             irrevocDate.setDate(irrevocDate.getDate() + 2);
+            // Deposit delivery date: 2 business days after today
+            const depositDate = new Date(today);
+            depositDate.setDate(depositDate.getDate() + 2);
+            // Skip weekends
+            if (depositDate.getDay() === 0) depositDate.setDate(depositDate.getDate() + 1);
+            if (depositDate.getDay() === 6) depositDate.setDate(depositDate.getDate() + 2);
 
             const fmtDate = (d) => d.toISOString().split('T')[0];
             const savedSig = localStorage.getItem('offerSignatureImg') || '';
@@ -4311,6 +4420,15 @@ Competitive: ${formatPrice(offers.competitive)}`;
                         <div class="offer-input-group">
                             <label>Deposit Held By</label>
                             <input type="text" id="offerDepositTrustee" value="Buyer's solicitor in trust">
+                        </div>
+                    </div>
+                    <div class="offer-input-row">
+                        <div class="offer-input-group">
+                            <label>Deposit Delivery Date</label>
+                            <input type="date" id="offerDepositDate" value="${fmtDate(depositDate)}">
+                        </div>
+                        <div class="offer-input-group" style="display:flex;align-items:flex-end;">
+                            <span style="font-size:11px;color:#666;padding-bottom:8px;">Date by which deposit must be delivered to trustee</span>
                         </div>
                     </div>
                     <div class="offer-input-row">
@@ -4440,6 +4558,7 @@ Competitive: ${formatPrice(offers.competitive)}`;
             const possessionDate = document.getElementById('offerPossessionDate').value;
             const subjectDate = document.getElementById('offerSubjectDate').value;
             const irrevocDate = document.getElementById('offerIrrevocDate').value;
+            const depositDeliveryDate = document.getElementById('offerDepositDate') ? document.getElementById('offerDepositDate').value : '';
             const agentName = document.getElementById('offerAgentName').value;
             const buyerName = document.getElementById('buyerName').value.trim() || 'Buyer Name';
             const buyerEmail = document.getElementById('buyerEmail').value.trim() || '';
@@ -4590,7 +4709,7 @@ Competitive: ${formatPrice(offers.competitive)}`;
                 body: [
                     ['Offer Price', fmtCur(offerPrice)],
                     ['Deposit Amount', fmtCur(deposit)],
-                    ['Deposit Delivery', 'Within 24 hours of acceptance by all parties, to be held by ' + depositTrustee],
+                    ['Deposit Delivery', (depositDeliveryDate ? 'On or before ' + fmtDt(depositDeliveryDate) : 'Within 24 hours of acceptance') + ', to be held by ' + depositTrustee],
                     ['Balance of Purchase Price', fmtCur(offerPrice - deposit) + ' due on Completion Date'],
                     ['Property Transfer Tax', 'Buyer acknowledges responsibility for BC Property Transfer Tax payable on completion'],
                     ['GST', 'If applicable, included in or in addition to the Purchase Price as required by law'],
@@ -4685,7 +4804,7 @@ Competitive: ${formatPrice(offers.competitive)}`;
             // ===== SECTION 7: FINANCING =====
             const secNum7 = secNum6 + 1;
             y = addSectionHeading(secNum7 + '. FINANCING AND ABILITY TO CLOSE', y);
-            y = addText('The Buyer confirms financial capacity to complete this purchase and is prepared to provide proof of funds or a mortgage pre-approval letter upon request. The deposit of ' + fmtCur(deposit) + ' will be delivered to ' + depositTrustee + ' within 24 hours of acceptance by all parties.', margin, y, {fontSize: 9.5});
+            y = addText('The Buyer confirms financial capacity to complete this purchase and is prepared to provide proof of funds or a mortgage pre-approval letter upon request. The deposit of ' + fmtCur(deposit) + ' will be delivered to ' + depositTrustee + (depositDeliveryDate ? ' on or before ' + fmtDt(depositDeliveryDate) + '.' : ' within 24 hours of acceptance by all parties.'), margin, y, {fontSize: 9.5});
             y += 4;
 
             // ===== SECTION 8: BUYER ACKNOWLEDGMENTS =====
@@ -4943,7 +5062,7 @@ Competitive: ${formatPrice(offers.competitive)}`;
             checklistHtml += '<label style="display:block;cursor:pointer;"><input type="checkbox" style="margin-right:8px;"> If accepted: retain a BC lawyer/notary immediately</label>';
             checklistHtml += '<label style="display:block;cursor:pointer;"><input type="checkbox" style="margin-right:8px;"> Arrange home inspection within subject period</label>';
             checklistHtml += '<label style="display:block;cursor:pointer;"><input type="checkbox" style="margin-right:8px;"> Confirm mortgage financing / proof of funds</label>';
-            checklistHtml += '<label style="display:block;cursor:pointer;"><input type="checkbox" style="margin-right:8px;"> Deliver deposit to trustee within 24 hours of acceptance</label>';
+            checklistHtml += '<label style="display:block;cursor:pointer;"><input type="checkbox" style="margin-right:8px;"> Deliver deposit to trustee by the deposit delivery date</label>';
             checklistHtml += '<label style="display:block;cursor:pointer;"><input type="checkbox" style="margin-right:8px;"> Remove subjects by the subject removal date</label>';
             checklistHtml += '<label style="display:block;cursor:pointer;"><input type="checkbox" style="margin-right:8px;"> Complete final walk-through before possession</label>';
             checklistHtml += '</div></div>';
