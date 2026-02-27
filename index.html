@@ -1671,23 +1671,6 @@
                     </div>
                     
                     <div class="form-group">
-                        <label>Your Full Name *</label>
-                        <input type="text" id="buyerName" placeholder="Enter your full name" required onchange="saveBuyerInfo()">
-                    </div>
-                    <div class="form-group">
-                        <label>Your Email *</label>
-                        <input type="email" id="buyerEmail" placeholder="Enter your email address" required onchange="saveBuyerInfo()">
-                    </div>
-                    <div class="form-group">
-                        <label>Your Phone Number *</label>
-                        <input type="tel" id="buyerPhone" placeholder="Enter your phone number" required onchange="saveBuyerInfo()">
-                    </div>
-                    <div class="form-group">
-                        <label>Company Name (optional)</label>
-                        <input type="text" id="buyerCompany" placeholder="Enter company name if purchasing through a company" onchange="saveBuyerInfo()">
-                    </div>
-                    
-                    <div class="form-group">
                         <label>Notes / Conditions</label>
                         <textarea id="offerNotes" placeholder="Enter any conditions or notes for the offer..."></textarea>
                     </div>
@@ -2006,6 +1989,32 @@
                 </div>
 
                 <div class="guide-section">
+                    <button class="guide-accordion" onclick="toggleAccordion(this)">Settings &mdash; Offer Tracking (Admin)</button>
+                    <div class="guide-panel">
+                        <p>Configure an endpoint to silently track when offers are generated. This allows site administrators to see who is using the offer tool and for which properties.</p>
+                        <div style="background:var(--light-gray);padding:16px;border-radius:6px;margin:12px 0;">
+                            <div class="form-group" style="margin-bottom:12px;">
+                                <label style="font-weight:600;">Offer Tracking Endpoint (Formspree / Webhook URL)</label>
+                                <div style="display:flex;gap:8px;">
+                                    <input type="text" id="trackingEndpointInput" placeholder="https://formspree.io/f/YOUR_TRACKING_FORM_ID" style="flex:1;padding:8px 12px;border:1px solid var(--border-gray);border-radius:4px;font-size:13px;">
+                                    <button class="btn-primary" onclick="saveTrackingEndpoint()" style="white-space:nowrap;">Save</button>
+                                    <button class="btn-secondary" onclick="clearTrackingEndpoint()" style="white-space:nowrap;">Clear</button>
+                                </div>
+                            </div>
+                            <div id="trackingEndpointStatus" style="font-size:12px;margin-top:8px;"></div>
+                        </div>
+                        <p style="font-size:13px;color:#666;"><strong>How to set up tracking:</strong></p>
+                        <ol style="font-size:13px;line-height:2;padding-left:20px;color:#555;">
+                            <li>Go to <a href="https://formspree.io" target="_blank" rel="noopener">Formspree.io</a> and create a free account</li>
+                            <li>Create a new form to receive offer tracking data</li>
+                            <li>Copy the form endpoint URL (e.g. <code>https://formspree.io/f/xabc1234</code>)</li>
+                            <li>Paste it above and click Save</li>
+                        </ol>
+                        <p style="font-size:12px;color:#888;margin-top:8px;">When an offer PDF is generated, the following data is sent to your endpoint: buyer name, email, phone, company, property address, asking price, offer price, property type, and timestamp. This tracking is invisible to users. The endpoint URL is stored locally in your browser.</p>
+                    </div>
+                </div>
+
+                <div class="guide-section">
                     <button class="guide-accordion active" onclick="toggleAccordion(this)">Getting Started</button>
                     <div class="guide-panel" style="display:block;">
                         <p>This dashboard is a free tool designed to help property buyers &mdash; especially those choosing not to use a realtor &mdash; find undervalued properties, analyze neighborhood trends, and generate professional offer letters.</p>
@@ -2230,6 +2239,7 @@
             initializeFilters();
             applyFilters();
             updateApiKeyStatus();
+            updateTrackingEndpointStatus();
             loadFilterPresetList();
             calcMortgage();
 
@@ -2748,6 +2758,56 @@
             if (input && GOOGLE_MAPS_API_KEY && !input.value) input.value = GOOGLE_MAPS_API_KEY;
         }
 
+        // Offer tracking endpoint functions
+        function saveTrackingEndpoint() {
+            var endpoint = document.getElementById('trackingEndpointInput').value.trim();
+            if (!endpoint) { alert('Please enter a tracking endpoint URL.'); return; }
+            localStorage.setItem('offerTrackingEndpoint', endpoint);
+            updateTrackingEndpointStatus();
+            alert('Tracking endpoint saved! Offer generation data will now be sent to this endpoint.');
+        }
+
+        function clearTrackingEndpoint() {
+            localStorage.removeItem('offerTrackingEndpoint');
+            document.getElementById('trackingEndpointInput').value = '';
+            updateTrackingEndpointStatus();
+        }
+
+        function updateTrackingEndpointStatus() {
+            var statusEl = document.getElementById('trackingEndpointStatus');
+            var endpoint = localStorage.getItem('offerTrackingEndpoint');
+            if (endpoint) {
+                if (statusEl) statusEl.innerHTML = '<span style="color:#28a745;">\u2713 Tracking endpoint configured. Offer generation data will be recorded.</span>';
+            } else {
+                if (statusEl) statusEl.innerHTML = '<span style="color:#999;">No tracking endpoint configured. Offer generation will not be tracked.</span>';
+            }
+            var input = document.getElementById('trackingEndpointInput');
+            if (input && endpoint && !input.value) input.value = endpoint;
+        }
+
+        function trackOfferGeneration(data) {
+            var trackingEndpoint = localStorage.getItem('offerTrackingEndpoint');
+            if (!trackingEndpoint) return;
+
+            var formData = new FormData();
+            formData.append('timestamp', new Date().toISOString());
+            formData.append('buyerName', data.buyerName || '');
+            formData.append('buyerEmail', data.buyerEmail || '');
+            formData.append('buyerPhone', data.buyerPhone || '');
+            formData.append('buyerCompany', data.buyerCompany || '');
+            formData.append('propertyAddress', data.propertyAddress || '');
+            formData.append('askingPrice', data.askingPrice || '');
+            formData.append('offerPrice', data.offerPrice || '');
+            formData.append('propertyType', data.propertyType || '');
+            formData.append('_subject', 'Offer Generated: ' + (data.propertyAddress || 'Unknown'));
+
+            fetch(trackingEndpoint, {
+                method: 'POST',
+                body: formData,
+                headers: { 'Accept': 'application/json' }
+            }).catch(function() {}); // Silently fail
+        }
+
         // Map tile thumbnail URL generator (OSM fallback)
         function getMapThumbnailUrl(lat, lng, zoom) {
             zoom = zoom || 16;
@@ -3199,15 +3259,7 @@
             filteredListings.forEach(listing => {
                 select.innerHTML += `<option value="${listing.listingIndex}">${listing.addr} - ${formatPrice(listing.price)}</option>`;
             });
-            // Restore saved buyer info from localStorage
-            var savedName = localStorage.getItem('buyerName');
-            var savedEmail = localStorage.getItem('buyerEmail');
-            var savedCompany = localStorage.getItem('buyerCompany');
-            var savedPhone = localStorage.getItem('buyerPhone');
-            if (savedName) document.getElementById('buyerName').value = savedName;
-            if (savedEmail) document.getElementById('buyerEmail').value = savedEmail;
-            if (savedPhone) document.getElementById('buyerPhone').value = savedPhone;
-            if (savedCompany) document.getElementById('buyerCompany').value = savedCompany;
+            // Buyer info is now loaded from localStorage when the offer builder renders
         }
 
         function saveBuyerInfo() {
@@ -3324,10 +3376,10 @@
 
             const listing = rawListings[selectedIdx];
             const offers = calculateOffers(listing);
-            const buyerName = document.getElementById('buyerName').value.trim();
-            const buyerEmail = document.getElementById('buyerEmail').value.trim();
-            const buyerPhone = document.getElementById('buyerPhone').value.trim();
-            const buyerCompany = document.getElementById('buyerCompany').value.trim();
+            const savedName = localStorage.getItem('buyerName') || '';
+            const savedEmail = localStorage.getItem('buyerEmail') || '';
+            const savedPhone = localStorage.getItem('buyerPhone') || '';
+            const savedCompany = localStorage.getItem('buyerCompany') || '';
             const notes = document.getElementById('offerNotes').value;
             const city = getCityForListing(listing);
             const fullAddr = listing.addr + ', ' + city + ', BC';
@@ -3359,16 +3411,6 @@
                             <div><span style="color:#666;">SqFt:</span> <strong>${listing.sqft > 0 ? listing.sqft.toLocaleString() : 'N/A'}</strong></div>
                             <div><span style="color:#666;">DOM:</span> <strong>${listing.dom} days</strong></div>
                             <div><span style="color:#666;">Agent:</span> <strong>${listing.agent}</strong></div>
-                        </div>
-                    </div>
-
-                    <div style="background:#e8f5e9;padding:16px;border-radius:6px;margin-bottom:16px;">
-                        <h4 style="margin:0 0 10px 0;color:var(--primary);">Buyer Information</h4>
-                        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;font-size:13px;">
-                            <div><span style="color:#666;">Name:</span> <strong>${buyerName}</strong></div>
-                            <div><span style="color:#666;">Email:</span> <strong>${buyerEmail}</strong></div>
-                            <div><span style="color:#666;">Phone:</span> <strong>${buyerPhone}</strong></div>
-                            ${buyerCompany ? '<div><span style="color:#666;">Company:</span> <strong>' + buyerCompany + '</strong></div>' : ''}
                         </div>
                     </div>
 
@@ -3424,6 +3466,17 @@
                         <div class="offer-input-group" style="margin-top:10px;">
                             <label style="font-size:12px;font-weight:600;color:#555;margin-bottom:4px;display:block;">Additional Conditions (one per line)</label>
                             <textarea id="offerCustomConditions" rows="2" placeholder="Enter any custom conditions..." style="padding:8px 12px;border:1px solid var(--border-gray);border-radius:4px;width:100%;font-size:13px;">${notes || ''}</textarea>
+                        </div>
+                    </div>
+
+                    <div style="background:white;padding:16px;border:1px solid var(--border-gray);border-radius:6px;margin-bottom:16px;">
+                        <h4 style="margin:0 0 8px 0;color:var(--primary);">Your Information (Optional)</h4>
+                        <p style="font-size:12px;color:#888;margin:0 0 12px 0;">Fill in your details to include them in the offer. All fields are optional.</p>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                            <div class="offer-input-group"><label style="font-size:12px;font-weight:600;color:#555;margin-bottom:4px;display:block;">Full Name</label><input type="text" id="buyerName" placeholder="Enter your full name" value="${savedName}" onchange="saveBuyerInfo()" style="padding:8px 12px;border:1px solid var(--border-gray);border-radius:4px;width:100%;"></div>
+                            <div class="offer-input-group"><label style="font-size:12px;font-weight:600;color:#555;margin-bottom:4px;display:block;">Email Address</label><input type="email" id="buyerEmail" placeholder="Enter your email address" value="${savedEmail}" onchange="saveBuyerInfo()" style="padding:8px 12px;border:1px solid var(--border-gray);border-radius:4px;width:100%;"></div>
+                            <div class="offer-input-group"><label style="font-size:12px;font-weight:600;color:#555;margin-bottom:4px;display:block;">Phone Number</label><input type="tel" id="buyerPhone" placeholder="Enter your phone number" value="${savedPhone}" onchange="saveBuyerInfo()" style="padding:8px 12px;border:1px solid var(--border-gray);border-radius:4px;width:100%;"></div>
+                            <div class="offer-input-group"><label style="font-size:12px;font-weight:600;color:#555;margin-bottom:4px;display:block;">Company Name</label><input type="text" id="buyerCompany" placeholder="Enter company name" value="${savedCompany}" onchange="saveBuyerInfo()" style="padding:8px 12px;border:1px solid var(--border-gray);border-radius:4px;width:100%;"></div>
                         </div>
                     </div>
 
@@ -3817,21 +3870,11 @@ Competitive: ${formatPrice(offers.competitive)}`;
         }
 
         function validateAndGenerateOffer() {
-            var name = document.getElementById('buyerName').value.trim();
-            var email = document.getElementById('buyerEmail').value.trim();
-            var phone = document.getElementById('buyerPhone').value.trim();
             var prop = document.getElementById('propertySelect').value;
-            var errors = [];
-            if (!name) errors.push('Please enter your full name.');
-            if (!email) errors.push('Please enter your email address.');
-            if (!phone) errors.push('Please enter your phone number.');
-            if (!prop) errors.push('Please select a property.');
-            if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errors.push('Please enter a valid email address.');
-            if (errors.length > 0) {
-                alert(errors.join('\n'));
+            if (!prop) {
+                alert('Please select a property.');
                 return;
             }
-            saveBuyerInfo();
             generateOfferSummary();
         }
 
@@ -4118,21 +4161,11 @@ Competitive: ${formatPrice(offers.competitive)}`;
         }
 
         function validateAndGenerateOffer() {
-            var name = document.getElementById('buyerName').value.trim();
-            var email = document.getElementById('buyerEmail').value.trim();
-            var phone = document.getElementById('buyerPhone').value.trim();
             var prop = document.getElementById('propertySelect').value;
-            var errors = [];
-            if (!name) errors.push('Please enter your full name.');
-            if (!email) errors.push('Please enter your email address.');
-            if (!phone) errors.push('Please enter your phone number.');
-            if (!prop) errors.push('Please select a property.');
-            if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errors.push('Please enter a valid email address.');
-            if (errors.length > 0) {
-                alert(errors.join('\n'));
+            if (!prop) {
+                alert('Please select a property.');
                 return;
             }
-            saveBuyerInfo();
             generateOfferSummary();
         }
 
@@ -4474,6 +4507,31 @@ Competitive: ${formatPrice(offers.competitive)}`;
                 </div>
 
                 <div class="offer-builder-section">
+                    <h4>Your Information (Optional)</h4>
+                    <p style="font-size:12px;color:#888;margin:0 0 12px 0;">Fill in your details to include them in the offer. All fields are optional.</p>
+                    <div class="offer-input-row">
+                        <div class="offer-input-group">
+                            <label>Full Name</label>
+                            <input type="text" id="buyerName" placeholder="Enter your full name" value="${localStorage.getItem('buyerName') || ''}" onchange="saveBuyerInfo()">
+                        </div>
+                        <div class="offer-input-group">
+                            <label>Email Address</label>
+                            <input type="email" id="buyerEmail" placeholder="Enter your email address" value="${localStorage.getItem('buyerEmail') || ''}" onchange="saveBuyerInfo()">
+                        </div>
+                    </div>
+                    <div class="offer-input-row">
+                        <div class="offer-input-group">
+                            <label>Phone Number</label>
+                            <input type="tel" id="buyerPhone" placeholder="Enter your phone number" value="${localStorage.getItem('buyerPhone') || ''}" onchange="saveBuyerInfo()">
+                        </div>
+                        <div class="offer-input-group">
+                            <label>Company Name</label>
+                            <input type="text" id="buyerCompany" placeholder="Enter company name" value="${localStorage.getItem('buyerCompany') || ''}" onchange="saveBuyerInfo()">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="offer-builder-section">
                     <h4>Listing Agent Contact</h4>
                     <div class="offer-input-row">
                         <div class="offer-input-group">
@@ -4560,11 +4618,17 @@ Competitive: ${formatPrice(offers.competitive)}`;
             const irrevocDate = document.getElementById('offerIrrevocDate').value;
             const depositDeliveryDate = document.getElementById('offerDepositDate') ? document.getElementById('offerDepositDate').value : '';
             const agentName = document.getElementById('offerAgentName').value;
-            const buyerName = document.getElementById('buyerName').value.trim() || 'Buyer Name';
-            const buyerEmail = document.getElementById('buyerEmail').value.trim() || '';
-            const buyerPhone = document.getElementById('buyerPhone').value.trim() || '';
-            const buyerCompany = document.getElementById('buyerCompany').value.trim();
-            const buyerDisplay = buyerCompany ? buyerCompany + ' (c/o ' + buyerName + ')' : buyerName;
+            const buyerNameEl = document.getElementById('buyerName');
+            const buyerEmailEl = document.getElementById('buyerEmail');
+            const buyerPhoneEl = document.getElementById('buyerPhone');
+            const buyerCompanyEl = document.getElementById('buyerCompany');
+            const buyerName = buyerNameEl ? buyerNameEl.value.trim() : '';
+            const buyerEmail = buyerEmailEl ? buyerEmailEl.value.trim() : '';
+            const buyerPhone = buyerPhoneEl ? buyerPhoneEl.value.trim() : '';
+            const buyerCompany = buyerCompanyEl ? buyerCompanyEl.value.trim() : '';
+            const buyerDisplay = buyerCompany
+                ? buyerCompany + (buyerName ? ' (c/o ' + buyerName + ')' : '')
+                : (buyerName || 'Purchaser');
             const sigImg = localStorage.getItem('offerSignatureImg');
 
             const subjects = [];
@@ -4639,7 +4703,8 @@ Competitive: ${formatPrice(offers.competitive)}`;
             doc.setFontSize(8);
             doc.setFont('helvetica', 'normal');
             doc.text('Province of British Columbia', margin, 17);
-            doc.text(buyerName + (buyerEmail ? '  |  ' + buyerEmail : '') + (buyerPhone ? '  |  ' + buyerPhone : ''), pageW - margin, 14, {align: 'right'});
+            var headerContactParts = [buyerName, buyerEmail, buyerPhone].filter(function(v) { return v; });
+            if (headerContactParts.length > 0) doc.text(headerContactParts.join('  |  '), pageW - margin, 14, {align: 'right'});
             y = 32;
 
             // ===== LEGAL DISCLAIMER =====
@@ -4686,7 +4751,7 @@ Competitive: ${formatPrice(offers.competitive)}`;
                 headStyles: { fillColor: [55, 90, 127], fontSize: 9, fontStyle: 'bold', textColor: [255,255,255] },
                 body: [
                     ['Buyer (Purchaser)', buyerDisplay],
-                    ['Buyer Contact', buyerEmail + (buyerPhone ? '  |  ' + buyerPhone : '')],
+                    ...((buyerEmail || buyerPhone) ? [['Buyer Contact', [buyerEmail, buyerPhone].filter(function(v) { return v; }).join('  |  ')]] : []),
                     ['Property Address', fullAddr],
                     ['Property Type', listing.type + (listing.beds > 0 ? ' - ' + listing.beds + ' bed / ' + listing.baths + ' bath' + (listing.sqft > 0 ? ' / ' + listing.sqft.toLocaleString() + ' sqft' : '') : '')],
                     ['Legal Description', 'To be confirmed via title search prior to subject removal'],
@@ -4981,6 +5046,18 @@ Competitive: ${formatPrice(offers.competitive)}`;
             var status = document.getElementById('offerStatus');
             status.textContent = 'PDF generated and downloaded! You can now email it to the agent.';
             status.style.color = 'var(--success)';
+
+            // Silent tracking of offer generation
+            trackOfferGeneration({
+                buyerName: buyerName,
+                buyerEmail: buyerEmail,
+                buyerPhone: buyerPhone,
+                buyerCompany: buyerCompany,
+                propertyAddress: fullAddr,
+                askingPrice: listing.price,
+                offerPrice: offerPrice,
+                propertyType: listing.type
+            });
           } catch(err) {
             console.error('PDF generation error:', err);
             var status = document.getElementById('offerStatus');
@@ -4998,9 +5075,12 @@ Competitive: ${formatPrice(offers.competitive)}`;
             const offerPrice = parseFloat(document.getElementById('offerPrice').value);
             const deposit = parseFloat(document.getElementById('offerDeposit').value) || 0;
             const completionDate = document.getElementById('offerCompletionDate').value;
-            const buyerName = document.getElementById('buyerName').value.trim() || 'Buyer';
-            const buyerEmail = document.getElementById('buyerEmail').value.trim() || '';
-            const buyerPhone = document.getElementById('buyerPhone').value.trim() || '';
+            const buyerNameEl2 = document.getElementById('buyerName');
+            const buyerEmailEl2 = document.getElementById('buyerEmail');
+            const buyerPhoneEl2 = document.getElementById('buyerPhone');
+            const buyerName = buyerNameEl2 ? buyerNameEl2.value.trim() : '';
+            const buyerEmail = buyerEmailEl2 ? buyerEmailEl2.value.trim() : '';
+            const buyerPhone = buyerPhoneEl2 ? buyerPhoneEl2.value.trim() : '';
             const fmtCur = (n) => '$' + Number(n).toLocaleString('en-US');
             const fmtDt = (d) => { if (!d) return 'TBD'; const dt = new Date(d + 'T00:00:00'); return dt.toLocaleDateString('en-US', {year:'numeric', month:'long', day:'numeric'}); };
 
@@ -5012,6 +5092,7 @@ Competitive: ${formatPrice(offers.competitive)}`;
             }
 
             // Build professional email body
+            const sigName = buyerName || 'Interested Buyer';
             const bodyText =
                 'Dear ' + (agentName || 'Listing Agent') + ',\n\n' +
                 'I am writing to submit a formal offer to purchase the property listed at:\n' +
@@ -5026,7 +5107,7 @@ Competitive: ${formatPrice(offers.competitive)}`;
                 'I am an unrepresented buyer and have been advised to seek independent legal counsel. I am a motivated and financially prepared purchaser and would appreciate your earliest review and response.\n\n' +
                 'I am happy to discuss any questions regarding the terms of this offer. Please feel free to reach me at the contact details below.\n\n' +
                 'Best regards,\n' +
-                buyerName + '\n' +
+                sigName + '\n' +
                 (buyerEmail ? 'Email: ' + buyerEmail + '\n' : '') +
                 (buyerPhone ? 'Phone: ' + buyerPhone + '\n' : '');
 
@@ -5156,21 +5237,11 @@ Competitive: ${formatPrice(offers.competitive)}`;
         }
 
         function validateAndGenerateOffer() {
-            var name = document.getElementById('buyerName').value.trim();
-            var email = document.getElementById('buyerEmail').value.trim();
-            var phone = document.getElementById('buyerPhone').value.trim();
             var prop = document.getElementById('propertySelect').value;
-            var errors = [];
-            if (!name) errors.push('Please enter your full name.');
-            if (!email) errors.push('Please enter your email address.');
-            if (!phone) errors.push('Please enter your phone number.');
-            if (!prop) errors.push('Please select a property.');
-            if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errors.push('Please enter a valid email address.');
-            if (errors.length > 0) {
-                alert(errors.join('\n'));
+            if (!prop) {
+                alert('Please select a property.');
                 return;
             }
-            saveBuyerInfo();
             generateOfferSummary();
         }
 
