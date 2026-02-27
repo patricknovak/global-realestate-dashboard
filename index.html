@@ -1134,6 +1134,35 @@
         .guide-panel p { margin: 8px 0; }
         .guide-panel a { color: var(--primary); text-decoration: underline; }
 
+
+        /* Sortable table headers */
+        .sortable-th { cursor: pointer; user-select: none; position: relative; }
+        .sortable-th:hover { background: #e9ecef; }
+        .sortable-th::after { content: ' ⇅'; font-size: 10px; opacity: 0.4; }
+
+        /* Comparison table */
+        .comparison-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .comparison-table th { text-align: left; padding: 10px; background: var(--light-gray); font-weight: 600; color: var(--primary); white-space: nowrap; width: 140px; }
+        .comparison-table td { padding: 10px; border-bottom: 1px solid #eee; text-align: center; }
+        .comparison-table tr:hover { background: #f0f4ff; }
+        .comp-better { background: #d4edda !important; font-weight: 600; }
+        .comp-worse { background: #f8d7da !important; }
+
+        /* Score weight sliders */
+        .weight-slider { display: flex; align-items: center; gap: 8px; margin: 4px 0; font-size: 12px; }
+        .weight-slider input[type=range] { flex: 1; height: 4px; }
+        .weight-slider label { min-width: 100px; }
+        .weight-slider .weight-val { min-width: 24px; text-align: right; font-weight: 600; }
+
+        /* Print styles */
+        @media print {
+            .sidebar, .header, .stats-bar, .tabs, .filter-toggle, .pagination, footer, .modal { display: none !important; }
+            .main-content { margin: 0 !important; }
+            .tab-content.active { display: block !important; overflow: visible !important; }
+            .container { display: block !important; }
+            body { font-size: 11px; }
+        }
+
         /* Mobile Filter Toggle */
         .filter-toggle {
             display: none;
@@ -1336,6 +1365,10 @@
         <!-- Sidebar with Filters -->
         <div class="sidebar" id="filterSidebar">
             <button class="sidebar-close-btn" onclick="closeMobileSidebar()">&times;</button>
+            <h3>Search</h3>
+            <div class="filter-group">
+                <input type="text" id="searchBox" placeholder="Search address, agent, neighborhood..." oninput="applyFilters()" style="width:100%;padding:8px 10px;border:1px solid var(--border-gray);border-radius:4px;font-size:13px;">
+            </div>
             <h3>Region</h3>
             <div class="filter-group">
                 <div class="checkbox-group" id="regionFilters"></div>
@@ -1421,6 +1454,15 @@
                     <input type="number" id="scoreMax" placeholder="Max" min="0" max="100">
                 </div>
             </div>
+
+            <h3>Score Weights</h3>
+            <div class="filter-group" style="font-size:11px;">
+                <div class="weight-slider"><label>DOM</label><input type="range" id="wDOM" min="0" max="10" value="5" oninput="this.nextElementSibling.textContent=this.value;applyFilters()"><span class="weight-val">5</span></div>
+                <div class="weight-slider"><label>Price vs Benchmark</label><input type="range" id="wBench" min="0" max="10" value="5" oninput="this.nextElementSibling.textContent=this.value;applyFilters()"><span class="weight-val">5</span></div>
+                <div class="weight-slider"><label>$/SqFt</label><input type="range" id="wPPSF" min="0" max="10" value="5" oninput="this.nextElementSibling.textContent=this.value;applyFilters()"><span class="weight-val">5</span></div>
+                <div class="weight-slider"><label>Lot Size</label><input type="range" id="wLot" min="0" max="10" value="5" oninput="this.nextElementSibling.textContent=this.value;applyFilters()"><span class="weight-val">5</span></div>
+                <div class="weight-slider"><label>Property Age</label><input type="range" id="wAge" min="0" max="10" value="5" oninput="this.nextElementSibling.textContent=this.value;applyFilters()"><span class="weight-val">5</span></div>
+            </div>
             
             <h3>Sort By</h3>
             <div class="filter-group">
@@ -1438,6 +1480,12 @@
                 <button class="btn-primary" onclick="applyFilters()">Apply Filters</button>
                 <button class="btn-secondary" onclick="resetFilters()">Reset</button>
             </div>
+            <div class="button-group" style="margin-top:4px;">
+                <button class="btn-secondary" onclick="saveFilterPreset()" style="font-size:11px;">Save Preset</button>
+                <select id="filterPresets" onchange="loadFilterPreset(this.value)" style="font-size:11px;padding:6px;">
+                    <option value="">Load preset...</option>
+                </select>
+            </div>
             
             <div class="button-group">
                 <button class="btn-success" onclick="exportFilteredCSV()">Export CSV</button>
@@ -1452,7 +1500,9 @@
                 <button class="tab-button" onclick="switchTab('neighborhood')">Neighborhood Analysis</button>
                 <button class="tab-button" onclick="switchTab('deals')">Deal Analysis</button>
                 <button class="tab-button" onclick="switchTab('offers')">Offer Generator</button>
+                <button class="tab-button" onclick="switchTab('mortgage')">Calculator</button>
                 <button class="tab-button" onclick="switchTab('shortlist')">Shortlist</button>
+                <button class="tab-button" onclick="openComparisonTool()">Compare</button>
                 <button class="tab-button" onclick="switchTab('norealtorguide')">No-Realtor Guide</button>
                 <button class="tab-button" onclick="switchTab('help')">Help</button>
             </div>
@@ -1469,16 +1519,16 @@
                         <thead>
                             <tr>
                                 <th style="width: 40px;">★</th>
-                                <th>Address</th>
-                                <th>Neighborhood</th>
-                                <th>Type</th>
-                                <th>Price</th>
+                                <th class="sortable-th" onclick="sortTable('addr')">Address</th>
+                                <th class="sortable-th" onclick="sortTable('neighborhood')">Neighborhood</th>
+                                <th class="sortable-th" onclick="sortTable('type')">Type</th>
+                                <th class="sortable-th" onclick="sortTable('price-asc')">Price</th>
                                 <th>Beds/Baths</th>
-                                <th>SqFt</th>
-                                <th>$/SqFt</th>
-                                <th>DOM</th>
-                                <th>Year</th>
-                                <th>Score</th>
+                                <th class="sortable-th" onclick="sortTable('sqft')">SqFt</th>
+                                <th class="sortable-th" onclick="sortTable('ppsf-asc')">$/SqFt</th>
+                                <th class="sortable-th" onclick="sortTable('dom-desc')">DOM</th>
+                                <th class="sortable-th" onclick="sortTable('year')">Year</th>
+                                <th class="sortable-th" onclick="sortTable('score-desc')">Score</th>
                                 <th>Agg. Offer</th>
                                 <th>Agent</th>
                             </tr>
@@ -1587,7 +1637,7 @@
                         <textarea id="offerNotes" placeholder="Enter any conditions or notes for the offer..."></textarea>
                     </div>
                     
-                    <button class="btn-primary" onclick="generateOfferSummary()" style="width: auto;">Generate Offer Summary</button>
+                    <button class="btn-primary" onclick="validateAndGenerateOffer()" style="width: auto;">Generate Offer Summary</button>
                     
                     <div id="offerSummary" style="display: none; margin-top: 20px;"></div>
                 </div>
@@ -1618,6 +1668,7 @@
                                 <th>DOM</th>
                                 <th>Score</th>
                                 <th>Agg. Offer</th>
+                                <th>Notes</th>
                             </tr>
                         </thead>
                         <tbody id="shortlistTableBody">
@@ -1628,6 +1679,82 @@
                 <div id="emptyShortlist" class="empty-state">
                     <div class="empty-state-title">No Shortlisted Properties</div>
                     <p>Click the ★ icon on properties to add them to your shortlist</p>
+                </div>
+            </div>
+
+
+            <!-- Tab: Mortgage Calculator -->
+            <div id="mortgage" class="tab-content" style="overflow: auto; padding: 20px;">
+                <h2 style="margin-bottom: 20px; color: var(--primary);">Mortgage &amp; Cost Calculator</h2>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+                    <div>
+                        <h3 style="color: var(--secondary); margin-bottom: 12px;">Mortgage Details</h3>
+                        <div class="form-group">
+                            <label>Purchase Price ($)</label>
+                            <input type="number" id="mortPrice" value="900000" onchange="calcMortgage()">
+                        </div>
+                        <div class="form-group">
+                            <label>Down Payment ($)</label>
+                            <input type="number" id="mortDown" value="180000" onchange="calcMortgage()">
+                        </div>
+                        <div class="form-group">
+                            <label>Down Payment (%)</label>
+                            <input type="number" id="mortDownPct" value="20" step="0.5" onchange="document.getElementById('mortDown').value=Math.round(document.getElementById('mortPrice').value*this.value/100);calcMortgage()">
+                        </div>
+                        <div class="form-group">
+                            <label>Interest Rate (%)</label>
+                            <input type="number" id="mortRate" value="5.5" step="0.1" onchange="calcMortgage()">
+                        </div>
+                        <div class="form-group">
+                            <label>Amortization (years)</label>
+                            <select id="mortAmort" onchange="calcMortgage()">
+                                <option value="25" selected>25 years</option>
+                                <option value="30">30 years</option>
+                                <option value="20">20 years</option>
+                                <option value="15">15 years</option>
+                            </select>
+                        </div>
+                        <button class="btn-primary" onclick="calcMortgage()" style="width: auto; margin-top: 8px;">Calculate</button>
+                    </div>
+                    <div>
+                        <h3 style="color: var(--secondary); margin-bottom: 12px;">Monthly Payment Breakdown</h3>
+                        <div id="mortResults" style="font-size: 14px;">
+                            <div style="background: var(--primary); color: white; padding: 16px; border-radius: 8px; text-align: center; margin-bottom: 16px;">
+                                <div style="font-size: 12px; opacity: 0.8;">Monthly Payment</div>
+                                <div id="mortMonthly" style="font-size: 28px; font-weight: 700;">$0</div>
+                            </div>
+                            <table style="width:100%;border-collapse:collapse;font-size:13px;">
+                                <tr><td style="padding:8px;border-bottom:1px solid #eee;">Mortgage Amount</td><td id="mortAmount" style="padding:8px;text-align:right;border-bottom:1px solid #eee;font-weight:600;">$0</td></tr>
+                                <tr><td style="padding:8px;border-bottom:1px solid #eee;">Total Interest (over term)</td><td id="mortTotalInterest" style="padding:8px;text-align:right;border-bottom:1px solid #eee;font-weight:600;">$0</td></tr>
+                                <tr><td style="padding:8px;border-bottom:1px solid #eee;">Total Cost of Ownership</td><td id="mortTotalCost" style="padding:8px;text-align:right;border-bottom:1px solid #eee;font-weight:600;">$0</td></tr>
+                                <tr><td style="padding:8px;border-bottom:1px solid #eee;">CMHC Insurance</td><td id="mortCMHC" style="padding:8px;text-align:right;border-bottom:1px solid #eee;font-weight:600;">$0</td></tr>
+                            </table>
+                        </div>
+
+                        <h3 style="color: var(--secondary); margin: 24px 0 12px;">BC Property Transfer Tax</h3>
+                        <div id="pttResults" style="font-size: 13px;">
+                            <table style="width:100%;border-collapse:collapse;">
+                                <tr style="background:#e7f3ff;"><td style="padding:8px;font-weight:700;">BC Property Transfer Tax</td><td id="pttTotal" style="padding:8px;text-align:right;font-weight:700;">$0</td></tr>
+                                <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;font-size:12px;color:#666;">First $200K @ 1%</td><td id="pttTier1" style="padding:6px 8px;text-align:right;border-bottom:1px solid #eee;font-size:12px;">$0</td></tr>
+                                <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;font-size:12px;color:#666;">$200K-$2M @ 2%</td><td id="pttTier2" style="padding:6px 8px;text-align:right;border-bottom:1px solid #eee;font-size:12px;">$0</td></tr>
+                                <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;font-size:12px;color:#666;">Over $2M @ 3%</td><td id="pttTier3" style="padding:6px 8px;text-align:right;border-bottom:1px solid #eee;font-size:12px;">$0</td></tr>
+                                <tr><td style="padding:6px 8px;font-size:12px;color:#666;">Foreign Buyer Tax (20%)</td><td id="pttForeign" style="padding:6px 8px;text-align:right;font-size:12px;">N/A</td></tr>
+                            </table>
+                        </div>
+
+                        <h3 style="color: var(--secondary); margin: 24px 0 12px;">Estimated Closing Costs</h3>
+                        <div id="closingResults">
+                            <table style="width:100%;border-collapse:collapse;font-size:13px;">
+                                <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;">Property Transfer Tax</td><td id="ccPTT" style="padding:6px 8px;text-align:right;border-bottom:1px solid #eee;">$0</td></tr>
+                                <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;">Legal / Notary Fees</td><td style="padding:6px 8px;text-align:right;border-bottom:1px solid #eee;">$1,500 - $2,500</td></tr>
+                                <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;">Home Inspection</td><td style="padding:6px 8px;text-align:right;border-bottom:1px solid #eee;">$400 - $700</td></tr>
+                                <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;">Appraisal</td><td style="padding:6px 8px;text-align:right;border-bottom:1px solid #eee;">$300 - $500</td></tr>
+                                <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;">Title Insurance</td><td style="padding:6px 8px;text-align:right;border-bottom:1px solid #eee;">$200 - $400</td></tr>
+                                <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;">CMHC Insurance (if &lt;20% down)</td><td id="ccCMHC" style="padding:6px 8px;text-align:right;border-bottom:1px solid #eee;">$0</td></tr>
+                                <tr style="background:#f8d7da;font-weight:700;"><td style="padding:10px 8px;">Estimated Total Closing Costs</td><td id="ccTotal" style="padding:10px 8px;text-align:right;">$0</td></tr>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -1918,6 +2045,15 @@
         </div>
     </footer>
 
+
+    <!-- Comparison Modal -->
+    <div id="comparisonModal" class="modal" onclick="if(event.target===this)this.classList.remove('active')">
+        <div class="modal-content" style="max-width: 95vw; max-height: 92vh; overflow: auto;">
+            <button class="modal-close" onclick="document.getElementById('comparisonModal').classList.remove('active')">&times;</button>
+            <div id="comparisonBody"></div>
+        </div>
+    </div>
+
     <!-- Detail Modal -->
     <div id="detailModal" class="modal" onclick="if(event.target===this)closeDetailModal()">
         <div class="modal-content">
@@ -2003,6 +2139,8 @@
             loadShortlist();
             initializeFilters();
             applyFilters();
+            loadFilterPresetList();
+            calcMortgage();
 
             // Formspree feedback form handler
             var feedbackForm = document.getElementById('feedbackForm');
@@ -2100,58 +2238,84 @@
             });
         }
         
+        function getScoreWeights() {
+            var el;
+            el = document.getElementById('wDOM'); var wDOM = el ? parseInt(el.value) : 5;
+            el = document.getElementById('wBench'); var wBench = el ? parseInt(el.value) : 5;
+            el = document.getElementById('wPPSF'); var wPPSF = el ? parseInt(el.value) : 5;
+            el = document.getElementById('wLot'); var wLot = el ? parseInt(el.value) : 5;
+            el = document.getElementById('wAge'); var wAge = el ? parseInt(el.value) : 5;
+            return { dom: wDOM/5, bench: wBench/5, ppsf: wPPSF/5, lot: wLot/5, age: wAge/5 };
+        }
+
         function calculateScore(listing) {
+            var w = getScoreWeights();
             let score = 0;
-            if (listing.dom > 150) score += 30;
-            else if (listing.dom > 120) score += 26;
-            else if (listing.dom > 90) score += 22;
-            else if (listing.dom > 60) score += 16;
-            else if (listing.dom > 45) score += 10;
-            else if (listing.dom > 30) score += 5;
-            
+            // DOM component (max 30 * weight)
+            var domPts = 0;
+            if (listing.dom > 150) domPts = 30;
+            else if (listing.dom > 120) domPts = 26;
+            else if (listing.dom > 90) domPts = 22;
+            else if (listing.dom > 60) domPts = 16;
+            else if (listing.dom > 45) domPts = 10;
+            else if (listing.dom > 30) domPts = 5;
+            score += domPts * w.dom;
+
+            // Benchmark component (max 20 * weight)
             const benchmark = neighborhoodBenchmarks[listing.neighborhood]?.[listing.type] || 1500000;
             const premium = (listing.price / benchmark - 1) * 100;
-            if (premium < -10) score += 20;
-            else if (premium < -5) score += 16;
-            else if (premium < 0) score += 12;
-            else if (premium < 5) score += 8;
-            else if (premium < 15) score += 4;
-            
+            var benchPts = 0;
+            if (premium < -10) benchPts = 20;
+            else if (premium < -5) benchPts = 16;
+            else if (premium < 0) benchPts = 12;
+            else if (premium < 5) benchPts = 8;
+            else if (premium < 15) benchPts = 4;
+            score += benchPts * w.bench;
+
+            // $/SqFt component (max 15 * weight)
             if (listing.sqft > 0) {
                 const ppsf = listing.price / listing.sqft;
                 const nbrAvgPpsf = getNeighborhoodAvgPpsf(listing.neighborhood, listing.type);
                 if (nbrAvgPpsf > 0) {
                     const pctDiff = (ppsf / nbrAvgPpsf - 1) * 100;
-                    if (pctDiff < -15) score += 15;
-                    else if (pctDiff < -5) score += 10;
-                    else if (pctDiff < 5) score += 5;
+                    var ppsfPts = 0;
+                    if (pctDiff < -15) ppsfPts = 15;
+                    else if (pctDiff < -5) ppsfPts = 10;
+                    else if (pctDiff < 5) ppsfPts = 5;
+                    score += ppsfPts * w.ppsf;
                 }
             }
-            
+
             score += trendBonus[listing.neighborhood] || 5;
-            
+
+            // Lot component (max 10 * weight)
             if (listing.lot) {
                 const parts = listing.lot.split('x');
                 if (parts.length === 2) {
                     const area = parseInt(parts[0]) * parseInt(parts[1]);
-                    if (area > 15000) score += 10;
-                    else if (area > 8000) score += 7;
-                    else if (area > 5000) score += 4;
-                    else score += 2;
+                    var lotPts = 0;
+                    if (area > 15000) lotPts = 10;
+                    else if (area > 8000) lotPts = 7;
+                    else if (area > 5000) lotPts = 4;
+                    else lotPts = 2;
+                    score += lotPts * w.lot;
                 }
             }
-            
+
             if (listing.waterView) score += 5;
-            
+
+            // Age component (max 10 * weight)
             if (listing.yearBuilt) {
                 const age = 2026 - listing.yearBuilt;
-                if (age < 5) score += 10;
-                else if (age < 15) score += 7;
-                else if (age < 30) score += 4;
-                else if (age < 50) score += 2;
+                var agePts = 0;
+                if (age < 5) agePts = 10;
+                else if (age < 15) agePts = 7;
+                else if (age < 30) agePts = 4;
+                else if (age < 50) agePts = 2;
+                score += agePts * w.age;
             }
-            
-            return Math.min(100, Math.max(0, score));
+
+            return Math.min(100, Math.max(0, Math.round(score)));
         }
         
         function getNeighborhoodAvgPpsf(neighborhood, type) {
@@ -2226,11 +2390,13 @@
             const scoreMax = parseFloat(document.getElementById('scoreMax').value) || 100;
             const filterWaterView = document.getElementById('filterWaterView').checked;
             const filterHasLot = document.getElementById('filterHasLot').checked;
-            
+            const searchTerm = (document.getElementById('searchBox').value || '').toLowerCase().trim();
+
             filteredListings = rawListings.filter((listing, idx) => {
                 listing.score = calculateScore(listing);
                 listing.listingIndex = idx;
-                
+
+                if (searchTerm && !(listing.addr.toLowerCase().includes(searchTerm) || listing.neighborhood.toLowerCase().includes(searchTerm) || listing.agent.toLowerCase().includes(searchTerm) || listing.type.toLowerCase().includes(searchTerm) || listing.region.toLowerCase().includes(searchTerm))) return false;
                 if (selectedRegions.length > 0 && !selectedRegions.includes(listing.region)) return false;
                 if (selectedNeighborhoods.length > 0 && !selectedNeighborhoods.includes(listing.neighborhood)) return false;
                 if (selectedTypes.length > 0 && !selectedTypes.includes(listing.type)) return false;
@@ -2333,6 +2499,7 @@
                 if (tabName === 'neighborhood') initializeNeighborhoodTab();
                 if (tabName === 'deals') initializeDealsTab();
                 if (tabName === 'offers') initializeOffersTab();
+                if (tabName === 'mortgage') calcMortgage();
                 if (tabName === 'shortlist') initializeShortlistTab();
                 if (tabName === 'listings') renderListingsTable();
             }
@@ -3153,30 +3320,51 @@
                 <div style="background: var(--light-gray); padding: 16px; border-radius: 4px; margin: 16px 0;">
                     <div style="font-weight: 700; color: var(--primary); margin-bottom: 16px;">Offer Tiers</div>
                     <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;">
-                        <div class="offer-tier-modal">
+                        <div class="offer-tier-modal" style="border-left: 3px solid var(--danger);">
                             <div class="offer-label">Aggressive Lowball</div>
                             <div class="offer-value">${formatPrice(offers.aggressive)}</div>
                             <div style="font-size: 11px; color: #666; margin-top: 4px;">
                                 ${Math.round((listing.price - offers.aggressive) / listing.price * 100)}% off asking
                             </div>
+                            <div style="font-size: 10px; color: #999; margin-top: 6px; line-height: 1.4;">Best when DOM &gt; 90, overpriced vs benchmark, or motivated seller.</div>
                         </div>
-                        <div class="offer-tier-modal">
+                        <div class="offer-tier-modal" style="border-left: 3px solid var(--warning);">
                             <div class="offer-label">Strategic Value</div>
                             <div class="offer-value">${formatPrice(offers.strategic)}</div>
                             <div style="font-size: 11px; color: #666; margin-top: 4px;">
                                 ${Math.round((listing.price - offers.strategic) / listing.price * 100)}% off asking
                             </div>
+                            <div style="font-size: 10px; color: #999; margin-top: 6px; line-height: 1.4;">Balanced approach. Good starting point for most negotiations.</div>
                         </div>
-                        <div class="offer-tier-modal">
+                        <div class="offer-tier-modal" style="border-left: 3px solid var(--success);">
                             <div class="offer-label">Competitive</div>
                             <div class="offer-value">${formatPrice(offers.competitive)}</div>
                             <div style="font-size: 11px; color: #666; margin-top: 4px;">
                                 ${Math.round((listing.price - offers.competitive) / listing.price * 100)}% off asking
                             </div>
+                            <div style="font-size: 10px; color: #999; margin-top: 6px; line-height: 1.4;">Use in hot markets, low DOM, or when you really want the property.</div>
                         </div>
                     </div>
                 </div>
-                
+
+                <div style="background: #fff3cd; padding: 14px 16px; border-radius: 4px; margin: 16px 0; font-size: 12px; border-left: 4px solid #ffc107;">
+                    <strong>Est. Closing Costs:</strong> PTT $${estimateClosingCosts(listing.price).ptt.toLocaleString()} + Legal/Inspection/etc ~$3,250 = <strong>~$${estimateClosingCosts(listing.price).total.toLocaleString()} total</strong>
+                    <span style="margin-left: 8px; opacity: 0.7;">|</span>
+                    <a href="#" onclick="event.preventDefault();switchTab('mortgage');document.getElementById('mortPrice').value=${listing.price};calcMortgage();closeDetailModal();" style="color: var(--primary); margin-left: 8px;">Open in Calculator</a>
+                </div>
+
+                ${(function(){
+                    var comps = findComparables(listing);
+                    if (comps.length === 0) return '';
+                    var h = '<div style="background:var(--light-gray);padding:16px;border-radius:4px;margin:16px 0;"><div style="font-weight:700;color:var(--primary);margin-bottom:12px;">Comparable Properties</div>';
+                    h += '<table style="width:100%;border-collapse:collapse;font-size:12px;"><tr style="background:#e9ecef;"><th style="padding:6px;text-align:left;">Address</th><th style="padding:6px;">Price</th><th style="padding:6px;">Type</th><th style="padding:6px;">Beds/Bath</th><th style="padding:6px;">SqFt</th><th style="padding:6px;">DOM</th><th style="padding:6px;">Score</th></tr>';
+                    comps.forEach(function(c){
+                        h += '<tr style="cursor:pointer;" onclick="closeDetailModal();setTimeout(function(){showDetailModal('+rawListings.indexOf(c)+')},200)"><td style="padding:6px;">'+c.addr+'</td><td style="padding:6px;text-align:center;">'+formatPrice(c.price)+'</td><td style="padding:6px;text-align:center;">'+c.type+'</td><td style="padding:6px;text-align:center;">'+c.beds+'/'+c.baths+'</td><td style="padding:6px;text-align:center;">'+c.sqft.toLocaleString()+'</td><td style="padding:6px;text-align:center;">'+c.dom+'</td><td style="padding:6px;text-align:center;">'+Math.round(c.score)+'</td></tr>';
+                    });
+                    h += '</table></div>';
+                    return h;
+                })()}
+
                 <div style="display: flex; gap: 8px; margin: 16px 0;">
                     <button class="btn-primary" onclick="copyOfferToClipboard(${listingIndex})">Copy Offer Details</button>
                     <button class="btn-primary" style="background: var(--success);" onclick="openOfferBuilder(${listingIndex})">Generate Offer</button>
@@ -3305,6 +3493,274 @@ Competitive: ${formatPrice(offers.competitive)}`;
             a.click();
             window.URL.revokeObjectURL(url);
         }
+
+
+
+        // ===== SAVED FILTER PRESETS =====
+        function saveFilterPreset() {
+            var name = prompt('Name this filter preset:');
+            if (!name) return;
+            var preset = {
+                search: document.getElementById('searchBox').value,
+                priceMin: document.getElementById('priceMin').value,
+                priceMax: document.getElementById('priceMax').value,
+                bedroomMin: document.getElementById('bedroomMin').value,
+                bathroomMin: document.getElementById('bathroomMin').value,
+                domMin: document.getElementById('domMin').value,
+                domMax: document.getElementById('domMax').value,
+                yearMin: document.getElementById('yearMin').value,
+                yearMax: document.getElementById('yearMax').value,
+                scoreMin: document.getElementById('scoreMin').value,
+                scoreMax: document.getElementById('scoreMax').value,
+                sortBy: document.getElementById('sortBy').value,
+                waterView: document.getElementById('filterWaterView').checked,
+                hasLot: document.getElementById('filterHasLot').checked,
+                regions: [...document.querySelectorAll('.region-filter:checked')].map(function(e){return e.value;}),
+                neighborhoods: [...document.querySelectorAll('.nbr-filter:checked')].map(function(e){return e.value;}),
+                types: [...document.querySelectorAll('.type-filter:checked')].map(function(e){return e.value;})
+            };
+            var presets = JSON.parse(localStorage.getItem('filterPresets') || '{}');
+            presets[name] = preset;
+            localStorage.setItem('filterPresets', JSON.stringify(presets));
+            loadFilterPresetList();
+        }
+        function loadFilterPresetList() {
+            var presets = JSON.parse(localStorage.getItem('filterPresets') || '{}');
+            var sel = document.getElementById('filterPresets');
+            sel.innerHTML = '<option value="">Load preset...</option>';
+            Object.keys(presets).forEach(function(name) {
+                sel.innerHTML += '<option value="' + name + '">' + name + '</option>';
+            });
+        }
+        function loadFilterPreset(name) {
+            if (!name) return;
+            var presets = JSON.parse(localStorage.getItem('filterPresets') || '{}');
+            var p = presets[name];
+            if (!p) return;
+            document.getElementById('searchBox').value = p.search || '';
+            document.getElementById('priceMin').value = p.priceMin || '';
+            document.getElementById('priceMax').value = p.priceMax || '';
+            document.getElementById('bedroomMin').value = p.bedroomMin || '';
+            document.getElementById('bathroomMin').value = p.bathroomMin || '';
+            document.getElementById('domMin').value = p.domMin || '';
+            document.getElementById('domMax').value = p.domMax || '';
+            document.getElementById('yearMin').value = p.yearMin || '';
+            document.getElementById('yearMax').value = p.yearMax || '';
+            document.getElementById('scoreMin').value = p.scoreMin || '';
+            document.getElementById('scoreMax').value = p.scoreMax || '';
+            document.getElementById('sortBy').value = p.sortBy || 'score-desc';
+            document.getElementById('filterWaterView').checked = !!p.waterView;
+            document.getElementById('filterHasLot').checked = !!p.hasLot;
+            if (p.regions) { document.querySelectorAll('.region-filter').forEach(function(e){ e.checked = p.regions.includes(e.value); }); }
+            if (p.neighborhoods) { document.querySelectorAll('.nbr-filter').forEach(function(e){ e.checked = p.neighborhoods.includes(e.value); }); }
+            if (p.types) { document.querySelectorAll('.type-filter').forEach(function(e){ e.checked = p.types.includes(e.value); }); }
+            applyFilters();
+        }
+
+        function validateAndGenerateOffer() {
+            var name = document.getElementById('buyerName').value.trim();
+            var email = document.getElementById('buyerEmail').value.trim();
+            var prop = document.getElementById('propertySelect').value;
+            var errors = [];
+            if (!name) errors.push('Please enter your full name.');
+            if (!email) errors.push('Please enter your email address.');
+            if (!prop) errors.push('Please select a property.');
+            if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errors.push('Please enter a valid email address.');
+            if (errors.length > 0) {
+                alert(errors.join('\n'));
+                return;
+            }
+            saveBuyerInfo();
+            generateOfferSummary();
+        }
+
+        // ===== MORTGAGE CALCULATOR =====
+        function calcMortgage() {
+            var price = parseFloat(document.getElementById('mortPrice').value) || 0;
+            var down = parseFloat(document.getElementById('mortDown').value) || 0;
+            var rate = parseFloat(document.getElementById('mortRate').value) || 5.5;
+            var years = parseInt(document.getElementById('mortAmort').value) || 25;
+            var principal = price - down;
+            var downPct = price > 0 ? (down / price * 100) : 0;
+
+            // CMHC Insurance (required if down < 20%)
+            var cmhc = 0;
+            if (downPct < 20 && price <= 1500000) {
+                var cmhcRate = downPct < 5 ? 0 : (downPct < 10 ? 0.04 : (downPct < 15 ? 0.031 : 0.028));
+                cmhc = Math.round(principal * cmhcRate);
+                principal += cmhc;
+            }
+
+            var monthlyRate = rate / 100 / 12;
+            var n = years * 12;
+            var monthly = monthlyRate > 0 ? principal * monthlyRate * Math.pow(1 + monthlyRate, n) / (Math.pow(1 + monthlyRate, n) - 1) : principal / n;
+            var totalCost = monthly * n;
+            var totalInterest = totalCost - (price - down);
+
+            document.getElementById('mortMonthly').textContent = '$' + Math.round(monthly).toLocaleString();
+            document.getElementById('mortAmount').textContent = '$' + Math.round(price - down).toLocaleString();
+            document.getElementById('mortTotalInterest').textContent = '$' + Math.round(totalInterest).toLocaleString();
+            document.getElementById('mortTotalCost').textContent = '$' + Math.round(totalCost).toLocaleString();
+            document.getElementById('mortCMHC').textContent = cmhc > 0 ? '$' + cmhc.toLocaleString() : 'N/A (20%+ down)';
+
+            // BC Property Transfer Tax
+            var ptt1 = Math.min(price, 200000) * 0.01;
+            var ptt2 = Math.max(0, Math.min(price, 2000000) - 200000) * 0.02;
+            var ptt3 = Math.max(0, price - 2000000) * 0.03;
+            var pttTotal = ptt1 + ptt2 + ptt3;
+
+            document.getElementById('pttTier1').textContent = '$' + Math.round(ptt1).toLocaleString();
+            document.getElementById('pttTier2').textContent = '$' + Math.round(ptt2).toLocaleString();
+            document.getElementById('pttTier3').textContent = '$' + Math.round(ptt3).toLocaleString();
+            document.getElementById('pttTotal').textContent = '$' + Math.round(pttTotal).toLocaleString();
+            document.getElementById('ccPTT').textContent = '$' + Math.round(pttTotal).toLocaleString();
+            document.getElementById('ccCMHC').textContent = cmhc > 0 ? '$' + cmhc.toLocaleString() : '$0';
+            var closingMin = pttTotal + 1500 + 400 + 300 + 200 + cmhc;
+            var closingMax = pttTotal + 2500 + 700 + 500 + 400 + cmhc;
+            document.getElementById('ccTotal').textContent = '$' + Math.round(closingMin).toLocaleString() + ' - $' + Math.round(closingMax).toLocaleString();
+        }
+
+        // ===== PROPERTY COMPARISON TOOL =====
+        var comparisonSet = new Set();
+
+        function toggleComparison(idx, event) {
+            if (event) event.stopPropagation();
+            if (comparisonSet.has(idx)) {
+                comparisonSet.delete(idx);
+            } else if (comparisonSet.size < 4) {
+                comparisonSet.add(idx);
+            } else {
+                alert('Maximum 4 properties for comparison. Remove one first.');
+                return;
+            }
+        }
+
+        function openComparisonTool() {
+            var items = [...comparisonSet].map(function(idx) { return rawListings[idx]; });
+            if (items.length < 2) {
+                // Show selection UI
+                var sl = [...shortlistedIds];
+                if (sl.length >= 2) {
+                    comparisonSet = new Set(sl.slice(0, Math.min(4, sl.length)));
+                    items = [...comparisonSet].map(function(idx) { return rawListings[idx]; });
+                } else {
+                    alert('Add at least 2 properties to your shortlist, then use Compare. Or click the compare checkbox on individual property cards.');
+                    return;
+                }
+            }
+            renderComparison(items);
+        }
+
+        function renderComparison(items) {
+            var fields = [
+                { key: 'price', label: 'Asking Price', fmt: function(l) { return formatPrice(l.price); }, compare: 'lower' },
+                { key: 'score', label: 'Deal Score', fmt: function(l) { return Math.round(l.score) + '/100'; }, compare: 'higher' },
+                { key: 'type', label: 'Property Type', fmt: function(l) { return l.type; } },
+                { key: 'beds', label: 'Bedrooms', fmt: function(l) { return l.beds; }, compare: 'higher' },
+                { key: 'baths', label: 'Bathrooms', fmt: function(l) { return l.baths; }, compare: 'higher' },
+                { key: 'sqft', label: 'Square Feet', fmt: function(l) { return l.sqft > 0 ? l.sqft.toLocaleString() : 'N/A'; }, compare: 'higher' },
+                { key: 'ppsf', label: '$/SqFt', fmt: function(l) { return l.sqft > 0 ? '$' + Math.round(l.price / l.sqft).toLocaleString() : 'N/A'; }, compare: 'lower' },
+                { key: 'dom', label: 'Days on Market', fmt: function(l) { return l.dom; }, compare: 'higher' },
+                { key: 'yearBuilt', label: 'Year Built', fmt: function(l) { return l.yearBuilt; }, compare: 'higher' },
+                { key: 'lot', label: 'Lot Size', fmt: function(l) { return l.lot || 'N/A'; } },
+                { key: 'neighborhood', label: 'Neighborhood', fmt: function(l) { return l.neighborhood; } },
+                { key: 'agent', label: 'Agent', fmt: function(l) { return l.agent; } },
+                { key: 'agg', label: 'Aggressive Offer', fmt: function(l) { return formatPrice(calculateOffers(l).aggressive); }, compare: 'lower' },
+                { key: 'str', label: 'Strategic Offer', fmt: function(l) { return formatPrice(calculateOffers(l).strategic); }, compare: 'lower' },
+                { key: 'comp', label: 'Competitive Offer', fmt: function(l) { return formatPrice(calculateOffers(l).competitive); }, compare: 'lower' },
+                { key: 'closingCost', label: 'Est. Closing Costs', fmt: function(l) { var p=l.price; var ptt=Math.min(p,200000)*0.01+Math.max(0,Math.min(p,2000000)-200000)*0.02+Math.max(0,p-2000000)*0.03; return '$'+Math.round(ptt+2500).toLocaleString(); }, compare: 'lower' },
+                { key: 'waterView', label: 'Water View', fmt: function(l) { return l.waterView ? 'Yes' : 'No'; } }
+            ];
+
+            var html = '<h2 style="color:var(--primary);margin-bottom:16px;">Property Comparison</h2>';
+            html += '<table class="comparison-table"><thead><tr><th></th>';
+            items.forEach(function(l) {
+                html += '<td style="font-weight:700;font-size:14px;padding:12px;background:var(--primary);color:white;min-width:180px;">' + l.addr + '<br><span style="font-weight:400;font-size:11px;opacity:0.8;">' + l.neighborhood + '</span></td>';
+            });
+            html += '</tr></thead><tbody>';
+
+            fields.forEach(function(field) {
+                html += '<tr><th>' + field.label + '</th>';
+                var vals = items.map(function(l) {
+                    if (field.key === 'ppsf') return l.sqft > 0 ? l.price / l.sqft : Infinity;
+                    if (field.key === 'agg') return calculateOffers(l).aggressive;
+                    if (field.key === 'str') return calculateOffers(l).strategic;
+                    if (field.key === 'comp') return calculateOffers(l).competitive;
+                    if (field.key === 'closingCost') { var p=l.price; return Math.min(p,200000)*0.01+Math.max(0,Math.min(p,2000000)-200000)*0.02+Math.max(0,p-2000000)*0.03+2500; }
+                    return l[field.key];
+                });
+                var best = field.compare === 'lower' ? Math.min(...vals.filter(function(v){return typeof v==='number'&&isFinite(v);})) : (field.compare === 'higher' ? Math.max(...vals.filter(function(v){return typeof v==='number'&&isFinite(v);})) : null);
+                items.forEach(function(l, i) {
+                    var cls = '';
+                    if (best !== null && typeof vals[i] === 'number' && isFinite(vals[i])) {
+                        cls = vals[i] === best ? ' class="comp-better"' : '';
+                    }
+                    html += '<td' + cls + '>' + field.fmt(l) + '</td>';
+                });
+                html += '</tr>';
+            });
+            html += '</tbody></table>';
+            html += '<div style="margin-top:16px;font-size:12px;color:#666;">Green highlights indicate the best value for that metric. Comparing ' + items.length + ' properties.</div>';
+            document.getElementById('comparisonBody').innerHTML = html;
+            document.getElementById('comparisonModal').classList.add('active');
+        }
+
+        // ===== TABLE COLUMN SORTING =====
+        var lastSortCol = '';
+        var sortAsc = true;
+        function sortTable(col) {
+            if (col === lastSortCol) { sortAsc = !sortAsc; } else { sortAsc = true; lastSortCol = col; }
+            var dir = sortAsc ? 1 : -1;
+            filteredListings.sort(function(a, b) {
+                switch(col) {
+                    case 'addr': return dir * a.addr.localeCompare(b.addr);
+                    case 'neighborhood': return dir * a.neighborhood.localeCompare(b.neighborhood);
+                    case 'type': return dir * a.type.localeCompare(b.type);
+                    case 'price-asc': return dir * (a.price - b.price);
+                    case 'sqft': return dir * (b.sqft - a.sqft);
+                    case 'ppsf-asc': return dir * ((a.sqft>0?a.price/a.sqft:Infinity) - (b.sqft>0?b.price/b.sqft:Infinity));
+                    case 'dom-desc': return dir * (b.dom - a.dom);
+                    case 'year': return dir * ((b.yearBuilt||0) - (a.yearBuilt||0));
+                    case 'score-desc': return dir * (b.score - a.score);
+                    default: return 0;
+                }
+            });
+            currentPage = 0;
+            renderListingsTable();
+        }
+
+        // ===== COMPARABLE SALES FINDER =====
+        function findComparables(listing) {
+            return rawListings.filter(function(l) {
+                if (l === listing) return false;
+                if (l.neighborhood !== listing.neighborhood && l.region !== listing.region) return false;
+                if (l.type !== listing.type) return false;
+                var priceDiff = Math.abs(l.price - listing.price) / listing.price;
+                return priceDiff < 0.35;
+            }).sort(function(a, b) {
+                var distA = Math.abs(a.price - listing.price);
+                var distB = Math.abs(b.price - listing.price);
+                return distA - distB;
+            }).slice(0, 5);
+        }
+
+        // ===== CLOSING COST ESTIMATOR =====
+        function estimateClosingCosts(price) {
+            var ptt1 = Math.min(price, 200000) * 0.01;
+            var ptt2 = Math.max(0, Math.min(price, 2000000) - 200000) * 0.02;
+            var ptt3 = Math.max(0, price - 2000000) * 0.03;
+            var ptt = ptt1 + ptt2 + ptt3;
+            return { ptt: Math.round(ptt), legal: 2000, inspection: 550, appraisal: 400, titleIns: 300, total: Math.round(ptt + 3250) };
+        }
+
+        // ===== SHORTLIST NOTES =====
+        var shortlistNotes = JSON.parse(localStorage.getItem('shortlistNotes') || '{}');
+        function saveShortlistNote(idx) {
+            var note = document.getElementById('note_' + idx).value;
+            shortlistNotes[idx] = note;
+            localStorage.setItem('shortlistNotes', JSON.stringify(shortlistNotes));
+        }
+
     </script>
 
     <!-- Mobile filter toggle button -->
@@ -3329,6 +3785,274 @@ Competitive: ${formatPrice(offers.competitive)}`;
                 if (window.innerWidth <= 768) closeMobileSidebar();
             };
         }
+
+
+
+        // ===== SAVED FILTER PRESETS =====
+        function saveFilterPreset() {
+            var name = prompt('Name this filter preset:');
+            if (!name) return;
+            var preset = {
+                search: document.getElementById('searchBox').value,
+                priceMin: document.getElementById('priceMin').value,
+                priceMax: document.getElementById('priceMax').value,
+                bedroomMin: document.getElementById('bedroomMin').value,
+                bathroomMin: document.getElementById('bathroomMin').value,
+                domMin: document.getElementById('domMin').value,
+                domMax: document.getElementById('domMax').value,
+                yearMin: document.getElementById('yearMin').value,
+                yearMax: document.getElementById('yearMax').value,
+                scoreMin: document.getElementById('scoreMin').value,
+                scoreMax: document.getElementById('scoreMax').value,
+                sortBy: document.getElementById('sortBy').value,
+                waterView: document.getElementById('filterWaterView').checked,
+                hasLot: document.getElementById('filterHasLot').checked,
+                regions: [...document.querySelectorAll('.region-filter:checked')].map(function(e){return e.value;}),
+                neighborhoods: [...document.querySelectorAll('.nbr-filter:checked')].map(function(e){return e.value;}),
+                types: [...document.querySelectorAll('.type-filter:checked')].map(function(e){return e.value;})
+            };
+            var presets = JSON.parse(localStorage.getItem('filterPresets') || '{}');
+            presets[name] = preset;
+            localStorage.setItem('filterPresets', JSON.stringify(presets));
+            loadFilterPresetList();
+        }
+        function loadFilterPresetList() {
+            var presets = JSON.parse(localStorage.getItem('filterPresets') || '{}');
+            var sel = document.getElementById('filterPresets');
+            sel.innerHTML = '<option value="">Load preset...</option>';
+            Object.keys(presets).forEach(function(name) {
+                sel.innerHTML += '<option value="' + name + '">' + name + '</option>';
+            });
+        }
+        function loadFilterPreset(name) {
+            if (!name) return;
+            var presets = JSON.parse(localStorage.getItem('filterPresets') || '{}');
+            var p = presets[name];
+            if (!p) return;
+            document.getElementById('searchBox').value = p.search || '';
+            document.getElementById('priceMin').value = p.priceMin || '';
+            document.getElementById('priceMax').value = p.priceMax || '';
+            document.getElementById('bedroomMin').value = p.bedroomMin || '';
+            document.getElementById('bathroomMin').value = p.bathroomMin || '';
+            document.getElementById('domMin').value = p.domMin || '';
+            document.getElementById('domMax').value = p.domMax || '';
+            document.getElementById('yearMin').value = p.yearMin || '';
+            document.getElementById('yearMax').value = p.yearMax || '';
+            document.getElementById('scoreMin').value = p.scoreMin || '';
+            document.getElementById('scoreMax').value = p.scoreMax || '';
+            document.getElementById('sortBy').value = p.sortBy || 'score-desc';
+            document.getElementById('filterWaterView').checked = !!p.waterView;
+            document.getElementById('filterHasLot').checked = !!p.hasLot;
+            if (p.regions) { document.querySelectorAll('.region-filter').forEach(function(e){ e.checked = p.regions.includes(e.value); }); }
+            if (p.neighborhoods) { document.querySelectorAll('.nbr-filter').forEach(function(e){ e.checked = p.neighborhoods.includes(e.value); }); }
+            if (p.types) { document.querySelectorAll('.type-filter').forEach(function(e){ e.checked = p.types.includes(e.value); }); }
+            applyFilters();
+        }
+
+        function validateAndGenerateOffer() {
+            var name = document.getElementById('buyerName').value.trim();
+            var email = document.getElementById('buyerEmail').value.trim();
+            var prop = document.getElementById('propertySelect').value;
+            var errors = [];
+            if (!name) errors.push('Please enter your full name.');
+            if (!email) errors.push('Please enter your email address.');
+            if (!prop) errors.push('Please select a property.');
+            if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errors.push('Please enter a valid email address.');
+            if (errors.length > 0) {
+                alert(errors.join('\n'));
+                return;
+            }
+            saveBuyerInfo();
+            generateOfferSummary();
+        }
+
+        // ===== MORTGAGE CALCULATOR =====
+        function calcMortgage() {
+            var price = parseFloat(document.getElementById('mortPrice').value) || 0;
+            var down = parseFloat(document.getElementById('mortDown').value) || 0;
+            var rate = parseFloat(document.getElementById('mortRate').value) || 5.5;
+            var years = parseInt(document.getElementById('mortAmort').value) || 25;
+            var principal = price - down;
+            var downPct = price > 0 ? (down / price * 100) : 0;
+
+            // CMHC Insurance (required if down < 20%)
+            var cmhc = 0;
+            if (downPct < 20 && price <= 1500000) {
+                var cmhcRate = downPct < 5 ? 0 : (downPct < 10 ? 0.04 : (downPct < 15 ? 0.031 : 0.028));
+                cmhc = Math.round(principal * cmhcRate);
+                principal += cmhc;
+            }
+
+            var monthlyRate = rate / 100 / 12;
+            var n = years * 12;
+            var monthly = monthlyRate > 0 ? principal * monthlyRate * Math.pow(1 + monthlyRate, n) / (Math.pow(1 + monthlyRate, n) - 1) : principal / n;
+            var totalCost = monthly * n;
+            var totalInterest = totalCost - (price - down);
+
+            document.getElementById('mortMonthly').textContent = '$' + Math.round(monthly).toLocaleString();
+            document.getElementById('mortAmount').textContent = '$' + Math.round(price - down).toLocaleString();
+            document.getElementById('mortTotalInterest').textContent = '$' + Math.round(totalInterest).toLocaleString();
+            document.getElementById('mortTotalCost').textContent = '$' + Math.round(totalCost).toLocaleString();
+            document.getElementById('mortCMHC').textContent = cmhc > 0 ? '$' + cmhc.toLocaleString() : 'N/A (20%+ down)';
+
+            // BC Property Transfer Tax
+            var ptt1 = Math.min(price, 200000) * 0.01;
+            var ptt2 = Math.max(0, Math.min(price, 2000000) - 200000) * 0.02;
+            var ptt3 = Math.max(0, price - 2000000) * 0.03;
+            var pttTotal = ptt1 + ptt2 + ptt3;
+
+            document.getElementById('pttTier1').textContent = '$' + Math.round(ptt1).toLocaleString();
+            document.getElementById('pttTier2').textContent = '$' + Math.round(ptt2).toLocaleString();
+            document.getElementById('pttTier3').textContent = '$' + Math.round(ptt3).toLocaleString();
+            document.getElementById('pttTotal').textContent = '$' + Math.round(pttTotal).toLocaleString();
+            document.getElementById('ccPTT').textContent = '$' + Math.round(pttTotal).toLocaleString();
+            document.getElementById('ccCMHC').textContent = cmhc > 0 ? '$' + cmhc.toLocaleString() : '$0';
+            var closingMin = pttTotal + 1500 + 400 + 300 + 200 + cmhc;
+            var closingMax = pttTotal + 2500 + 700 + 500 + 400 + cmhc;
+            document.getElementById('ccTotal').textContent = '$' + Math.round(closingMin).toLocaleString() + ' - $' + Math.round(closingMax).toLocaleString();
+        }
+
+        // ===== PROPERTY COMPARISON TOOL =====
+        var comparisonSet = new Set();
+
+        function toggleComparison(idx, event) {
+            if (event) event.stopPropagation();
+            if (comparisonSet.has(idx)) {
+                comparisonSet.delete(idx);
+            } else if (comparisonSet.size < 4) {
+                comparisonSet.add(idx);
+            } else {
+                alert('Maximum 4 properties for comparison. Remove one first.');
+                return;
+            }
+        }
+
+        function openComparisonTool() {
+            var items = [...comparisonSet].map(function(idx) { return rawListings[idx]; });
+            if (items.length < 2) {
+                // Show selection UI
+                var sl = [...shortlistedIds];
+                if (sl.length >= 2) {
+                    comparisonSet = new Set(sl.slice(0, Math.min(4, sl.length)));
+                    items = [...comparisonSet].map(function(idx) { return rawListings[idx]; });
+                } else {
+                    alert('Add at least 2 properties to your shortlist, then use Compare. Or click the compare checkbox on individual property cards.');
+                    return;
+                }
+            }
+            renderComparison(items);
+        }
+
+        function renderComparison(items) {
+            var fields = [
+                { key: 'price', label: 'Asking Price', fmt: function(l) { return formatPrice(l.price); }, compare: 'lower' },
+                { key: 'score', label: 'Deal Score', fmt: function(l) { return Math.round(l.score) + '/100'; }, compare: 'higher' },
+                { key: 'type', label: 'Property Type', fmt: function(l) { return l.type; } },
+                { key: 'beds', label: 'Bedrooms', fmt: function(l) { return l.beds; }, compare: 'higher' },
+                { key: 'baths', label: 'Bathrooms', fmt: function(l) { return l.baths; }, compare: 'higher' },
+                { key: 'sqft', label: 'Square Feet', fmt: function(l) { return l.sqft > 0 ? l.sqft.toLocaleString() : 'N/A'; }, compare: 'higher' },
+                { key: 'ppsf', label: '$/SqFt', fmt: function(l) { return l.sqft > 0 ? '$' + Math.round(l.price / l.sqft).toLocaleString() : 'N/A'; }, compare: 'lower' },
+                { key: 'dom', label: 'Days on Market', fmt: function(l) { return l.dom; }, compare: 'higher' },
+                { key: 'yearBuilt', label: 'Year Built', fmt: function(l) { return l.yearBuilt; }, compare: 'higher' },
+                { key: 'lot', label: 'Lot Size', fmt: function(l) { return l.lot || 'N/A'; } },
+                { key: 'neighborhood', label: 'Neighborhood', fmt: function(l) { return l.neighborhood; } },
+                { key: 'agent', label: 'Agent', fmt: function(l) { return l.agent; } },
+                { key: 'agg', label: 'Aggressive Offer', fmt: function(l) { return formatPrice(calculateOffers(l).aggressive); }, compare: 'lower' },
+                { key: 'str', label: 'Strategic Offer', fmt: function(l) { return formatPrice(calculateOffers(l).strategic); }, compare: 'lower' },
+                { key: 'comp', label: 'Competitive Offer', fmt: function(l) { return formatPrice(calculateOffers(l).competitive); }, compare: 'lower' },
+                { key: 'closingCost', label: 'Est. Closing Costs', fmt: function(l) { var p=l.price; var ptt=Math.min(p,200000)*0.01+Math.max(0,Math.min(p,2000000)-200000)*0.02+Math.max(0,p-2000000)*0.03; return '$'+Math.round(ptt+2500).toLocaleString(); }, compare: 'lower' },
+                { key: 'waterView', label: 'Water View', fmt: function(l) { return l.waterView ? 'Yes' : 'No'; } }
+            ];
+
+            var html = '<h2 style="color:var(--primary);margin-bottom:16px;">Property Comparison</h2>';
+            html += '<table class="comparison-table"><thead><tr><th></th>';
+            items.forEach(function(l) {
+                html += '<td style="font-weight:700;font-size:14px;padding:12px;background:var(--primary);color:white;min-width:180px;">' + l.addr + '<br><span style="font-weight:400;font-size:11px;opacity:0.8;">' + l.neighborhood + '</span></td>';
+            });
+            html += '</tr></thead><tbody>';
+
+            fields.forEach(function(field) {
+                html += '<tr><th>' + field.label + '</th>';
+                var vals = items.map(function(l) {
+                    if (field.key === 'ppsf') return l.sqft > 0 ? l.price / l.sqft : Infinity;
+                    if (field.key === 'agg') return calculateOffers(l).aggressive;
+                    if (field.key === 'str') return calculateOffers(l).strategic;
+                    if (field.key === 'comp') return calculateOffers(l).competitive;
+                    if (field.key === 'closingCost') { var p=l.price; return Math.min(p,200000)*0.01+Math.max(0,Math.min(p,2000000)-200000)*0.02+Math.max(0,p-2000000)*0.03+2500; }
+                    return l[field.key];
+                });
+                var best = field.compare === 'lower' ? Math.min(...vals.filter(function(v){return typeof v==='number'&&isFinite(v);})) : (field.compare === 'higher' ? Math.max(...vals.filter(function(v){return typeof v==='number'&&isFinite(v);})) : null);
+                items.forEach(function(l, i) {
+                    var cls = '';
+                    if (best !== null && typeof vals[i] === 'number' && isFinite(vals[i])) {
+                        cls = vals[i] === best ? ' class="comp-better"' : '';
+                    }
+                    html += '<td' + cls + '>' + field.fmt(l) + '</td>';
+                });
+                html += '</tr>';
+            });
+            html += '</tbody></table>';
+            html += '<div style="margin-top:16px;font-size:12px;color:#666;">Green highlights indicate the best value for that metric. Comparing ' + items.length + ' properties.</div>';
+            document.getElementById('comparisonBody').innerHTML = html;
+            document.getElementById('comparisonModal').classList.add('active');
+        }
+
+        // ===== TABLE COLUMN SORTING =====
+        var lastSortCol = '';
+        var sortAsc = true;
+        function sortTable(col) {
+            if (col === lastSortCol) { sortAsc = !sortAsc; } else { sortAsc = true; lastSortCol = col; }
+            var dir = sortAsc ? 1 : -1;
+            filteredListings.sort(function(a, b) {
+                switch(col) {
+                    case 'addr': return dir * a.addr.localeCompare(b.addr);
+                    case 'neighborhood': return dir * a.neighborhood.localeCompare(b.neighborhood);
+                    case 'type': return dir * a.type.localeCompare(b.type);
+                    case 'price-asc': return dir * (a.price - b.price);
+                    case 'sqft': return dir * (b.sqft - a.sqft);
+                    case 'ppsf-asc': return dir * ((a.sqft>0?a.price/a.sqft:Infinity) - (b.sqft>0?b.price/b.sqft:Infinity));
+                    case 'dom-desc': return dir * (b.dom - a.dom);
+                    case 'year': return dir * ((b.yearBuilt||0) - (a.yearBuilt||0));
+                    case 'score-desc': return dir * (b.score - a.score);
+                    default: return 0;
+                }
+            });
+            currentPage = 0;
+            renderListingsTable();
+        }
+
+        // ===== COMPARABLE SALES FINDER =====
+        function findComparables(listing) {
+            return rawListings.filter(function(l) {
+                if (l === listing) return false;
+                if (l.neighborhood !== listing.neighborhood && l.region !== listing.region) return false;
+                if (l.type !== listing.type) return false;
+                var priceDiff = Math.abs(l.price - listing.price) / listing.price;
+                return priceDiff < 0.35;
+            }).sort(function(a, b) {
+                var distA = Math.abs(a.price - listing.price);
+                var distB = Math.abs(b.price - listing.price);
+                return distA - distB;
+            }).slice(0, 5);
+        }
+
+        // ===== CLOSING COST ESTIMATOR =====
+        function estimateClosingCosts(price) {
+            var ptt1 = Math.min(price, 200000) * 0.01;
+            var ptt2 = Math.max(0, Math.min(price, 2000000) - 200000) * 0.02;
+            var ptt3 = Math.max(0, price - 2000000) * 0.03;
+            var ptt = ptt1 + ptt2 + ptt3;
+            return { ptt: Math.round(ptt), legal: 2000, inspection: 550, appraisal: 400, titleIns: 300, total: Math.round(ptt + 3250) };
+        }
+
+        // ===== SHORTLIST NOTES =====
+        var shortlistNotes = JSON.parse(localStorage.getItem('shortlistNotes') || '{}');
+        function saveShortlistNote(idx) {
+            var note = document.getElementById('note_' + idx).value;
+            shortlistNotes[idx] = note;
+            localStorage.setItem('shortlistNotes', JSON.stringify(shortlistNotes));
+        }
+
     </script>
     <script>
         // ========== OFFER BUILDER SYSTEM ==========
@@ -3991,6 +4715,274 @@ Competitive: ${formatPrice(offers.competitive)}`;
             status.textContent = 'Email client opened! Attach the downloaded PDF (' + lastGeneratedPdfFilename + ') and send.';
             status.style.color = 'var(--secondary)';
         }
+
+
+
+        // ===== SAVED FILTER PRESETS =====
+        function saveFilterPreset() {
+            var name = prompt('Name this filter preset:');
+            if (!name) return;
+            var preset = {
+                search: document.getElementById('searchBox').value,
+                priceMin: document.getElementById('priceMin').value,
+                priceMax: document.getElementById('priceMax').value,
+                bedroomMin: document.getElementById('bedroomMin').value,
+                bathroomMin: document.getElementById('bathroomMin').value,
+                domMin: document.getElementById('domMin').value,
+                domMax: document.getElementById('domMax').value,
+                yearMin: document.getElementById('yearMin').value,
+                yearMax: document.getElementById('yearMax').value,
+                scoreMin: document.getElementById('scoreMin').value,
+                scoreMax: document.getElementById('scoreMax').value,
+                sortBy: document.getElementById('sortBy').value,
+                waterView: document.getElementById('filterWaterView').checked,
+                hasLot: document.getElementById('filterHasLot').checked,
+                regions: [...document.querySelectorAll('.region-filter:checked')].map(function(e){return e.value;}),
+                neighborhoods: [...document.querySelectorAll('.nbr-filter:checked')].map(function(e){return e.value;}),
+                types: [...document.querySelectorAll('.type-filter:checked')].map(function(e){return e.value;})
+            };
+            var presets = JSON.parse(localStorage.getItem('filterPresets') || '{}');
+            presets[name] = preset;
+            localStorage.setItem('filterPresets', JSON.stringify(presets));
+            loadFilterPresetList();
+        }
+        function loadFilterPresetList() {
+            var presets = JSON.parse(localStorage.getItem('filterPresets') || '{}');
+            var sel = document.getElementById('filterPresets');
+            sel.innerHTML = '<option value="">Load preset...</option>';
+            Object.keys(presets).forEach(function(name) {
+                sel.innerHTML += '<option value="' + name + '">' + name + '</option>';
+            });
+        }
+        function loadFilterPreset(name) {
+            if (!name) return;
+            var presets = JSON.parse(localStorage.getItem('filterPresets') || '{}');
+            var p = presets[name];
+            if (!p) return;
+            document.getElementById('searchBox').value = p.search || '';
+            document.getElementById('priceMin').value = p.priceMin || '';
+            document.getElementById('priceMax').value = p.priceMax || '';
+            document.getElementById('bedroomMin').value = p.bedroomMin || '';
+            document.getElementById('bathroomMin').value = p.bathroomMin || '';
+            document.getElementById('domMin').value = p.domMin || '';
+            document.getElementById('domMax').value = p.domMax || '';
+            document.getElementById('yearMin').value = p.yearMin || '';
+            document.getElementById('yearMax').value = p.yearMax || '';
+            document.getElementById('scoreMin').value = p.scoreMin || '';
+            document.getElementById('scoreMax').value = p.scoreMax || '';
+            document.getElementById('sortBy').value = p.sortBy || 'score-desc';
+            document.getElementById('filterWaterView').checked = !!p.waterView;
+            document.getElementById('filterHasLot').checked = !!p.hasLot;
+            if (p.regions) { document.querySelectorAll('.region-filter').forEach(function(e){ e.checked = p.regions.includes(e.value); }); }
+            if (p.neighborhoods) { document.querySelectorAll('.nbr-filter').forEach(function(e){ e.checked = p.neighborhoods.includes(e.value); }); }
+            if (p.types) { document.querySelectorAll('.type-filter').forEach(function(e){ e.checked = p.types.includes(e.value); }); }
+            applyFilters();
+        }
+
+        function validateAndGenerateOffer() {
+            var name = document.getElementById('buyerName').value.trim();
+            var email = document.getElementById('buyerEmail').value.trim();
+            var prop = document.getElementById('propertySelect').value;
+            var errors = [];
+            if (!name) errors.push('Please enter your full name.');
+            if (!email) errors.push('Please enter your email address.');
+            if (!prop) errors.push('Please select a property.');
+            if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errors.push('Please enter a valid email address.');
+            if (errors.length > 0) {
+                alert(errors.join('\n'));
+                return;
+            }
+            saveBuyerInfo();
+            generateOfferSummary();
+        }
+
+        // ===== MORTGAGE CALCULATOR =====
+        function calcMortgage() {
+            var price = parseFloat(document.getElementById('mortPrice').value) || 0;
+            var down = parseFloat(document.getElementById('mortDown').value) || 0;
+            var rate = parseFloat(document.getElementById('mortRate').value) || 5.5;
+            var years = parseInt(document.getElementById('mortAmort').value) || 25;
+            var principal = price - down;
+            var downPct = price > 0 ? (down / price * 100) : 0;
+
+            // CMHC Insurance (required if down < 20%)
+            var cmhc = 0;
+            if (downPct < 20 && price <= 1500000) {
+                var cmhcRate = downPct < 5 ? 0 : (downPct < 10 ? 0.04 : (downPct < 15 ? 0.031 : 0.028));
+                cmhc = Math.round(principal * cmhcRate);
+                principal += cmhc;
+            }
+
+            var monthlyRate = rate / 100 / 12;
+            var n = years * 12;
+            var monthly = monthlyRate > 0 ? principal * monthlyRate * Math.pow(1 + monthlyRate, n) / (Math.pow(1 + monthlyRate, n) - 1) : principal / n;
+            var totalCost = monthly * n;
+            var totalInterest = totalCost - (price - down);
+
+            document.getElementById('mortMonthly').textContent = '$' + Math.round(monthly).toLocaleString();
+            document.getElementById('mortAmount').textContent = '$' + Math.round(price - down).toLocaleString();
+            document.getElementById('mortTotalInterest').textContent = '$' + Math.round(totalInterest).toLocaleString();
+            document.getElementById('mortTotalCost').textContent = '$' + Math.round(totalCost).toLocaleString();
+            document.getElementById('mortCMHC').textContent = cmhc > 0 ? '$' + cmhc.toLocaleString() : 'N/A (20%+ down)';
+
+            // BC Property Transfer Tax
+            var ptt1 = Math.min(price, 200000) * 0.01;
+            var ptt2 = Math.max(0, Math.min(price, 2000000) - 200000) * 0.02;
+            var ptt3 = Math.max(0, price - 2000000) * 0.03;
+            var pttTotal = ptt1 + ptt2 + ptt3;
+
+            document.getElementById('pttTier1').textContent = '$' + Math.round(ptt1).toLocaleString();
+            document.getElementById('pttTier2').textContent = '$' + Math.round(ptt2).toLocaleString();
+            document.getElementById('pttTier3').textContent = '$' + Math.round(ptt3).toLocaleString();
+            document.getElementById('pttTotal').textContent = '$' + Math.round(pttTotal).toLocaleString();
+            document.getElementById('ccPTT').textContent = '$' + Math.round(pttTotal).toLocaleString();
+            document.getElementById('ccCMHC').textContent = cmhc > 0 ? '$' + cmhc.toLocaleString() : '$0';
+            var closingMin = pttTotal + 1500 + 400 + 300 + 200 + cmhc;
+            var closingMax = pttTotal + 2500 + 700 + 500 + 400 + cmhc;
+            document.getElementById('ccTotal').textContent = '$' + Math.round(closingMin).toLocaleString() + ' - $' + Math.round(closingMax).toLocaleString();
+        }
+
+        // ===== PROPERTY COMPARISON TOOL =====
+        var comparisonSet = new Set();
+
+        function toggleComparison(idx, event) {
+            if (event) event.stopPropagation();
+            if (comparisonSet.has(idx)) {
+                comparisonSet.delete(idx);
+            } else if (comparisonSet.size < 4) {
+                comparisonSet.add(idx);
+            } else {
+                alert('Maximum 4 properties for comparison. Remove one first.');
+                return;
+            }
+        }
+
+        function openComparisonTool() {
+            var items = [...comparisonSet].map(function(idx) { return rawListings[idx]; });
+            if (items.length < 2) {
+                // Show selection UI
+                var sl = [...shortlistedIds];
+                if (sl.length >= 2) {
+                    comparisonSet = new Set(sl.slice(0, Math.min(4, sl.length)));
+                    items = [...comparisonSet].map(function(idx) { return rawListings[idx]; });
+                } else {
+                    alert('Add at least 2 properties to your shortlist, then use Compare. Or click the compare checkbox on individual property cards.');
+                    return;
+                }
+            }
+            renderComparison(items);
+        }
+
+        function renderComparison(items) {
+            var fields = [
+                { key: 'price', label: 'Asking Price', fmt: function(l) { return formatPrice(l.price); }, compare: 'lower' },
+                { key: 'score', label: 'Deal Score', fmt: function(l) { return Math.round(l.score) + '/100'; }, compare: 'higher' },
+                { key: 'type', label: 'Property Type', fmt: function(l) { return l.type; } },
+                { key: 'beds', label: 'Bedrooms', fmt: function(l) { return l.beds; }, compare: 'higher' },
+                { key: 'baths', label: 'Bathrooms', fmt: function(l) { return l.baths; }, compare: 'higher' },
+                { key: 'sqft', label: 'Square Feet', fmt: function(l) { return l.sqft > 0 ? l.sqft.toLocaleString() : 'N/A'; }, compare: 'higher' },
+                { key: 'ppsf', label: '$/SqFt', fmt: function(l) { return l.sqft > 0 ? '$' + Math.round(l.price / l.sqft).toLocaleString() : 'N/A'; }, compare: 'lower' },
+                { key: 'dom', label: 'Days on Market', fmt: function(l) { return l.dom; }, compare: 'higher' },
+                { key: 'yearBuilt', label: 'Year Built', fmt: function(l) { return l.yearBuilt; }, compare: 'higher' },
+                { key: 'lot', label: 'Lot Size', fmt: function(l) { return l.lot || 'N/A'; } },
+                { key: 'neighborhood', label: 'Neighborhood', fmt: function(l) { return l.neighborhood; } },
+                { key: 'agent', label: 'Agent', fmt: function(l) { return l.agent; } },
+                { key: 'agg', label: 'Aggressive Offer', fmt: function(l) { return formatPrice(calculateOffers(l).aggressive); }, compare: 'lower' },
+                { key: 'str', label: 'Strategic Offer', fmt: function(l) { return formatPrice(calculateOffers(l).strategic); }, compare: 'lower' },
+                { key: 'comp', label: 'Competitive Offer', fmt: function(l) { return formatPrice(calculateOffers(l).competitive); }, compare: 'lower' },
+                { key: 'closingCost', label: 'Est. Closing Costs', fmt: function(l) { var p=l.price; var ptt=Math.min(p,200000)*0.01+Math.max(0,Math.min(p,2000000)-200000)*0.02+Math.max(0,p-2000000)*0.03; return '$'+Math.round(ptt+2500).toLocaleString(); }, compare: 'lower' },
+                { key: 'waterView', label: 'Water View', fmt: function(l) { return l.waterView ? 'Yes' : 'No'; } }
+            ];
+
+            var html = '<h2 style="color:var(--primary);margin-bottom:16px;">Property Comparison</h2>';
+            html += '<table class="comparison-table"><thead><tr><th></th>';
+            items.forEach(function(l) {
+                html += '<td style="font-weight:700;font-size:14px;padding:12px;background:var(--primary);color:white;min-width:180px;">' + l.addr + '<br><span style="font-weight:400;font-size:11px;opacity:0.8;">' + l.neighborhood + '</span></td>';
+            });
+            html += '</tr></thead><tbody>';
+
+            fields.forEach(function(field) {
+                html += '<tr><th>' + field.label + '</th>';
+                var vals = items.map(function(l) {
+                    if (field.key === 'ppsf') return l.sqft > 0 ? l.price / l.sqft : Infinity;
+                    if (field.key === 'agg') return calculateOffers(l).aggressive;
+                    if (field.key === 'str') return calculateOffers(l).strategic;
+                    if (field.key === 'comp') return calculateOffers(l).competitive;
+                    if (field.key === 'closingCost') { var p=l.price; return Math.min(p,200000)*0.01+Math.max(0,Math.min(p,2000000)-200000)*0.02+Math.max(0,p-2000000)*0.03+2500; }
+                    return l[field.key];
+                });
+                var best = field.compare === 'lower' ? Math.min(...vals.filter(function(v){return typeof v==='number'&&isFinite(v);})) : (field.compare === 'higher' ? Math.max(...vals.filter(function(v){return typeof v==='number'&&isFinite(v);})) : null);
+                items.forEach(function(l, i) {
+                    var cls = '';
+                    if (best !== null && typeof vals[i] === 'number' && isFinite(vals[i])) {
+                        cls = vals[i] === best ? ' class="comp-better"' : '';
+                    }
+                    html += '<td' + cls + '>' + field.fmt(l) + '</td>';
+                });
+                html += '</tr>';
+            });
+            html += '</tbody></table>';
+            html += '<div style="margin-top:16px;font-size:12px;color:#666;">Green highlights indicate the best value for that metric. Comparing ' + items.length + ' properties.</div>';
+            document.getElementById('comparisonBody').innerHTML = html;
+            document.getElementById('comparisonModal').classList.add('active');
+        }
+
+        // ===== TABLE COLUMN SORTING =====
+        var lastSortCol = '';
+        var sortAsc = true;
+        function sortTable(col) {
+            if (col === lastSortCol) { sortAsc = !sortAsc; } else { sortAsc = true; lastSortCol = col; }
+            var dir = sortAsc ? 1 : -1;
+            filteredListings.sort(function(a, b) {
+                switch(col) {
+                    case 'addr': return dir * a.addr.localeCompare(b.addr);
+                    case 'neighborhood': return dir * a.neighborhood.localeCompare(b.neighborhood);
+                    case 'type': return dir * a.type.localeCompare(b.type);
+                    case 'price-asc': return dir * (a.price - b.price);
+                    case 'sqft': return dir * (b.sqft - a.sqft);
+                    case 'ppsf-asc': return dir * ((a.sqft>0?a.price/a.sqft:Infinity) - (b.sqft>0?b.price/b.sqft:Infinity));
+                    case 'dom-desc': return dir * (b.dom - a.dom);
+                    case 'year': return dir * ((b.yearBuilt||0) - (a.yearBuilt||0));
+                    case 'score-desc': return dir * (b.score - a.score);
+                    default: return 0;
+                }
+            });
+            currentPage = 0;
+            renderListingsTable();
+        }
+
+        // ===== COMPARABLE SALES FINDER =====
+        function findComparables(listing) {
+            return rawListings.filter(function(l) {
+                if (l === listing) return false;
+                if (l.neighborhood !== listing.neighborhood && l.region !== listing.region) return false;
+                if (l.type !== listing.type) return false;
+                var priceDiff = Math.abs(l.price - listing.price) / listing.price;
+                return priceDiff < 0.35;
+            }).sort(function(a, b) {
+                var distA = Math.abs(a.price - listing.price);
+                var distB = Math.abs(b.price - listing.price);
+                return distA - distB;
+            }).slice(0, 5);
+        }
+
+        // ===== CLOSING COST ESTIMATOR =====
+        function estimateClosingCosts(price) {
+            var ptt1 = Math.min(price, 200000) * 0.01;
+            var ptt2 = Math.max(0, Math.min(price, 2000000) - 200000) * 0.02;
+            var ptt3 = Math.max(0, price - 2000000) * 0.03;
+            var ptt = ptt1 + ptt2 + ptt3;
+            return { ptt: Math.round(ptt), legal: 2000, inspection: 550, appraisal: 400, titleIns: 300, total: Math.round(ptt + 3250) };
+        }
+
+        // ===== SHORTLIST NOTES =====
+        var shortlistNotes = JSON.parse(localStorage.getItem('shortlistNotes') || '{}');
+        function saveShortlistNote(idx) {
+            var note = document.getElementById('note_' + idx).value;
+            shortlistNotes[idx] = note;
+            localStorage.setItem('shortlistNotes', JSON.stringify(shortlistNotes));
+        }
+
     </script>
 
 </body>
