@@ -1088,6 +1088,21 @@
             background: #555;
         }
         
+        /* Listing badges */
+        .listing-badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 9px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-left: 6px;
+            vertical-align: middle;
+        }
+        .badge-new { background: #d4edda; color: #155724; }
+        .badge-hot { background: #f8d7da; color: #721c24; }
+
         /* Empty state */
         .empty-state {
             text-align: center;
@@ -1312,6 +1327,26 @@
             }
         }
 
+        /* Mobile tab groups */
+        @media (max-width: 768px) {
+            .tabs {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 4px;
+            }
+            .tabs .tab-button {
+                font-size: 11px;
+                padding: 7px 10px;
+                flex: 0 1 auto;
+            }
+            .tab-group-divider {
+                width: 100%;
+                height: 1px;
+                background: var(--border-gray);
+                margin: 2px 0;
+            }
+        }
+
         /* Responsive: Small phones */
         @media (max-width: 480px) {
             .header h1 { font-size: 15px; }
@@ -1338,6 +1373,10 @@
         <div class="stat-item">
             <div class="stat-value" id="totalProperties">0</div>
             <div class="stat-label">Total Properties</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-value" id="dataTimestamp" style="font-size: 13px;">--</div>
+            <div class="stat-label">Data as of</div>
         </div>
         <div class="stat-item">
             <div class="stat-value" id="avgPrice">$0</div>
@@ -1501,8 +1540,10 @@
                 <button class="tab-button" onclick="switchTab('deals')">Deal Analysis</button>
                 <button class="tab-button" onclick="switchTab('offers')">Offer Generator</button>
                 <button class="tab-button" onclick="switchTab('mortgage')">Calculator</button>
+                <span class="tab-group-divider"></span>
                 <button class="tab-button" onclick="switchTab('shortlist')">Shortlist</button>
                 <button class="tab-button" onclick="openComparisonTool()">Compare</button>
+                <span class="tab-group-divider"></span>
                 <button class="tab-button" onclick="switchTab('norealtorguide')">No-Realtor Guide</button>
                 <button class="tab-button" onclick="switchTab('help')">Help</button>
             </div>
@@ -1626,6 +1667,10 @@
                     <div class="form-group">
                         <label>Your Email *</label>
                         <input type="email" id="buyerEmail" placeholder="Enter your email address" required onchange="saveBuyerInfo()">
+                    </div>
+                    <div class="form-group">
+                        <label>Your Phone Number *</label>
+                        <input type="tel" id="buyerPhone" placeholder="Enter your phone number" required onchange="saveBuyerInfo()">
                     </div>
                     <div class="form-group">
                         <label>Company Name (optional)</label>
@@ -2529,6 +2574,16 @@
             const end = start + listingsPerPage;
             const pageData = filteredListings.slice(start, end);
             
+            if (filteredListings.length === 0) {
+                document.getElementById('listingsTableBody').innerHTML = '<tr><td colspan="13" style="text-align:center;padding:40px;color:#999;"><div style="font-size:18px;font-weight:700;color:#666;margin-bottom:8px;">No Properties Found</div><p>Try adjusting your filters or search terms</p></td></tr>';
+                document.getElementById('listingsPagination').innerHTML = '';
+                document.getElementById('listingCountLabel').textContent = '0 properties';
+                if (currentListingView === 'cards') {
+                    document.getElementById('cardGridContainer').innerHTML = '<div style="text-align:center;padding:40px;color:#999;grid-column:1/-1;"><div style="font-size:18px;font-weight:700;color:#666;margin-bottom:8px;">No Properties Found</div><p>Try adjusting your filters or search terms</p></div>';
+                }
+                return;
+            }
+
             let html = '';
             pageData.forEach((listing) => {
                 const offers = calculateOffers(listing);
@@ -2540,7 +2595,7 @@
                 html += `
                     <tr onclick="showDetailModal(${listing.listingIndex})">
                         <td><span class="star-toggle ${starClass}" onclick="event.stopPropagation(); toggleShortlist(${listing.listingIndex})">★</span></td>
-                        <td><span class="water-view-icon">${listing.waterView ? '🌊' : ''}</span>${listing.addr}</td>
+                        <td><span class="water-view-icon">${listing.waterView ? '🌊' : ''}</span>${listing.addr}${getListingBadge(listing)}</td>
                         <td>${listing.neighborhood}</td>
                         <td>${listing.type}</td>
                         <td>${formatPrice(listing.price)}</td>
@@ -2672,7 +2727,7 @@
                 html += '</div>';
                 html += '<div class="property-card-body">';
                 html += '<div class="property-card-price">' + formatPrice(listing.price) + '</div>';
-                html += '<div class="property-card-addr">' + listing.addr + '</div>';
+                html += '<div class="property-card-addr">' + listing.addr + getListingBadge(listing) + '</div>';
                 html += '<div class="property-card-nbr">' + listing.neighborhood + ' &middot; ' + listing.region + '</div>';
                 html += '<div class="property-card-details">';
                 html += '<span><strong>' + listing.beds + '</strong> Beds</span>';
@@ -3052,14 +3107,17 @@
             var savedName = localStorage.getItem('buyerName');
             var savedEmail = localStorage.getItem('buyerEmail');
             var savedCompany = localStorage.getItem('buyerCompany');
+            var savedPhone = localStorage.getItem('buyerPhone');
             if (savedName) document.getElementById('buyerName').value = savedName;
             if (savedEmail) document.getElementById('buyerEmail').value = savedEmail;
+            if (savedPhone) document.getElementById('buyerPhone').value = savedPhone;
             if (savedCompany) document.getElementById('buyerCompany').value = savedCompany;
         }
 
         function saveBuyerInfo() {
             localStorage.setItem('buyerName', document.getElementById('buyerName').value);
             localStorage.setItem('buyerEmail', document.getElementById('buyerEmail').value);
+            localStorage.setItem('buyerPhone', document.getElementById('buyerPhone').value);
             localStorage.setItem('buyerCompany', document.getElementById('buyerCompany').value);
         }
         
@@ -3457,6 +3515,12 @@ Competitive: ${formatPrice(offers.competitive)}`;
             return 'https://www.bcassessment.ca/Property/AssessmentSearch';
         }
         
+        function getListingBadge(listing) {
+            if (listing.dom <= 7) return '<span class="listing-badge badge-new">New</span>';
+            if (listing.dom >= 90) return '<span class="listing-badge badge-hot">90+ Days</span>';
+            return '';
+        }
+
         function getScoreClass(score) {
             if (score >= 70) return 'score-hot';
             if (score >= 50) return 'score-good';
@@ -3560,10 +3624,12 @@ Competitive: ${formatPrice(offers.competitive)}`;
         function validateAndGenerateOffer() {
             var name = document.getElementById('buyerName').value.trim();
             var email = document.getElementById('buyerEmail').value.trim();
+            var phone = document.getElementById('buyerPhone').value.trim();
             var prop = document.getElementById('propertySelect').value;
             var errors = [];
             if (!name) errors.push('Please enter your full name.');
             if (!email) errors.push('Please enter your email address.');
+            if (!phone) errors.push('Please enter your phone number.');
             if (!prop) errors.push('Please select a property.');
             if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errors.push('Please enter a valid email address.');
             if (errors.length > 0) {
@@ -3644,7 +3710,14 @@ Competitive: ${formatPrice(offers.competitive)}`;
                     comparisonSet = new Set(sl.slice(0, Math.min(4, sl.length)));
                     items = [...comparisonSet].map(function(idx) { return rawListings[idx]; });
                 } else {
-                    alert('Add at least 2 properties to your shortlist, then use Compare. Or click the compare checkbox on individual property cards.');
+                    var emptyModal = '<div style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:10000;display:flex;align-items:center;justify-content:center;" onclick="if(event.target===this)this.remove()">';
+                    emptyModal += '<div style="background:white;border-radius:8px;max-width:400px;width:90%;padding:30px;text-align:center;">';
+                    emptyModal += '<div style="font-size:48px;margin-bottom:12px;">⚖️</div>';
+                    emptyModal += '<h3 style="color:var(--primary);margin:0 0 8px 0;">No Properties to Compare</h3>';
+                    emptyModal += '<p style="color:#666;font-size:13px;margin:0 0 16px 0;">Add at least 2 properties to your shortlist (★), then use Compare to see them side by side.</p>';
+                    emptyModal += '<button onclick="this.closest(\'div[style*=fixed]\').remove()" style="padding:10px 24px;background:var(--primary);color:white;border:none;border-radius:4px;cursor:pointer;">Got It</button>';
+                    emptyModal += '</div></div>';
+                    document.body.insertAdjacentHTML('beforeend', emptyModal);
                     return;
                 }
             }
@@ -3852,10 +3925,12 @@ Competitive: ${formatPrice(offers.competitive)}`;
         function validateAndGenerateOffer() {
             var name = document.getElementById('buyerName').value.trim();
             var email = document.getElementById('buyerEmail').value.trim();
+            var phone = document.getElementById('buyerPhone').value.trim();
             var prop = document.getElementById('propertySelect').value;
             var errors = [];
             if (!name) errors.push('Please enter your full name.');
             if (!email) errors.push('Please enter your email address.');
+            if (!phone) errors.push('Please enter your phone number.');
             if (!prop) errors.push('Please select a property.');
             if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errors.push('Please enter a valid email address.');
             if (errors.length > 0) {
@@ -3936,7 +4011,14 @@ Competitive: ${formatPrice(offers.competitive)}`;
                     comparisonSet = new Set(sl.slice(0, Math.min(4, sl.length)));
                     items = [...comparisonSet].map(function(idx) { return rawListings[idx]; });
                 } else {
-                    alert('Add at least 2 properties to your shortlist, then use Compare. Or click the compare checkbox on individual property cards.');
+                    var emptyModal = '<div style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:10000;display:flex;align-items:center;justify-content:center;" onclick="if(event.target===this)this.remove()">';
+                    emptyModal += '<div style="background:white;border-radius:8px;max-width:400px;width:90%;padding:30px;text-align:center;">';
+                    emptyModal += '<div style="font-size:48px;margin-bottom:12px;">⚖️</div>';
+                    emptyModal += '<h3 style="color:var(--primary);margin:0 0 8px 0;">No Properties to Compare</h3>';
+                    emptyModal += '<p style="color:#666;font-size:13px;margin:0 0 16px 0;">Add at least 2 properties to your shortlist (★), then use Compare to see them side by side.</p>';
+                    emptyModal += '<button onclick="this.closest(\'div[style*=fixed]\').remove()" style="padding:10px 24px;background:var(--primary);color:white;border:none;border-radius:4px;cursor:pointer;">Got It</button>';
+                    emptyModal += '</div></div>';
+                    document.body.insertAdjacentHTML('beforeend', emptyModal);
                     return;
                 }
             }
@@ -4269,6 +4351,7 @@ Competitive: ${formatPrice(offers.competitive)}`;
             const agentName = document.getElementById('offerAgentName').value;
             const buyerName = document.getElementById('buyerName').value.trim() || 'Buyer Name';
             const buyerEmail = document.getElementById('buyerEmail').value.trim() || '';
+            const buyerPhone = document.getElementById('buyerPhone').value.trim() || '';
             const buyerCompany = document.getElementById('buyerCompany').value.trim();
             const buyerDisplay = buyerCompany ? buyerCompany + ' (c/o ' + buyerName + ')' : buyerName;
             const sigImg = localStorage.getItem('offerSignatureImg');
@@ -4345,8 +4428,24 @@ Competitive: ${formatPrice(offers.competitive)}`;
             doc.setFontSize(8);
             doc.setFont('helvetica', 'normal');
             doc.text('Province of British Columbia', margin, 17);
-            doc.text(buyerName + (buyerEmail ? '  |  ' + buyerEmail : ''), pageW - margin, 14, {align: 'right'});
+            doc.text(buyerName + (buyerEmail ? '  |  ' + buyerEmail : '') + (buyerPhone ? '  |  ' + buyerPhone : ''), pageW - margin, 14, {align: 'right'});
             y = 32;
+
+            // ===== LEGAL DISCLAIMER =====
+            doc.setFillColor(255, 245, 235);
+            doc.setDrawColor(220, 120, 50);
+            doc.rect(margin, y - 2, contentW, 14, 'FD');
+            doc.setFontSize(7.5);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(180, 80, 20);
+            doc.text('IMPORTANT DISCLAIMER', margin + 3, y + 3);
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(6.5);
+            doc.setTextColor(120, 60, 10);
+            var disclaimerText = 'This document is generated by an automated tool for informational purposes only and does not constitute legal advice. It is not a standard BCREA Contract of Purchase and Sale. The Buyer is strongly advised to retain a qualified BC lawyer or notary to review this offer before submission. Use at your own risk.';
+            var disclaimerLines = doc.splitTextToSize(disclaimerText, contentW - 6);
+            doc.text(disclaimerLines, margin + 3, y + 7);
+            y += 16;
 
             // ===== DATE & RECIPIENT =====
             const today = new Date();
@@ -4376,7 +4475,7 @@ Competitive: ${formatPrice(offers.competitive)}`;
                 headStyles: { fillColor: [55, 90, 127], fontSize: 9, fontStyle: 'bold', textColor: [255,255,255] },
                 body: [
                     ['Buyer (Purchaser)', buyerDisplay],
-                    ['Buyer Contact', buyerEmail],
+                    ['Buyer Contact', buyerEmail + (buyerPhone ? '  |  ' + buyerPhone : '')],
                     ['Property Address', fullAddr],
                     ['Property Type', listing.type + (listing.beds > 0 ? ' - ' + listing.beds + ' bed / ' + listing.baths + ' bath' + (listing.sqft > 0 ? ' / ' + listing.sqft.toLocaleString() + ' sqft' : '') : '')],
                     ['Legal Description', 'To be confirmed via title search prior to subject removal'],
@@ -4453,17 +4552,17 @@ Competitive: ${formatPrice(offers.competitive)}`;
                 ['ADJUSTMENTS:', 'All adjustments to be made as of the Adjustment Date, including but not limited to: property taxes, utility charges, strata/maintenance fees, rental income (if applicable), fuel, and other items typically adjusted in a BC real estate transaction. Any prepaid amounts by the Seller beyond the Adjustment Date shall be credited to the Seller; any amounts owing shall be the responsibility of the Seller up to and including the Adjustment Date.'],
                 ['RISK AND INSURANCE:', 'The property shall be and remain at the risk of the Seller until the Completion Date. If the property is materially damaged before completion, the Buyer may at the Buyer\'s option either complete the purchase and receive all insurance proceeds or terminate this agreement and receive a full refund of the deposit. The Seller shall maintain all existing insurance policies in full force and effect until completion.'],
                 ['TITLE:', 'Good and marketable title shall be conveyed to the Buyer free and clear of all liens, charges, encumbrances, and defects, except: (a) conditions, provisos, restrictions, and reservations in the original grant from the Crown; (b) subsisting conditions and reservations in the Land Title Act; and (c) any registered easements or covenants disclosed to and accepted by the Buyer prior to subject removal.'],
-                ['PROPERTY CONDITION:', 'The Seller represents and warrants that as of the Completion Date: (a) the Seller has not received notice of any existing or pending building code violations, zoning non-compliance, or bylaw infractions; (b) all mechanical, electrical, plumbing, heating, and structural systems shall be in normal working order; (c) the property shall be delivered in substantially the same condition as on the date of acceptance, reasonable wear and tear excepted.'],
+                ['PROPERTY CONDITION:', 'The property is sold on an "as-is, where-is" basis as of the date of acceptance, subject to the Seller\'s obligations under the Property Disclosure Statement. The Seller represents that the Seller has not received notice of any building code violations, zoning non-compliance, or bylaw infractions affecting the property. The property shall be delivered in substantially the same condition as on the date of acceptance, reasonable wear and tear excepted.'],
                 ['PROPERTY DISCLOSURE:', 'The Seller shall provide to the Buyer a completed Property Disclosure Statement (BC Form) within 3 business days of acceptance. Any material misrepresentation or omission in the Property Disclosure Statement shall entitle the Buyer to terminate this agreement and receive a full refund of the deposit.'],
                 ['INCLUDED ITEMS:', 'All fixtures, improvements, and appurtenances attached to the property are included in the purchase price unless specifically excluded in writing. This includes but is not limited to: built-in appliances, light fixtures, window coverings, attached floor coverings, garage door openers with remotes, and all landscaping.'],
                 ['BUYER ACCESS:', 'The Seller shall provide the Buyer and the Buyer\'s agents (inspectors, appraisers, contractors) reasonable access to the property for inspections and assessments during the subject removal period, and for one final walk-through within 48 hours prior to the Completion Date.'],
-                ['VACANT POSSESSION:', 'The Seller shall deliver vacant possession of the property on the Possession Date, with all personal belongings and debris removed. If the Seller fails to deliver vacant possession, the Buyer shall be entitled to compensation of $500 per day until vacant possession is delivered.'],
+                ['VACANT POSSESSION:', 'The Seller shall deliver vacant possession of the property on the Possession Date, with all personal belongings and debris removed and the property in a clean, broom-swept condition.'],
                 ['REPRESENTATIONS AND WARRANTIES:', 'The Seller represents and warrants that: (a) the Seller has the legal authority and capacity to sell the property; (b) the property is not subject to any undisclosed litigation, claims, or disputes; (c) all information provided to the Buyer is true and accurate to the best of the Seller\'s knowledge. These representations and warranties shall survive and not merge on completion.'],
-                ['REMEDIES:', 'If the Seller fails to complete this transaction after all conditions have been fulfilled or waived, the Buyer shall be entitled to specific performance or damages at the Buyer\'s election. If the Buyer fails to complete after all conditions have been fulfilled or waived, the Seller\'s sole remedy shall be forfeiture of the deposit as liquidated damages.'],
+                ['REMEDIES:', 'If the Seller fails to complete this transaction after all conditions have been fulfilled or waived, the Buyer shall be entitled to pursue all remedies available at law or in equity. If the Buyer fails to complete after all conditions have been fulfilled or waived, the Seller\'s remedies shall include forfeiture of the deposit as liquidated damages, without prejudice to any other remedies available at law.'],
                 ['GOVERNING LAW:', 'This agreement shall be governed by and construed in accordance with the laws of the Province of British Columbia and the federal laws of Canada applicable therein. Any disputes shall be resolved in the courts of British Columbia.'],
                 ['ENTIRE AGREEMENT:', 'This offer, when accepted, shall constitute the entire agreement between the Buyer and Seller. There are no representations, warranties, guarantees, promises, or agreements other than those set out herein. Any amendment shall be made in writing and signed by all parties.'],
                 ['TENDER:', 'Any tender of documents or money may be made on or upon the parties or their respective lawyers.'],
-                ['ASSIGNMENT:', 'The Buyer shall have the right to assign this agreement, or direct title to a nominee or corporation designated by the Buyer, prior to or on the Completion Date, without requiring the Seller\'s consent.'],
+                ['ASSIGNMENT:', 'The Buyer may assign this agreement or direct title to a nominee prior to or on the Completion Date, provided the Seller\'s written consent is obtained, which consent shall not be unreasonably withheld.'],
                 ['SEVERABILITY:', 'If any provision of this agreement is found to be invalid or unenforceable, the remaining provisions shall continue in full force and effect.'],
             ];
 
@@ -4537,6 +4636,7 @@ Competitive: ${formatPrice(offers.competitive)}`;
             y = addText(buyerDisplay + ' (Buyer)', margin, y, {fontSize: 10, bold: true});
             y = addText('Date: ' + dateStr, margin, y, {fontSize: 9});
             if (buyerEmail) y = addText('Email: ' + buyerEmail, margin, y, {fontSize: 9, color: [100, 100, 100]});
+            if (buyerPhone) y = addText('Phone: ' + buyerPhone, margin, y, {fontSize: 9, color: [100, 100, 100]});
 
             // ===== SELLER RESPONSE FORM (new page) =====
             doc.addPage();
@@ -4685,9 +4785,13 @@ Competitive: ${formatPrice(offers.competitive)}`;
             const agentEmail = document.getElementById('offerAgentEmail').value.trim();
             const agentName = document.getElementById('offerAgentName').value.trim();
             const offerPrice = parseFloat(document.getElementById('offerPrice').value);
+            const deposit = parseFloat(document.getElementById('offerDeposit').value) || 0;
+            const completionDate = document.getElementById('offerCompletionDate').value;
             const buyerName = document.getElementById('buyerName').value.trim() || 'Buyer';
             const buyerEmail = document.getElementById('buyerEmail').value.trim() || '';
+            const buyerPhone = document.getElementById('buyerPhone').value.trim() || '';
             const fmtCur = (n) => '$' + Number(n).toLocaleString('en-US');
+            const fmtDt = (d) => { if (!d) return 'TBD'; const dt = new Date(d + 'T00:00:00'); return dt.toLocaleDateString('en-US', {year:'numeric', month:'long', day:'numeric'}); };
 
             if (!agentEmail) {
                 const status = document.getElementById('offerStatus');
@@ -4696,24 +4800,85 @@ Competitive: ${formatPrice(offers.competitive)}`;
                 return;
             }
 
-            const subject = encodeURIComponent('Offer to Purchase — ' + fullAddr);
-            const body = encodeURIComponent(
+            // Build professional email body
+            const bodyText =
                 'Dear ' + (agentName || 'Listing Agent') + ',\n\n' +
-                'Please find attached my offer to purchase the property at ' + fullAddr + '.\n\n' +
-                'Offer Price: ' + fmtCur(offerPrice) + '\n\n' +
-                'I am a motivated buyer and would appreciate your earliest review and response. I am happy to discuss any questions regarding the terms.\n\n' +
-                'Please find the signed offer letter attached as a PDF.\n\n' +
-                'Thank you for your time.\n\n' +
+                'I am writing to submit a formal offer to purchase the property listed at:\n' +
+                fullAddr + '\n\n' +
+                'OFFER SUMMARY\n' +
+                '—————————————————\n' +
+                'Offer Price: ' + fmtCur(offerPrice) + '\n' +
+                'Deposit: ' + fmtCur(deposit) + '\n' +
+                'Proposed Completion: ' + fmtDt(completionDate) + '\n' +
+                '—————————————————\n\n' +
+                'Please find the full signed offer letter attached as a PDF (' + (lastGeneratedPdfFilename || 'Offer_Letter.pdf') + ').\n\n' +
+                'I am an unrepresented buyer and have been advised to seek independent legal counsel. I am a motivated and financially prepared purchaser and would appreciate your earliest review and response.\n\n' +
+                'I am happy to discuss any questions regarding the terms of this offer. Please feel free to reach me at the contact details below.\n\n' +
                 'Best regards,\n' +
                 buyerName + '\n' +
-                buyerEmail
-            );
+                (buyerEmail ? 'Email: ' + buyerEmail + '\n' : '') +
+                (buyerPhone ? 'Phone: ' + buyerPhone + '\n' : '');
 
-            window.open('mailto:' + agentEmail + '?subject=' + subject + '&body=' + body, '_self');
+            // Show preview modal
+            var previewHtml = '<div style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:10000;display:flex;align-items:center;justify-content:center;" id="emailPreviewModal" onclick="if(event.target===this)this.remove()">';
+            previewHtml += '<div style="background:white;border-radius:8px;max-width:640px;width:90%;max-height:85vh;overflow:auto;padding:24px;">';
+            previewHtml += '<h3 style="color:var(--primary);margin:0 0 16px 0;">Email Preview</h3>';
+            previewHtml += '<div style="margin-bottom:12px;"><strong>To:</strong> ' + agentEmail + '</div>';
+            previewHtml += '<div style="margin-bottom:12px;"><strong>Subject:</strong> Offer to Purchase \u2014 ' + fullAddr + '</div>';
+            previewHtml += '<hr style="border:none;border-top:1px solid #eee;margin:12px 0;">';
+            previewHtml += '<pre style="white-space:pre-wrap;font-family:inherit;font-size:13px;line-height:1.6;background:#f8f9fa;padding:16px;border-radius:4px;max-height:400px;overflow:auto;">' + bodyText.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</pre>';
+            previewHtml += '<div style="margin-top:12px;padding:10px;background:#fff3cd;border-radius:4px;font-size:12px;color:#856404;">Remember to attach the PDF file: <strong>' + (lastGeneratedPdfFilename || 'Offer_Letter.pdf') + '</strong></div>';
+            previewHtml += '<div style="display:flex;gap:12px;margin-top:20px;">';
+            previewHtml += '<button onclick="document.getElementById(\'emailPreviewModal\').remove(); sendEmailNow();" style="flex:1;padding:12px;background:var(--secondary);color:white;border:none;border-radius:4px;font-size:14px;font-weight:600;cursor:pointer;">Open Email Client</button>';
+            previewHtml += '<button onclick="document.getElementById(\'emailPreviewModal\').remove();" style="flex:1;padding:12px;background:#6c757d;color:white;border:none;border-radius:4px;font-size:14px;cursor:pointer;">Cancel</button>';
+            previewHtml += '</div></div></div>';
+            document.body.insertAdjacentHTML('beforeend', previewHtml);
 
-            const status = document.getElementById('offerStatus');
+            // Store data for actual send
+            window._pendingEmail = {
+                to: agentEmail,
+                subject: encodeURIComponent('Offer to Purchase \u2014 ' + fullAddr),
+                body: encodeURIComponent(bodyText)
+            };
+        }
+
+        function showPostSubmissionChecklist() {
+            var checklistHtml = '<div style="margin-top:20px;padding:20px;background:linear-gradient(135deg, #e8f5e9 0%, #f1f8e9 100%);border-radius:8px;border-left:4px solid var(--secondary);">';
+            checklistHtml += '<h4 style="color:var(--primary);margin:0 0 12px 0;">What Happens Next</h4>';
+            checklistHtml += '<div style="font-size:13px;line-height:2;">';
+            checklistHtml += '<label style="display:block;cursor:pointer;"><input type="checkbox" style="margin-right:8px;"> Attach the PDF to your email and send it</label>';
+            checklistHtml += '<label style="display:block;cursor:pointer;"><input type="checkbox" style="margin-right:8px;"> Wait for agent response (typically 1\u20133 business days)</label>';
+            checklistHtml += '<label style="display:block;cursor:pointer;"><input type="checkbox" style="margin-right:8px;"> If accepted: retain a BC lawyer/notary immediately</label>';
+            checklistHtml += '<label style="display:block;cursor:pointer;"><input type="checkbox" style="margin-right:8px;"> Arrange home inspection within subject period</label>';
+            checklistHtml += '<label style="display:block;cursor:pointer;"><input type="checkbox" style="margin-right:8px;"> Confirm mortgage financing / proof of funds</label>';
+            checklistHtml += '<label style="display:block;cursor:pointer;"><input type="checkbox" style="margin-right:8px;"> Deliver deposit to trustee within 24 hours of acceptance</label>';
+            checklistHtml += '<label style="display:block;cursor:pointer;"><input type="checkbox" style="margin-right:8px;"> Remove subjects by the subject removal date</label>';
+            checklistHtml += '<label style="display:block;cursor:pointer;"><input type="checkbox" style="margin-right:8px;"> Complete final walk-through before possession</label>';
+            checklistHtml += '</div></div>';
+
+            var summaryDiv = document.getElementById('offerSummary');
+            if (summaryDiv) {
+                var existing = document.getElementById('postSubmissionChecklist');
+                if (existing) existing.remove();
+                var div = document.createElement('div');
+                div.id = 'postSubmissionChecklist';
+                div.innerHTML = checklistHtml;
+                summaryDiv.appendChild(div);
+            }
+        }
+
+        function sendEmailNow() {
+            if (!window._pendingEmail) return;
+            var e = window._pendingEmail;
+            window.open('mailto:' + e.to + '?subject=' + e.subject + '&body=' + e.body, '_self');
+
+            var status = document.getElementById('offerStatus');
             status.textContent = 'Email client opened! Attach the downloaded PDF (' + lastGeneratedPdfFilename + ') and send.';
             status.style.color = 'var(--secondary)';
+
+            // Show "What Happens Next" checklist
+            showPostSubmissionChecklist();
+            window._pendingEmail = null;
         }
 
 
@@ -4782,10 +4947,12 @@ Competitive: ${formatPrice(offers.competitive)}`;
         function validateAndGenerateOffer() {
             var name = document.getElementById('buyerName').value.trim();
             var email = document.getElementById('buyerEmail').value.trim();
+            var phone = document.getElementById('buyerPhone').value.trim();
             var prop = document.getElementById('propertySelect').value;
             var errors = [];
             if (!name) errors.push('Please enter your full name.');
             if (!email) errors.push('Please enter your email address.');
+            if (!phone) errors.push('Please enter your phone number.');
             if (!prop) errors.push('Please select a property.');
             if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errors.push('Please enter a valid email address.');
             if (errors.length > 0) {
@@ -4866,7 +5033,14 @@ Competitive: ${formatPrice(offers.competitive)}`;
                     comparisonSet = new Set(sl.slice(0, Math.min(4, sl.length)));
                     items = [...comparisonSet].map(function(idx) { return rawListings[idx]; });
                 } else {
-                    alert('Add at least 2 properties to your shortlist, then use Compare. Or click the compare checkbox on individual property cards.');
+                    var emptyModal = '<div style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:10000;display:flex;align-items:center;justify-content:center;" onclick="if(event.target===this)this.remove()">';
+                    emptyModal += '<div style="background:white;border-radius:8px;max-width:400px;width:90%;padding:30px;text-align:center;">';
+                    emptyModal += '<div style="font-size:48px;margin-bottom:12px;">⚖️</div>';
+                    emptyModal += '<h3 style="color:var(--primary);margin:0 0 8px 0;">No Properties to Compare</h3>';
+                    emptyModal += '<p style="color:#666;font-size:13px;margin:0 0 16px 0;">Add at least 2 properties to your shortlist (★), then use Compare to see them side by side.</p>';
+                    emptyModal += '<button onclick="this.closest(\'div[style*=fixed]\').remove()" style="padding:10px 24px;background:var(--primary);color:white;border:none;border-radius:4px;cursor:pointer;">Got It</button>';
+                    emptyModal += '</div></div>';
+                    document.body.insertAdjacentHTML('beforeend', emptyModal);
                     return;
                 }
             }
