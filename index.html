@@ -2015,6 +2015,39 @@
                 </div>
 
                 <div class="guide-section">
+                    <button class="guide-accordion" onclick="toggleAccordion(this)">Settings &mdash; GitHub Feedback Integration</button>
+                    <div class="guide-panel">
+                        <p>Connect the Suggestions &amp; Feedback form to <strong>GitHub Issues</strong> so that every submission creates a trackable issue in your repository with appropriate labels.</p>
+                        <div style="background:var(--light-gray);padding:16px;border-radius:6px;margin:12px 0;">
+                            <div class="form-group" style="margin-bottom:12px;">
+                                <label style="font-weight:600;">GitHub Repository</label>
+                                <div style="display:flex;gap:8px;">
+                                    <input type="text" id="githubRepoInput" placeholder="owner/repo (e.g. patricknovak/global-realestate-dashboard)" style="flex:1;padding:8px 12px;border:1px solid var(--border-gray);border-radius:4px;font-size:13px;">
+                                </div>
+                            </div>
+                            <div class="form-group" style="margin-bottom:12px;">
+                                <label style="font-weight:600;">GitHub Personal Access Token</label>
+                                <div style="display:flex;gap:8px;">
+                                    <input type="password" id="githubTokenInput" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" style="flex:1;padding:8px 12px;border:1px solid var(--border-gray);border-radius:4px;font-size:13px;">
+                                    <button class="btn-primary" onclick="saveGitHubConfig()" style="white-space:nowrap;">Save</button>
+                                    <button class="btn-secondary" onclick="clearGitHubConfig()" style="white-space:nowrap;">Clear</button>
+                                </div>
+                            </div>
+                            <div id="githubConfigStatus" style="font-size:12px;margin-top:8px;"></div>
+                        </div>
+                        <p style="font-size:13px;color:#666;"><strong>How to create a Personal Access Token:</strong></p>
+                        <ol style="font-size:13px;line-height:2;padding-left:20px;color:#555;">
+                            <li>Go to <a href="https://github.com/settings/tokens?type=beta" target="_blank" rel="noopener">GitHub &rarr; Settings &rarr; Developer settings &rarr; Personal access tokens</a></li>
+                            <li>Click <strong>Generate new token</strong> (fine-grained recommended)</li>
+                            <li>Under <strong>Repository access</strong>, select your dashboard repository</li>
+                            <li>Under <strong>Permissions &rarr; Issues</strong>, grant <strong>Read and write</strong> access</li>
+                            <li>Generate the token and paste it above along with the repo name</li>
+                        </ol>
+                        <p style="font-size:12px;color:#888;margin-top:8px;">Feedback submissions will create GitHub Issues with labels matching the feedback type (bug, enhancement, feedback). Your token and repo are stored locally in your browser and only sent to the GitHub API.</p>
+                    </div>
+                </div>
+
+                <div class="guide-section">
                     <button class="guide-accordion active" onclick="toggleAccordion(this)">Getting Started</button>
                     <div class="guide-panel" style="display:block;">
                         <p>This dashboard is a free tool designed to help property buyers &mdash; especially those choosing not to use a realtor &mdash; find undervalued properties, analyze neighborhood trends, and generate professional offer letters.</p>
@@ -2079,9 +2112,9 @@
                 <hr style="border: none; border-top: 2px solid var(--light-gray); margin: 30px 0;">
 
                 <h3 style="color: var(--primary); margin-bottom: 16px;">Suggestions &amp; Feedback</h3>
-                <p style="margin-bottom: 16px; color: #666;">Help us improve this tool! Submit bug reports, feature requests, or general feedback.</p>
+                <p style="margin-bottom: 16px; color: #666;">Help us improve this tool! Submit bug reports, feature requests, or general feedback. Submissions are created as GitHub Issues for transparent tracking.</p>
 
-                <form id="feedbackForm" action="https://formspree.io/f/YOUR_FORM_ID" method="POST" style="max-width: 600px;">
+                <form id="feedbackForm" style="max-width: 600px;">
                     <div class="form-group">
                         <label>Your Name</label>
                         <input type="text" name="name" placeholder="Enter your name" required>
@@ -2104,12 +2137,11 @@
                         <label>Message</label>
                         <textarea name="message" rows="5" placeholder="Describe your suggestion, bug, or feedback..." required></textarea>
                     </div>
-                    <input type="hidden" name="_subject" value="Real Estate Dashboard Feedback">
                     <button type="submit" class="btn-primary" style="width: auto;">Submit Feedback</button>
                     <div id="feedbackStatus" style="margin-top: 12px; font-size: 13px;"></div>
                 </form>
 
-                <p style="margin-top: 20px; font-size: 12px; color: #999;">Feedback is sent via Formspree. To activate, replace <code>YOUR_FORM_ID</code> in the source with your Formspree endpoint. <a href="https://formspree.io" target="_blank" rel="noopener">Create a free form at formspree.io</a>.</p>
+                <p id="feedbackConfigNote" style="margin-top: 20px; font-size: 12px; color: #999;">Feedback is submitted as GitHub Issues. Configure your GitHub token and repository in the <strong>GitHub Feedback Integration</strong> settings section above to activate.</p>
             </div>
         </div>
     </div>
@@ -2243,30 +2275,15 @@
             loadFilterPresetList();
             calcMortgage();
 
-            // Formspree feedback form handler
+            // GitHub Issues feedback form handler
             var feedbackForm = document.getElementById('feedbackForm');
             if (feedbackForm) {
                 feedbackForm.addEventListener('submit', function(e) {
                     e.preventDefault();
-                    var status = document.getElementById('feedbackStatus');
-                    var formData = new FormData(feedbackForm);
-                    fetch(feedbackForm.action, { method: 'POST', body: formData, headers: { 'Accept': 'application/json' } })
-                    .then(function(r) {
-                        if (r.ok) {
-                            status.textContent = 'Thank you! Your feedback has been submitted.';
-                            status.style.color = '#28a745';
-                            feedbackForm.reset();
-                        } else {
-                            status.textContent = 'There was an error submitting. Please try again.';
-                            status.style.color = '#dc3545';
-                        }
-                    })
-                    .catch(function() {
-                        status.textContent = 'Network error. Please check your connection.';
-                        status.style.color = '#dc3545';
-                    });
+                    submitFeedbackToGitHub(feedbackForm);
                 });
             }
+            updateGitHubConfigStatus();
         });
         
         function loadShortlist() {
@@ -2783,6 +2800,116 @@
             }
             var input = document.getElementById('trackingEndpointInput');
             if (input && endpoint && !input.value) input.value = endpoint;
+        }
+
+        // GitHub feedback integration functions
+        function saveGitHubConfig() {
+            var repo = document.getElementById('githubRepoInput').value.trim();
+            var token = document.getElementById('githubTokenInput').value.trim();
+            if (!repo || !token) { alert('Please enter both a repository (owner/repo) and a Personal Access Token.'); return; }
+            if (!/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(repo)) { alert('Repository must be in the format owner/repo (e.g. patricknovak/global-realestate-dashboard).'); return; }
+            localStorage.setItem('githubFeedbackRepo', repo);
+            localStorage.setItem('githubFeedbackToken', token);
+            updateGitHubConfigStatus();
+            alert('GitHub feedback integration saved! Feedback submissions will now create GitHub Issues.');
+        }
+
+        function clearGitHubConfig() {
+            localStorage.removeItem('githubFeedbackRepo');
+            localStorage.removeItem('githubFeedbackToken');
+            document.getElementById('githubRepoInput').value = '';
+            document.getElementById('githubTokenInput').value = '';
+            updateGitHubConfigStatus();
+        }
+
+        function updateGitHubConfigStatus() {
+            var statusEl = document.getElementById('githubConfigStatus');
+            var noteEl = document.getElementById('feedbackConfigNote');
+            var repo = localStorage.getItem('githubFeedbackRepo');
+            var token = localStorage.getItem('githubFeedbackToken');
+            if (repo && token) {
+                if (statusEl) statusEl.innerHTML = '<span style="color:#28a745;">\u2713 GitHub integration configured for <strong>' + repo.replace(/</g, '&lt;') + '</strong>. Feedback will create issues.</span>';
+                if (noteEl) noteEl.innerHTML = 'Feedback is submitted as GitHub Issues to <strong>' + repo.replace(/</g, '&lt;') + '</strong>. Each submission creates a labeled issue for transparent tracking.';
+            } else {
+                if (statusEl) statusEl.innerHTML = '<span style="color:#999;">No GitHub integration configured. Feedback form is inactive.</span>';
+                if (noteEl) noteEl.innerHTML = 'Feedback is submitted as GitHub Issues. Configure your GitHub token and repository in the <strong>GitHub Feedback Integration</strong> settings section above to activate.';
+            }
+            var repoInput = document.getElementById('githubRepoInput');
+            if (repoInput && repo && !repoInput.value) repoInput.value = repo;
+        }
+
+        function submitFeedbackToGitHub(form) {
+            var status = document.getElementById('feedbackStatus');
+            var repo = localStorage.getItem('githubFeedbackRepo');
+            var token = localStorage.getItem('githubFeedbackToken');
+
+            if (!repo || !token) {
+                status.textContent = 'GitHub integration is not configured. Please set it up in the settings above.';
+                status.style.color = '#dc3545';
+                return;
+            }
+
+            var name = form.querySelector('[name="name"]').value.trim();
+            var email = form.querySelector('[name="email"]').value.trim();
+            var type = form.querySelector('[name="type"]').value;
+            var message = form.querySelector('[name="message"]').value.trim();
+
+            // Map feedback types to GitHub labels
+            var labelMap = {
+                'Bug Report': ['bug'],
+                'Feature Request': ['enhancement'],
+                'New Region Request': ['enhancement', 'new region'],
+                'General Feedback': ['feedback']
+            };
+            var labels = labelMap[type] || ['feedback'];
+
+            var title = '[' + type + '] ' + (message.length > 80 ? message.substring(0, 80) + '...' : message);
+            var body = '## ' + type + '\n\n'
+                + message + '\n\n'
+                + '---\n'
+                + '**Submitted by:** ' + name + ' (' + email + ')\n'
+                + '**Date:** ' + new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) + '\n'
+                + '**Source:** Real Estate Investment Dashboard Feedback Form';
+
+            status.textContent = 'Submitting...';
+            status.style.color = '#666';
+
+            fetch('https://api.github.com/repos/' + repo + '/issues', {
+                method: 'POST',
+                headers: {
+                    'Authorization': 'Bearer ' + token,
+                    'Accept': 'application/vnd.github+json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ title: title, body: body, labels: labels })
+            })
+            .then(function(r) {
+                if (r.ok || r.status === 201) {
+                    return r.json().then(function(data) {
+                        status.innerHTML = 'Thank you! Your feedback has been submitted as <a href="' + data.html_url + '" target="_blank" rel="noopener" style="color:#28a745;text-decoration:underline;">Issue #' + data.number + '</a>.';
+                        status.style.color = '#28a745';
+                        form.reset();
+                    });
+                } else if (r.status === 401) {
+                    status.textContent = 'Authentication failed. The GitHub token may be invalid or expired.';
+                    status.style.color = '#dc3545';
+                } else if (r.status === 404) {
+                    status.textContent = 'Repository not found. Please check the repository name in settings.';
+                    status.style.color = '#dc3545';
+                } else if (r.status === 410) {
+                    status.textContent = 'Issues are disabled for this repository.';
+                    status.style.color = '#dc3545';
+                } else {
+                    return r.json().then(function(data) {
+                        status.textContent = 'Error: ' + (data.message || 'Unknown error. Please try again.');
+                        status.style.color = '#dc3545';
+                    });
+                }
+            })
+            .catch(function() {
+                status.textContent = 'Network error. Please check your connection and try again.';
+                status.style.color = '#dc3545';
+            });
         }
 
         function trackOfferGeneration(data) {
