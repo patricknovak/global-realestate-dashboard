@@ -1631,6 +1631,94 @@
         body.dark-mode .filter-toggle { background: var(--secondary); }
         body.dark-mode .modal-close { background: #2d3748; color: #e2e8f0; }
         body.dark-mode .modal-close:hover { background: var(--danger); }
+
+        /* === Data Freshness Indicators === */
+        .freshness-badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 600; }
+        .freshness-fresh { background: #d4edda; color: #155724; }
+        .freshness-recent { background: #fff3cd; color: #856404; }
+        .freshness-aging { background: #ffe0b2; color: #e65100; }
+        .freshness-stale { background: #f8d7da; color: #721c24; }
+        .data-freshness-bar { display: flex; gap: 4px; margin: 12px 0; height: 6px; border-radius: 3px; overflow: hidden; }
+        .data-freshness-bar > div { height: 100%; transition: width 0.3s; }
+        .flag-btn { background: none; border: 1px solid #ddd; padding: 4px 10px; border-radius: 4px; font-size: 11px; cursor: pointer; color: #666; }
+        .flag-btn:hover { border-color: var(--warning); color: var(--warning); }
+        .flag-modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1001; display: flex; align-items: center; justify-content: center; }
+        .flag-modal { background: white; padding: 24px; border-radius: 8px; max-width: 420px; width: 90%; }
+        body.dark-mode .flag-modal { background: #1a202c; }
+
+        /* === Price History === */
+        .price-history-chart { width: 100%; height: 120px; position: relative; background: var(--light-gray); border-radius: 4px; padding: 8px; }
+        .price-change-badge { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 600; }
+        .price-up { background: #f8d7da; color: #721c24; }
+        .price-down { background: #d4edda; color: #155724; }
+        .price-same { background: #e2e3e5; color: #383d41; }
+
+        /* === Viewing Scheduler === */
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; margin: 16px 0; }
+        .calendar-header { text-align: center; font-weight: 700; font-size: 11px; padding: 8px 4px; color: var(--primary); text-transform: uppercase; }
+        .calendar-day { min-height: 70px; padding: 4px; border: 1px solid var(--border-gray); border-radius: 4px; font-size: 11px; cursor: pointer; position: relative; }
+        .calendar-day:hover { background: #e7f3ff; }
+        .calendar-day.today { border-color: var(--secondary); background: #f0f7ff; }
+        .calendar-day.other-month { opacity: 0.4; }
+        .calendar-day-num { font-weight: 600; margin-bottom: 4px; }
+        .calendar-event { background: var(--secondary); color: white; padding: 2px 4px; border-radius: 3px; font-size: 9px; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
+        .calendar-event.completed { background: var(--success); }
+        .calendar-event.cancelled { background: #999; text-decoration: line-through; }
+        .viewing-card { background: white; border: 1px solid var(--border-gray); border-radius: 8px; padding: 16px; margin-bottom: 12px; }
+        body.dark-mode .viewing-card { background: #1a202c; }
+        .viewing-status { display: inline-block; padding: 2px 10px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+        .viewing-scheduled { background: #cce5ff; color: #004085; }
+        .viewing-completed { background: #d4edda; color: #155724; }
+        .viewing-cancelled { background: #f8d7da; color: #721c24; }
+        .star-rating { display: inline-flex; gap: 2px; cursor: pointer; }
+        .star-rating span { font-size: 18px; color: #ddd; transition: color 0.2s; }
+        .star-rating span.filled { color: #ffc107; }
+        .star-rating:hover span { color: #ffc107; }
+
+        /* === Document Vault === */
+        .doc-drop-zone { border: 2px dashed var(--border-gray); border-radius: 8px; padding: 30px; text-align: center; cursor: pointer; transition: all 0.3s; margin: 16px 0; }
+        .doc-drop-zone:hover, .doc-drop-zone.drag-over { border-color: var(--secondary); background: #f0f7ff; }
+        .doc-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border: 1px solid var(--border-gray); border-radius: 6px; margin-bottom: 8px; }
+        .doc-icon { width: 40px; height: 40px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 18px; background: var(--light-gray); }
+        .doc-icon.pdf { background: #fee2e2; color: #dc2626; }
+        .doc-icon.img { background: #dbeafe; color: #2563eb; }
+        .doc-icon.doc { background: #e0e7ff; color: #4f46e5; }
+        .doc-info { flex: 1; }
+        .doc-info .doc-title { font-weight: 600; font-size: 13px; }
+        .doc-info .doc-meta { font-size: 11px; color: #888; margin-top: 2px; }
+
+        /* === Neighborhood Enrichment === */
+        .score-circle { display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 48px; border-radius: 50%; font-weight: 700; font-size: 14px; border: 3px solid; }
+        .score-circle.high { border-color: var(--success); color: var(--success); }
+        .score-circle.medium { border-color: var(--warning); color: var(--warning); }
+        .score-circle.low { border-color: var(--danger); color: var(--danger); }
+        .amenity-chip { display: inline-block; padding: 4px 10px; background: var(--light-gray); border-radius: 12px; font-size: 11px; margin: 2px; }
+        .enrichment-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+        .enrichment-card { background: white; border: 1px solid var(--border-gray); border-radius: 8px; padding: 16px; }
+        body.dark-mode .enrichment-card { background: #1a202c; }
+        .enrichment-card h4 { margin: 0 0 12px 0; color: var(--primary); font-size: 14px; }
+        .school-item { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--border-gray); font-size: 12px; }
+        .school-item:last-child { border-bottom: none; }
+
+        /* === Enhanced Comparison === */
+        .comparison-highlight { background: #d4edda !important; }
+        .comparison-winner { font-weight: 700; color: var(--success); }
+        .comparison-loser { color: #999; }
+
+        /* === API Data Loading === */
+        .api-status-bar { padding: 8px 16px; font-size: 11px; display: flex; align-items: center; gap: 8px; }
+        .api-status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+        .api-status-dot.connected { background: var(--success); }
+        .api-status-dot.disconnected { background: var(--danger); }
+        .api-status-dot.loading { background: var(--warning); animation: pulse 1s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+        /* Responsive for new features */
+        @media (max-width: 768px) {
+            .calendar-grid { grid-template-columns: repeat(7, 1fr); }
+            .calendar-day { min-height: 50px; font-size: 10px; }
+            .enrichment-grid { grid-template-columns: 1fr; }
+        }
     </style>
 </head>
 <body>
@@ -1827,6 +1915,13 @@
                 <span class="tab-group-divider"></span>
                 <button class="tab-button" onclick="switchTab('buyerprofile')">My Profile</button>
                 <button class="tab-button" onclick="switchTab('contactlog')">Contact Log</button>
+                <button class="tab-button" onclick="switchTab('viewings')">Viewings</button>
+                <button class="tab-button" onclick="switchTab('documents')">Documents</button>
+                <span class="tab-group-divider"></span>
+                <button class="tab-button" onclick="switchTab('pricehistory')">Price History</button>
+                <button class="tab-button" onclick="switchTab('neighborhooddata')">Area Intel</button>
+                <button class="tab-button" onclick="switchTab('datafreshness')">Data Health</button>
+                <span class="tab-group-divider"></span>
                 <button class="tab-button" onclick="switchTab('norealtorguide')">No-Realtor Guide</button>
                 <button class="tab-button" onclick="switchTab('help')">Help</button>
             </div>
@@ -2555,8 +2650,201 @@
                 <div id="importExportStatus" style="margin-top:8px;font-size:12px;"></div>
             </div>
 
+            <!-- Tab: Viewing Scheduler -->
+            <div id="viewings" class="tab-content" style="overflow: auto; padding: 20px;">
+                <h2 style="margin-bottom: 8px; color: var(--primary);">Viewing Scheduler</h2>
+                <p style="color: #666; margin-bottom: 16px;">Schedule and track property viewings. Add notes and ratings after each visit.</p>
+
+                <div style="display: flex; gap: 12px; margin-bottom: 20px; align-items: center; flex-wrap: wrap;">
+                    <button class="btn-primary" onclick="showScheduleViewingForm()">+ Schedule Viewing</button>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <button class="btn-secondary" onclick="changeCalendarMonth(-1)" style="padding: 6px 12px;">&laquo; Prev</button>
+                        <span id="calendarMonthLabel" style="font-weight: 700; color: var(--primary); min-width: 140px; text-align: center;"></span>
+                        <button class="btn-secondary" onclick="changeCalendarMonth(1)" style="padding: 6px 12px;">Next &raquo;</button>
+                    </div>
+                    <div style="margin-left: auto; display: flex; gap: 8px;">
+                        <button class="btn-secondary" onclick="setViewingsView('calendar')" id="viewCalBtn" style="font-size:11px;">Calendar</button>
+                        <button class="btn-secondary" onclick="setViewingsView('list')" id="viewListBtn" style="font-size:11px;">List</button>
+                    </div>
+                </div>
+
+                <div id="viewingsCalendar"></div>
+                <div id="viewingsList" style="display:none;"></div>
+                <div id="viewingFormContainer" style="display:none;"></div>
+
+                <div id="emptyViewings" class="empty-state" style="display:none;">
+                    <div class="empty-state-title">No Viewings Scheduled</div>
+                    <p>Click the property detail modal or use the "+ Schedule Viewing" button to book your first property tour.</p>
+                </div>
+
+                <div style="background: #f0f7ff; padding: 14px; border-radius: 8px; margin-top: 20px;">
+                    <div style="font-weight: 700; color: var(--primary); margin-bottom: 8px; font-size: 13px;">Viewing Tips</div>
+                    <ul style="font-size: 12px; color: #555; margin: 0; padding-left: 18px; line-height: 1.8;">
+                        <li>Visit at different times of day to check noise/traffic levels</li>
+                        <li>Check water pressure, open/close all doors and windows</li>
+                        <li>Take photos of everything - foundation, roof, plumbing, electrical panel</li>
+                        <li>Ask about strata fees, special assessments, and bylaws (for condos/townhomes)</li>
+                        <li>Drive the neighborhood and note proximity to amenities</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Tab: Document Vault -->
+            <div id="documents" class="tab-content" style="overflow: auto; padding: 20px;">
+                <h2 style="margin-bottom: 8px; color: var(--primary);">Document Vault</h2>
+                <p style="color: #666; margin-bottom: 16px;">Store and organize property-related documents. Inspection reports, title searches, strata documents, contracts, and more.</p>
+
+                <div style="display: flex; gap: 12px; margin-bottom: 16px; align-items: center;">
+                    <select id="docFilterListing" onchange="renderDocuments()" style="padding: 6px 10px; border-radius: 4px; border: 1px solid var(--border-gray); font-size: 12px;">
+                        <option value="">All Properties</option>
+                    </select>
+                    <select id="docFilterType" onchange="renderDocuments()" style="padding: 6px 10px; border-radius: 4px; border: 1px solid var(--border-gray); font-size: 12px;">
+                        <option value="">All Types</option>
+                        <option value="inspection">Inspection Report</option>
+                        <option value="title_search">Title Search</option>
+                        <option value="strata_docs">Strata Documents</option>
+                        <option value="disclosure">Disclosure Statement</option>
+                        <option value="appraisal">Appraisal</option>
+                        <option value="contract">Contract / Agreement</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+
+                <div class="doc-drop-zone" id="docDropZone" onclick="document.getElementById('docFileInput').click()">
+                    <div style="font-size: 32px; color: #ccc; margin-bottom: 8px;">+</div>
+                    <div style="font-weight: 600; color: #666;">Drop files here or click to upload</div>
+                    <div style="font-size: 11px; color: #999; margin-top: 4px;">Supports PDF, images, Word, and text files. Max 10MB per file.</div>
+                    <input type="file" id="docFileInput" multiple accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.txt" style="display:none;" onchange="handleDocUpload(this.files)">
+                </div>
+
+                <div id="documentsList"></div>
+                <div id="emptyDocuments" class="empty-state">
+                    <div class="empty-state-title">No Documents Yet</div>
+                    <p>Upload inspection reports, title searches, and other documents to keep everything organized.</p>
+                </div>
+            </div>
+
+            <!-- Tab: Price History -->
+            <div id="pricehistory" class="tab-content" style="overflow: auto; padding: 20px;">
+                <h2 style="margin-bottom: 8px; color: var(--primary);">Price History Tracker</h2>
+                <p style="color: #666; margin-bottom: 16px;">Track price changes across all listings. Spot motivated sellers and market shifts.</p>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 12px; margin-bottom: 20px;">
+                    <div style="background: var(--light-gray); padding: 14px; border-radius: 8px; text-align: center;">
+                        <div style="font-size: 24px; font-weight: 700; color: var(--success);" id="priceDropCount">0</div>
+                        <div style="font-size: 11px; color: #888;">Price Drops</div>
+                    </div>
+                    <div style="background: var(--light-gray); padding: 14px; border-radius: 8px; text-align: center;">
+                        <div style="font-size: 24px; font-weight: 700; color: var(--danger);" id="priceIncCount">0</div>
+                        <div style="font-size: 11px; color: #888;">Price Increases</div>
+                    </div>
+                    <div style="background: var(--light-gray); padding: 14px; border-radius: 8px; text-align: center;">
+                        <div style="font-size: 24px; font-weight: 700; color: var(--primary);" id="avgDropPct">0%</div>
+                        <div style="font-size: 11px; color: #888;">Avg Drop %</div>
+                    </div>
+                    <div style="background: var(--light-gray); padding: 14px; border-radius: 8px; text-align: center;">
+                        <div style="font-size: 24px; font-weight: 700; color: var(--accent);" id="trackedCount">0</div>
+                        <div style="font-size: 11px; color: #888;">Tracked Listings</div>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 16px;">
+                    <select id="priceHistoryFilter" onchange="renderPriceHistory()" style="padding: 6px 10px; border-radius: 4px; border: 1px solid var(--border-gray); font-size: 12px;">
+                        <option value="all">All Changes</option>
+                        <option value="drops">Price Drops Only</option>
+                        <option value="increases">Price Increases Only</option>
+                    </select>
+                    <select id="priceHistoryRegion" onchange="renderPriceHistory()" style="padding: 6px 10px; border-radius: 4px; border: 1px solid var(--border-gray); font-size: 12px; margin-left: 8px;">
+                        <option value="">All Regions</option>
+                    </select>
+                </div>
+
+                <div id="priceHistoryList"></div>
+                <div id="emptyPriceHistory" class="empty-state" style="display:none;">
+                    <div class="empty-state-title">No Price Changes Recorded</div>
+                    <p>Price changes are tracked automatically when data is refreshed via the scraping pipeline. You can also manually log price changes.</p>
+                </div>
+            </div>
+
+            <!-- Tab: Neighborhood Enrichment / Area Intel -->
+            <div id="neighborhooddata" class="tab-content" style="overflow: auto; padding: 20px;">
+                <h2 style="margin-bottom: 8px; color: var(--primary);">Area Intelligence</h2>
+                <p style="color: #666; margin-bottom: 16px;">Walk scores, schools, amenities, and livability data for each neighborhood.</p>
+
+                <div style="margin-bottom: 16px;">
+                    <select id="areaIntelRegion" onchange="renderAreaIntel()" style="padding: 6px 10px; border-radius: 4px; border: 1px solid var(--border-gray); font-size: 12px;">
+                        <option value="">All Regions</option>
+                    </select>
+                    <select id="areaIntelSort" onchange="renderAreaIntel()" style="padding: 6px 10px; border-radius: 4px; border: 1px solid var(--border-gray); font-size: 12px; margin-left: 8px;">
+                        <option value="name">Sort by Name</option>
+                        <option value="walk">Sort by Walk Score</option>
+                        <option value="transit">Sort by Transit Score</option>
+                        <option value="schools">Sort by Schools Nearby</option>
+                    </select>
+                </div>
+
+                <div id="areaIntelGrid" class="enrichment-grid"></div>
+            </div>
+
+            <!-- Tab: Data Health / Freshness -->
+            <div id="datafreshness" class="tab-content" style="overflow: auto; padding: 20px;">
+                <h2 style="margin-bottom: 8px; color: var(--primary);">Data Health Dashboard</h2>
+                <p style="color: #666; margin-bottom: 16px;">Monitor data freshness, flag inaccuracies, and track the quality of listings data.</p>
+
+                <div id="apiStatusContainer" class="api-status-bar" style="background: var(--light-gray); border-radius: 8px; margin-bottom: 16px; padding: 12px 16px;">
+                    <span class="api-status-dot" id="apiStatusDot"></span>
+                    <span id="apiStatusText">Checking API connection...</span>
+                    <button class="btn-secondary" onclick="checkApiConnection()" style="margin-left: auto; font-size: 11px; padding: 4px 10px;">Refresh</button>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 12px; margin-bottom: 20px;">
+                    <div style="background: var(--light-gray); padding: 14px; border-radius: 8px; text-align: center;">
+                        <div style="font-size: 24px; font-weight: 700; color: var(--success);" id="freshCount">0</div>
+                        <div style="font-size: 11px; color: #888;">Fresh (&lt;3 days)</div>
+                    </div>
+                    <div style="background: var(--light-gray); padding: 14px; border-radius: 8px; text-align: center;">
+                        <div style="font-size: 24px; font-weight: 700; color: var(--warning);" id="recentCount">0</div>
+                        <div style="font-size: 11px; color: #888;">Recent (3-7 days)</div>
+                    </div>
+                    <div style="background: var(--light-gray); padding: 14px; border-radius: 8px; text-align: center;">
+                        <div style="font-size: 24px; font-weight: 700; color: #e65100;" id="agingCount">0</div>
+                        <div style="font-size: 11px; color: #888;">Aging (7-14 days)</div>
+                    </div>
+                    <div style="background: var(--light-gray); padding: 14px; border-radius: 8px; text-align: center;">
+                        <div style="font-size: 24px; font-weight: 700; color: var(--danger);" id="staleCount">0</div>
+                        <div style="font-size: 11px; color: #888;">Stale (&gt;14 days)</div>
+                    </div>
+                </div>
+
+                <div class="data-freshness-bar" id="freshnessBar" style="height: 12px; border-radius: 6px;"></div>
+                <div style="display: flex; justify-content: space-between; font-size: 10px; color: #999; margin-bottom: 20px;">
+                    <span>Fresh</span><span>Recent</span><span>Aging</span><span>Stale</span>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;">
+                    <div style="background: var(--light-gray); padding: 16px; border-radius: 8px;">
+                        <div style="font-weight: 700; color: var(--primary); margin-bottom: 12px;">Freshness by Region</div>
+                        <div id="freshnessByRegion"></div>
+                    </div>
+                    <div style="background: var(--light-gray); padding: 16px; border-radius: 8px;">
+                        <div style="font-weight: 700; color: var(--primary); margin-bottom: 12px;">Data Sources</div>
+                        <div id="dataSourcesSummary"></div>
+                    </div>
+                </div>
+
+                <div style="background: var(--light-gray); padding: 16px; border-radius: 8px; margin-bottom: 20px;">
+                    <div style="font-weight: 700; color: var(--primary); margin-bottom: 12px;">Community Flags</div>
+                    <p style="font-size: 12px; color: #666; margin-bottom: 12px;">Help keep data accurate by flagging listings that appear sold, delisted, or have incorrect information.</p>
+                    <div id="communityFlagsList"></div>
+                    <div id="emptyCommunityFlags" style="text-align: center; padding: 20px; color: #999; font-size: 12px;">No community flags submitted yet. Use the flag button on any listing to report inaccuracies.</div>
+                </div>
+
+                <div style="background: #fff3cd; padding: 14px; border-radius: 8px; font-size: 12px; border-left: 4px solid #ffc107;">
+                    <strong>About Data Freshness:</strong> Listing data is sourced through a combination of manual scraping from REW.ca and Realtor.ca, supplemented by community corrections. Run the scraping pipeline regularly to keep data current. See the <code>tools/scraper/</code> directory for automation options.
+                </div>
+            </div>
+
             <!-- Tab: Contact Log -->
-            <div id="contactlog" class="tab-content" style="overflow: auto; padding: 20px;">
                 <h2 style="margin-bottom: 8px; color: var(--primary);">Agent Contact Log</h2>
                 <p style="color: #666; margin-bottom: 16px;">Track all your communications with listing agents. Add notes after viewings, calls, and emails.</p>
                 <button class="btn-primary" onclick="addContactLogEntry()" style="margin-bottom: 16px;">+ Add Contact Entry</button>
@@ -3400,6 +3688,11 @@
                 if (tabName === 'lenders') initializeLenders();
                 if (tabName === 'buyerprofile') loadBuyerProfile();
                 if (tabName === 'contactlog') initializeContactLog();
+                if (tabName === 'viewings') initializeViewings();
+                if (tabName === 'documents') initializeDocuments();
+                if (tabName === 'pricehistory') renderPriceHistory();
+                if (tabName === 'neighborhooddata') renderAreaIntel();
+                if (tabName === 'datafreshness') initializeDataFreshness();
             }
         }
 
@@ -3424,6 +3717,11 @@
             if (tabName === 'roi') initializeROI();
             if (tabName === 'lenders') initializeLenders();
             if (tabName === 'buyerprofile') loadBuyerProfile();
+            if (tabName === 'viewings') initializeViewings();
+            if (tabName === 'documents') initializeDocuments();
+            if (tabName === 'pricehistory') renderPriceHistory();
+            if (tabName === 'neighborhooddata') renderAreaIntel();
+            if (tabName === 'datafreshness') initializeDataFreshness();
             if (tabName === 'norealtorguide' || tabName === 'help') { /* static tabs */ }
         }
         
@@ -6708,6 +7006,1118 @@ Competitive: ${formatPrice(offers.competitive)}`;
                 });
             };
         }
+
+        // ===================================================================
+        // API DATA LAYER - Load from backend with static JSON fallback
+        // ===================================================================
+        var API_BASE = '/api/v1';
+        var apiConnected = false;
+
+        async function checkApiConnection() {
+            var dot = document.getElementById('apiStatusDot');
+            var text = document.getElementById('apiStatusText');
+            if (dot) dot.className = 'api-status-dot loading';
+            if (text) text.textContent = 'Checking API connection...';
+            try {
+                var resp = await fetch(API_BASE + '/data/benchmarks', { signal: AbortSignal.timeout(3000) });
+                if (resp.ok) {
+                    apiConnected = true;
+                    if (dot) dot.className = 'api-status-dot connected';
+                    if (text) text.textContent = 'API connected - live data mode';
+                    return true;
+                }
+            } catch(e) { /* fallback */ }
+            apiConnected = false;
+            if (dot) dot.className = 'api-status-dot disconnected';
+            if (text) text.textContent = 'API offline - using embedded data (static mode)';
+            return false;
+        }
+
+        async function apiGet(path) {
+            if (!apiConnected) return null;
+            try {
+                var resp = await fetch(API_BASE + path);
+                if (resp.ok) return await resp.json();
+            } catch(e) { /* fallback */ }
+            return null;
+        }
+
+        async function apiPost(path, data) {
+            if (!apiConnected) return null;
+            try {
+                var resp = await fetch(API_BASE + path, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                if (resp.ok) return await resp.json();
+            } catch(e) { /* fallback */ }
+            return null;
+        }
+
+        async function apiPut(path, data) {
+            if (!apiConnected) return null;
+            try {
+                var resp = await fetch(API_BASE + path, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                if (resp.ok) return await resp.json();
+            } catch(e) { /* fallback */ }
+            return null;
+        }
+
+        async function apiDelete(path) {
+            if (!apiConnected) return null;
+            try {
+                var resp = await fetch(API_BASE + path, { method: 'DELETE' });
+                if (resp.ok) return await resp.json();
+            } catch(e) { /* fallback */ }
+            return null;
+        }
+
+        // Try loading listings from API, fall back to embedded rawListings
+        async function loadListingsFromAPI() {
+            var data = await apiGet('/listings?limit=2000');
+            if (data && data.listings && data.listings.length > 0) {
+                // Map API format back to our format
+                rawListings.length = 0;
+                data.listings.forEach(function(l) {
+                    rawListings.push({
+                        addr: l.addr, price: l.price, beds: l.beds, baths: l.baths,
+                        sqft: l.sqft, type: l.type, lot: l.lot, agent: l.agent,
+                        neighborhood: l.neighborhood, dom: l.dom, yearBuilt: l.year_built || l.yearBuilt,
+                        waterView: l.water_view || l.waterView, latitude: l.latitude,
+                        longitude: l.longitude, region: l.region,
+                        _id: l.id, _status: l.status, _source: l.source,
+                        _scrapedAt: l.scraped_at, _verifiedAt: l.verified_at,
+                        _updatedAt: l.updated_at
+                    });
+                });
+                applyFilters();
+                return true;
+            }
+            return false;
+        }
+
+        // Initialize API on load
+        (async function() {
+            var connected = await checkApiConnection();
+            if (connected) {
+                await loadListingsFromAPI();
+            }
+        })();
+
+        // ===================================================================
+        // VIEWING SCHEDULER
+        // ===================================================================
+        var currentCalendarDate = new Date();
+        var viewingsViewMode = 'calendar';
+
+        function getViewings() {
+            var saved = localStorage.getItem('viewings');
+            return saved ? JSON.parse(saved) : [];
+        }
+        function saveViewings(viewings) {
+            localStorage.setItem('viewings', JSON.stringify(viewings));
+        }
+
+        function setViewingsView(mode) {
+            viewingsViewMode = mode;
+            document.getElementById('viewCalBtn').style.fontWeight = mode === 'calendar' ? '700' : '400';
+            document.getElementById('viewListBtn').style.fontWeight = mode === 'list' ? '700' : '400';
+            initializeViewings();
+        }
+
+        function changeCalendarMonth(delta) {
+            currentCalendarDate.setMonth(currentCalendarDate.getMonth() + delta);
+            initializeViewings();
+        }
+
+        function initializeViewings() {
+            var viewings = getViewings();
+            var label = document.getElementById('calendarMonthLabel');
+            var months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+            label.textContent = months[currentCalendarDate.getMonth()] + ' ' + currentCalendarDate.getFullYear();
+
+            var emptyEl = document.getElementById('emptyViewings');
+            var calEl = document.getElementById('viewingsCalendar');
+            var listEl = document.getElementById('viewingsList');
+
+            if (viewingsViewMode === 'calendar') {
+                calEl.style.display = '';
+                listEl.style.display = 'none';
+                renderCalendar(viewings);
+            } else {
+                calEl.style.display = 'none';
+                listEl.style.display = '';
+                renderViewingsList(viewings);
+            }
+            emptyEl.style.display = viewings.length === 0 ? '' : 'none';
+        }
+
+        function renderCalendar(viewings) {
+            var cal = document.getElementById('viewingsCalendar');
+            var year = currentCalendarDate.getFullYear();
+            var month = currentCalendarDate.getMonth();
+            var firstDay = new Date(year, month, 1).getDay();
+            var daysInMonth = new Date(year, month + 1, 0).getDate();
+            var today = new Date();
+
+            var html = '<div class="calendar-grid">';
+            ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].forEach(function(d) {
+                html += '<div class="calendar-header">' + d + '</div>';
+            });
+
+            // Previous month padding
+            var prevDays = new Date(year, month, 0).getDate();
+            for (var i = firstDay - 1; i >= 0; i--) {
+                html += '<div class="calendar-day other-month"><div class="calendar-day-num">' + (prevDays - i) + '</div></div>';
+            }
+
+            for (var d = 1; d <= daysInMonth; d++) {
+                var dateStr = year + '-' + String(month + 1).padStart(2, '0') + '-' + String(d).padStart(2, '0');
+                var isToday = (today.getFullYear() === year && today.getMonth() === month && today.getDate() === d);
+                var dayViewings = viewings.filter(function(v) { return v.scheduled_date === dateStr; });
+
+                html += '<div class="calendar-day' + (isToday ? ' today' : '') + '" onclick="showScheduleViewingForm(\'' + dateStr + '\')">';
+                html += '<div class="calendar-day-num">' + d + '</div>';
+                dayViewings.forEach(function(v) {
+                    var listing = rawListings[v.listing_id] || {};
+                    var statusClass = v.status === 'completed' ? ' completed' : (v.status === 'cancelled' ? ' cancelled' : '');
+                    html += '<div class="calendar-event' + statusClass + '" onclick="event.stopPropagation();showViewingDetail(' + v.id + ')" title="' + (listing.addr || 'Property') + '">';
+                    html += v.scheduled_time + ' ' + (listing.addr || '').substring(0, 15);
+                    html += '</div>';
+                });
+                html += '</div>';
+            }
+
+            // Next month padding
+            var totalCells = firstDay + daysInMonth;
+            var remaining = (7 - (totalCells % 7)) % 7;
+            for (var i = 1; i <= remaining; i++) {
+                html += '<div class="calendar-day other-month"><div class="calendar-day-num">' + i + '</div></div>';
+            }
+
+            html += '</div>';
+            cal.innerHTML = html;
+        }
+
+        function renderViewingsList(viewings) {
+            var listEl = document.getElementById('viewingsList');
+            if (viewings.length === 0) { listEl.innerHTML = ''; return; }
+
+            var sorted = viewings.slice().sort(function(a, b) { return (a.scheduled_date + a.scheduled_time).localeCompare(b.scheduled_date + b.scheduled_time); });
+            var html = '';
+            sorted.forEach(function(v) {
+                var listing = rawListings[v.listing_id] || {};
+                var statusClass = v.status === 'completed' ? 'viewing-completed' : (v.status === 'cancelled' ? 'viewing-cancelled' : 'viewing-scheduled');
+                html += '<div class="viewing-card">';
+                html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">';
+                html += '<div><strong style="font-size:14px;">' + (listing.addr || 'Unknown Property') + '</strong>';
+                html += '<span style="margin-left:8px;font-size:11px;color:#888;">' + (listing.neighborhood || '') + '</span></div>';
+                html += '<span class="viewing-status ' + statusClass + '">' + v.status + '</span>';
+                html += '</div>';
+                html += '<div style="font-size:12px;color:#666;margin-bottom:8px;">';
+                html += '<strong>' + v.scheduled_date + '</strong> at <strong>' + v.scheduled_time + '</strong>';
+                html += ' (' + (v.duration_minutes || 30) + ' min)';
+                if (v.agent_name) html += ' &bull; Agent: ' + v.agent_name;
+                html += '</div>';
+                if (v.notes) html += '<div style="font-size:12px;color:#555;background:var(--light-gray);padding:8px;border-radius:4px;margin-bottom:8px;">' + v.notes + '</div>';
+                if (v.rating) {
+                    html += '<div style="font-size:12px;">Rating: ';
+                    for (var s = 1; s <= 5; s++) html += '<span style="color:' + (s <= v.rating ? '#ffc107' : '#ddd') + ';">&#9733;</span>';
+                    html += '</div>';
+                }
+                if (v.feedback) html += '<div style="font-size:12px;color:#555;margin-top:4px;"><em>Feedback: ' + v.feedback + '</em></div>';
+                html += '<div style="display:flex;gap:6px;margin-top:10px;">';
+                if (v.status === 'scheduled') {
+                    html += '<button class="btn-secondary" onclick="completeViewing(' + v.id + ')" style="font-size:11px;padding:4px 10px;">Mark Complete</button>';
+                    html += '<button class="btn-secondary" onclick="cancelViewing(' + v.id + ')" style="font-size:11px;padding:4px 10px;color:var(--danger);">Cancel</button>';
+                }
+                if (v.status === 'completed' && !v.rating) {
+                    html += '<button class="btn-secondary" onclick="rateViewing(' + v.id + ')" style="font-size:11px;padding:4px 10px;">Add Rating</button>';
+                }
+                html += '<button class="btn-secondary" onclick="deleteViewing(' + v.id + ')" style="font-size:11px;padding:4px 10px;">Delete</button>';
+                html += '</div></div>';
+            });
+            listEl.innerHTML = html;
+        }
+
+        function showScheduleViewingForm(prefillDate) {
+            var container = document.getElementById('viewingFormContainer');
+            var today = new Date().toISOString().split('T')[0];
+            var dateVal = prefillDate || today;
+
+            var propertyOptions = '<option value="">Select a property...</option>';
+            rawListings.forEach(function(l, idx) {
+                propertyOptions += '<option value="' + idx + '">' + l.addr + ' - ' + l.neighborhood + ' (' + formatPrice(l.price) + ')</option>';
+            });
+
+            container.style.display = '';
+            container.innerHTML = '<div style="background:var(--light-gray);padding:20px;border-radius:8px;margin-bottom:16px;">' +
+                '<div style="font-weight:700;color:var(--primary);margin-bottom:12px;">Schedule a Viewing</div>' +
+                '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">' +
+                '<div><label style="font-size:12px;font-weight:600;">Property</label><select id="viewingProperty" style="width:100%;padding:6px;border:1px solid var(--border-gray);border-radius:4px;margin-top:4px;">' + propertyOptions + '</select></div>' +
+                '<div><label style="font-size:12px;font-weight:600;">Date</label><input type="date" id="viewingDate" value="' + dateVal + '" min="' + today + '" style="width:100%;padding:6px;border:1px solid var(--border-gray);border-radius:4px;margin-top:4px;"></div>' +
+                '<div><label style="font-size:12px;font-weight:600;">Time</label><input type="time" id="viewingTime" value="10:00" style="width:100%;padding:6px;border:1px solid var(--border-gray);border-radius:4px;margin-top:4px;"></div>' +
+                '<div><label style="font-size:12px;font-weight:600;">Duration (min)</label><input type="number" id="viewingDuration" value="30" min="15" max="120" step="15" style="width:100%;padding:6px;border:1px solid var(--border-gray);border-radius:4px;margin-top:4px;"></div>' +
+                '<div><label style="font-size:12px;font-weight:600;">Agent Name</label><input type="text" id="viewingAgent" placeholder="Listing agent name" style="width:100%;padding:6px;border:1px solid var(--border-gray);border-radius:4px;margin-top:4px;"></div>' +
+                '<div><label style="font-size:12px;font-weight:600;">Agent Phone/Email</label><input type="text" id="viewingAgentContact" placeholder="Phone or email" style="width:100%;padding:6px;border:1px solid var(--border-gray);border-radius:4px;margin-top:4px;"></div>' +
+                '<div style="grid-column:1/3;"><label style="font-size:12px;font-weight:600;">Notes</label><textarea id="viewingNotes" rows="2" placeholder="Things to check, questions to ask..." style="width:100%;padding:6px;border:1px solid var(--border-gray);border-radius:4px;margin-top:4px;"></textarea></div>' +
+                '</div>' +
+                '<div style="display:flex;gap:8px;margin-top:12px;">' +
+                '<button class="btn-primary" onclick="saveNewViewing()">Save Viewing</button>' +
+                '<button class="btn-secondary" onclick="document.getElementById(\'viewingFormContainer\').style.display=\'none\'">Cancel</button>' +
+                '</div></div>';
+
+            // Auto-fill agent if property selected
+            document.getElementById('viewingProperty').addEventListener('change', function() {
+                var idx = parseInt(this.value);
+                if (!isNaN(idx) && rawListings[idx]) {
+                    document.getElementById('viewingAgent').value = rawListings[idx].agent.split(',')[0];
+                }
+            });
+        }
+
+        function saveNewViewing() {
+            var propIdx = parseInt(document.getElementById('viewingProperty').value);
+            var date = document.getElementById('viewingDate').value;
+            var time = document.getElementById('viewingTime').value;
+            if (isNaN(propIdx) || !date || !time) { alert('Please select a property, date, and time.'); return; }
+
+            var viewings = getViewings();
+            var newId = viewings.length > 0 ? Math.max.apply(null, viewings.map(function(v){return v.id;})) + 1 : 1;
+            viewings.push({
+                id: newId,
+                listing_id: propIdx,
+                scheduled_date: date,
+                scheduled_time: time,
+                duration_minutes: parseInt(document.getElementById('viewingDuration').value) || 30,
+                status: 'scheduled',
+                agent_name: document.getElementById('viewingAgent').value,
+                agent_contact: document.getElementById('viewingAgentContact').value,
+                notes: document.getElementById('viewingNotes').value,
+                rating: null,
+                feedback: null,
+                created_at: new Date().toISOString()
+            });
+            saveViewings(viewings);
+            // Also save to API if connected
+            if (apiConnected) apiPost('/viewings', viewings[viewings.length - 1]);
+            document.getElementById('viewingFormContainer').style.display = 'none';
+            initializeViewings();
+        }
+
+        function completeViewing(id) {
+            var viewings = getViewings();
+            var v = viewings.find(function(x){return x.id === id;});
+            if (v) { v.status = 'completed'; saveViewings(viewings); }
+            if (apiConnected) apiPut('/viewings/' + id, { status: 'completed' });
+            initializeViewings();
+        }
+
+        function cancelViewing(id) {
+            var viewings = getViewings();
+            var v = viewings.find(function(x){return x.id === id;});
+            if (v) { v.status = 'cancelled'; saveViewings(viewings); }
+            if (apiConnected) apiPut('/viewings/' + id, { status: 'cancelled' });
+            initializeViewings();
+        }
+
+        function deleteViewing(id) {
+            if (!confirm('Delete this viewing?')) return;
+            var viewings = getViewings().filter(function(x){return x.id !== id;});
+            saveViewings(viewings);
+            if (apiConnected) apiDelete('/viewings/' + id);
+            initializeViewings();
+        }
+
+        function rateViewing(id) {
+            var rating = prompt('Rate this viewing (1-5 stars):');
+            var r = parseInt(rating);
+            if (isNaN(r) || r < 1 || r > 5) { alert('Please enter 1-5.'); return; }
+            var feedback = prompt('Any feedback or notes from the viewing?') || '';
+            var viewings = getViewings();
+            var v = viewings.find(function(x){return x.id === id;});
+            if (v) { v.rating = r; v.feedback = feedback; saveViewings(viewings); }
+            if (apiConnected) apiPut('/viewings/' + id, { rating: r, feedback: feedback });
+            initializeViewings();
+        }
+
+        function showViewingDetail(id) {
+            var viewings = getViewings();
+            var v = viewings.find(function(x){return x.id === id;});
+            if (!v) return;
+            var listing = rawListings[v.listing_id] || {};
+            alert('Viewing: ' + (listing.addr || 'Unknown') + '\nDate: ' + v.scheduled_date + ' at ' + v.scheduled_time + '\nStatus: ' + v.status + (v.notes ? '\nNotes: ' + v.notes : '') + (v.rating ? '\nRating: ' + v.rating + '/5' : ''));
+        }
+
+        // ===================================================================
+        // DOCUMENT VAULT
+        // ===================================================================
+        function getDocuments() {
+            var saved = localStorage.getItem('documents');
+            return saved ? JSON.parse(saved) : [];
+        }
+        function saveDocumentsList(docs) {
+            localStorage.setItem('documents', JSON.stringify(docs));
+        }
+
+        function initializeDocuments() {
+            // Populate listing filter dropdown
+            var select = document.getElementById('docFilterListing');
+            if (select && select.options.length <= 1) {
+                shortlistedIds.forEach(function(idx) {
+                    var l = rawListings[idx];
+                    if (l) {
+                        var opt = document.createElement('option');
+                        opt.value = idx;
+                        opt.textContent = l.addr + ' - ' + l.neighborhood;
+                        select.appendChild(opt);
+                    }
+                });
+            }
+            renderDocuments();
+            setupDocDragDrop();
+        }
+
+        function setupDocDragDrop() {
+            var zone = document.getElementById('docDropZone');
+            if (!zone || zone._dragSetup) return;
+            zone._dragSetup = true;
+            zone.addEventListener('dragover', function(e) { e.preventDefault(); zone.classList.add('drag-over'); });
+            zone.addEventListener('dragleave', function() { zone.classList.remove('drag-over'); });
+            zone.addEventListener('drop', function(e) {
+                e.preventDefault(); zone.classList.remove('drag-over');
+                if (e.dataTransfer.files.length > 0) handleDocUpload(e.dataTransfer.files);
+            });
+        }
+
+        function handleDocUpload(files) {
+            var docs = getDocuments();
+            Array.from(files).forEach(function(file) {
+                if (file.size > 10 * 1024 * 1024) { alert(file.name + ' exceeds 10MB limit.'); return; }
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    var newId = docs.length > 0 ? Math.max.apply(null, docs.map(function(d){return d.id;})) + 1 : 1;
+                    var docType = guessDocType(file.name);
+                    docs.push({
+                        id: newId,
+                        listing_id: document.getElementById('docFilterListing').value || null,
+                        title: file.name.replace(/\.[^.]+$/, ''),
+                        doc_type: docType,
+                        file_name: file.name,
+                        file_size: file.size,
+                        mime_type: file.type,
+                        data: e.target.result,
+                        notes: '',
+                        created_at: new Date().toISOString()
+                    });
+                    saveDocumentsList(docs);
+                    renderDocuments();
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function guessDocType(filename) {
+            var lower = filename.toLowerCase();
+            if (lower.includes('inspect')) return 'inspection';
+            if (lower.includes('title')) return 'title_search';
+            if (lower.includes('strata') || lower.includes('bylaws')) return 'strata_docs';
+            if (lower.includes('disclos')) return 'disclosure';
+            if (lower.includes('apprais')) return 'appraisal';
+            if (lower.includes('contract') || lower.includes('agreement') || lower.includes('offer')) return 'contract';
+            return 'other';
+        }
+
+        function getDocIcon(type) {
+            var icons = { inspection: 'pdf', title_search: 'doc', strata_docs: 'doc', disclosure: 'pdf', appraisal: 'pdf', contract: 'doc', other: 'doc' };
+            var labels = { inspection: 'INS', title_search: 'TTL', strata_docs: 'STR', disclosure: 'DIS', appraisal: 'APR', contract: 'CON', other: 'DOC' };
+            return { cls: icons[type] || 'doc', label: labels[type] || 'DOC' };
+        }
+
+        function renderDocuments() {
+            var docs = getDocuments();
+            var filterListing = document.getElementById('docFilterListing').value;
+            var filterType = document.getElementById('docFilterType').value;
+
+            if (filterListing) docs = docs.filter(function(d) { return String(d.listing_id) === filterListing; });
+            if (filterType) docs = docs.filter(function(d) { return d.doc_type === filterType; });
+
+            var listEl = document.getElementById('documentsList');
+            var emptyEl = document.getElementById('emptyDocuments');
+
+            if (docs.length === 0) {
+                listEl.innerHTML = '';
+                emptyEl.style.display = '';
+                return;
+            }
+            emptyEl.style.display = 'none';
+
+            var html = '';
+            docs.forEach(function(doc) {
+                var icon = getDocIcon(doc.doc_type);
+                var size = doc.file_size < 1024 ? doc.file_size + ' B' : (doc.file_size < 1024*1024 ? Math.round(doc.file_size/1024) + ' KB' : (doc.file_size/1024/1024).toFixed(1) + ' MB');
+                var listing = doc.listing_id !== null ? rawListings[doc.listing_id] : null;
+                html += '<div class="doc-item">';
+                html += '<div class="doc-icon ' + icon.cls + '">' + icon.label + '</div>';
+                html += '<div class="doc-info"><div class="doc-title">' + doc.title + '</div>';
+                html += '<div class="doc-meta">' + (doc.doc_type || 'other').replace(/_/g, ' ') + ' &bull; ' + size + ' &bull; ' + new Date(doc.created_at).toLocaleDateString();
+                if (listing) html += ' &bull; ' + listing.addr;
+                html += '</div></div>';
+                html += '<div style="display:flex;gap:4px;">';
+                if (doc.data) html += '<button class="btn-secondary" onclick="downloadDoc(' + doc.id + ')" style="font-size:11px;padding:4px 8px;">Download</button>';
+                html += '<button class="btn-secondary" onclick="editDocNotes(' + doc.id + ')" style="font-size:11px;padding:4px 8px;">Notes</button>';
+                html += '<button class="btn-secondary" onclick="deleteDoc(' + doc.id + ')" style="font-size:11px;padding:4px 8px;color:var(--danger);">Delete</button>';
+                html += '</div></div>';
+            });
+            listEl.innerHTML = html;
+        }
+
+        function downloadDoc(id) {
+            var docs = getDocuments();
+            var doc = docs.find(function(d) { return d.id === id; });
+            if (!doc || !doc.data) return;
+            var a = document.createElement('a');
+            a.href = doc.data;
+            a.download = doc.file_name;
+            a.click();
+        }
+
+        function editDocNotes(id) {
+            var docs = getDocuments();
+            var doc = docs.find(function(d) { return d.id === id; });
+            if (!doc) return;
+            var notes = prompt('Notes for "' + doc.title + '":', doc.notes || '');
+            if (notes !== null) { doc.notes = notes; saveDocumentsList(docs); renderDocuments(); }
+        }
+
+        function deleteDoc(id) {
+            if (!confirm('Delete this document?')) return;
+            var docs = getDocuments().filter(function(d) { return d.id !== id; });
+            saveDocumentsList(docs);
+            renderDocuments();
+        }
+
+        // ===================================================================
+        // PRICE HISTORY TRACKING
+        // ===================================================================
+        function getPriceHistory() {
+            var saved = localStorage.getItem('priceHistory');
+            return saved ? JSON.parse(saved) : [];
+        }
+        function savePriceHistory(history) {
+            localStorage.setItem('priceHistory', JSON.stringify(history));
+        }
+
+        function recordPriceSnapshot() {
+            var history = getPriceHistory();
+            var today = new Date().toISOString().split('T')[0];
+            // Only snapshot once per day
+            var lastSnap = history.length > 0 ? history[history.length - 1] : null;
+            if (lastSnap && lastSnap.date === today) return;
+
+            var snapshot = { date: today, prices: {} };
+            rawListings.forEach(function(l, idx) {
+                snapshot.prices[idx] = l.price;
+            });
+            history.push(snapshot);
+            // Keep max 90 days of history
+            if (history.length > 90) history = history.slice(-90);
+            savePriceHistory(history);
+        }
+
+        function detectPriceChanges() {
+            var history = getPriceHistory();
+            if (history.length < 2) return [];
+            var changes = [];
+            var latest = history[history.length - 1];
+            var previous = history[history.length - 2];
+            for (var idx in latest.prices) {
+                if (previous.prices[idx] !== undefined && latest.prices[idx] !== previous.prices[idx]) {
+                    var oldPrice = previous.prices[idx];
+                    var newPrice = latest.prices[idx];
+                    var changePct = ((newPrice - oldPrice) / oldPrice * 100).toFixed(1);
+                    changes.push({
+                        listingIndex: parseInt(idx),
+                        oldPrice: oldPrice,
+                        newPrice: newPrice,
+                        changePct: parseFloat(changePct),
+                        changeDate: latest.date,
+                        type: newPrice < oldPrice ? 'decrease' : 'increase'
+                    });
+                }
+            }
+            return changes;
+        }
+
+        function getAllPriceChanges() {
+            var history = getPriceHistory();
+            var allChanges = [];
+            for (var i = 1; i < history.length; i++) {
+                for (var idx in history[i].prices) {
+                    if (history[i-1].prices[idx] !== undefined && history[i].prices[idx] !== history[i-1].prices[idx]) {
+                        var oldPrice = history[i-1].prices[idx];
+                        var newPrice = history[i].prices[idx];
+                        allChanges.push({
+                            listingIndex: parseInt(idx),
+                            oldPrice: oldPrice,
+                            newPrice: newPrice,
+                            changePct: parseFloat(((newPrice - oldPrice) / oldPrice * 100).toFixed(1)),
+                            changeDate: history[i].date,
+                            type: newPrice < oldPrice ? 'decrease' : 'increase'
+                        });
+                    }
+                }
+            }
+            return allChanges;
+        }
+
+        function renderPriceHistory() {
+            var changes = getAllPriceChanges();
+            var filter = document.getElementById('priceHistoryFilter');
+            var regionSelect = document.getElementById('priceHistoryRegion');
+
+            // Populate region filter
+            if (regionSelect && regionSelect.options.length <= 1) {
+                var regions = [...new Set(rawListings.map(function(l){return l.region;}))].sort();
+                regions.forEach(function(r) {
+                    var opt = document.createElement('option');
+                    opt.value = r; opt.textContent = r;
+                    regionSelect.appendChild(opt);
+                });
+            }
+
+            var filterVal = filter ? filter.value : 'all';
+            var regionVal = regionSelect ? regionSelect.value : '';
+
+            if (filterVal === 'drops') changes = changes.filter(function(c){return c.type === 'decrease';});
+            if (filterVal === 'increases') changes = changes.filter(function(c){return c.type === 'increase';});
+            if (regionVal) changes = changes.filter(function(c){
+                var l = rawListings[c.listingIndex];
+                return l && l.region === regionVal;
+            });
+
+            // Update stats
+            var drops = changes.filter(function(c){return c.type === 'decrease';});
+            var increases = changes.filter(function(c){return c.type === 'increase';});
+            document.getElementById('priceDropCount').textContent = drops.length;
+            document.getElementById('priceIncCount').textContent = increases.length;
+            document.getElementById('avgDropPct').textContent = drops.length > 0 ?
+                (drops.reduce(function(s,c){return s + Math.abs(c.changePct);}, 0) / drops.length).toFixed(1) + '%' : '0%';
+            document.getElementById('trackedCount').textContent = rawListings.length;
+
+            var listEl = document.getElementById('priceHistoryList');
+            var emptyEl = document.getElementById('emptyPriceHistory');
+
+            if (changes.length === 0) {
+                listEl.innerHTML = '<div style="text-align:center;padding:30px;color:#666;"><p>No price changes detected yet.</p><p style="font-size:12px;color:#999;">Price snapshots are taken daily. Run the scraping pipeline to detect changes, or manually record a price change below.</p>' +
+                    '<button class="btn-secondary" onclick="manualPriceChange()" style="margin-top:12px;">Record Manual Price Change</button></div>';
+                emptyEl.style.display = 'none';
+                return;
+            }
+            emptyEl.style.display = 'none';
+
+            changes.sort(function(a,b) { return b.changeDate.localeCompare(a.changeDate); });
+
+            var html = '<table style="width:100%;border-collapse:collapse;font-size:12px;"><thead><tr style="background:var(--light-gray);">' +
+                '<th style="padding:8px;text-align:left;">Property</th><th style="padding:8px;">Neighborhood</th><th style="padding:8px;">Old Price</th><th style="padding:8px;">New Price</th><th style="padding:8px;">Change</th><th style="padding:8px;">Date</th></tr></thead><tbody>';
+            changes.forEach(function(c) {
+                var l = rawListings[c.listingIndex] || {};
+                var changeClass = c.type === 'decrease' ? 'price-down' : 'price-up';
+                html += '<tr style="cursor:pointer;" onclick="showDetailModal(' + c.listingIndex + ')">';
+                html += '<td style="padding:8px;">' + (l.addr || 'Unknown') + '</td>';
+                html += '<td style="padding:8px;text-align:center;">' + (l.neighborhood || '') + '</td>';
+                html += '<td style="padding:8px;text-align:center;">' + formatPrice(c.oldPrice) + '</td>';
+                html += '<td style="padding:8px;text-align:center;">' + formatPrice(c.newPrice) + '</td>';
+                html += '<td style="padding:8px;text-align:center;"><span class="price-change-badge ' + changeClass + '">' + (c.changePct > 0 ? '+' : '') + c.changePct + '%</span></td>';
+                html += '<td style="padding:8px;text-align:center;">' + c.changeDate + '</td>';
+                html += '</tr>';
+            });
+            html += '</tbody></table>';
+            html += '<div style="margin-top:12px;text-align:right;"><button class="btn-secondary" onclick="manualPriceChange()" style="font-size:11px;">Record Manual Price Change</button></div>';
+            listEl.innerHTML = html;
+        }
+
+        function manualPriceChange() {
+            var addrSearch = prompt('Enter property address (or part of it):');
+            if (!addrSearch) return;
+            var matches = rawListings.map(function(l,i){return {listing:l, idx:i};}).filter(function(x) {
+                return x.listing.addr.toLowerCase().includes(addrSearch.toLowerCase());
+            });
+            if (matches.length === 0) { alert('No matching property found.'); return; }
+            var match = matches[0];
+            var newPrice = prompt('New price for "' + match.listing.addr + '" (current: ' + formatPrice(match.listing.price) + '):');
+            if (!newPrice) return;
+            newPrice = parseInt(newPrice.replace(/[^0-9]/g, ''));
+            if (isNaN(newPrice) || newPrice <= 0) { alert('Invalid price.'); return; }
+
+            // Record snapshot with old prices, then update
+            var history = getPriceHistory();
+            var today = new Date().toISOString().split('T')[0];
+            // Ensure we have a "before" snapshot
+            if (history.length === 0 || history[history.length - 1].date !== today) {
+                var snapshot = { date: today, prices: {} };
+                rawListings.forEach(function(l,idx) { snapshot.prices[idx] = l.price; });
+                history.push(snapshot);
+            }
+            // Now update the listing and create "after" snapshot
+            rawListings[match.idx].price = newPrice;
+            var afterSnapshot = { date: today + '_updated', prices: {} };
+            rawListings.forEach(function(l,idx) { afterSnapshot.prices[idx] = l.price; });
+            history.push(afterSnapshot);
+            savePriceHistory(history);
+            applyFilters();
+            renderPriceHistory();
+        }
+
+        // Take initial price snapshot on load
+        recordPriceSnapshot();
+
+        // ===================================================================
+        // NEIGHBORHOOD ENRICHMENT / AREA INTEL
+        // ===================================================================
+        var neighborhoodEnrichment = {
+            'White Rock': { walkScore: 72, transitScore: 45, bikeScore: 55, population: 21000, avgHouseholdIncome: 82000, crimeIndex: 22, parksNearby: 8, groceryNearby: 6, restaurantsNearby: 42, schools: [{name: 'Earl Marriott Secondary', type: 'Secondary', rating: 7.2}, {name: 'White Rock Elementary', type: 'Elementary', rating: 7.8}, {name: 'Semiahmoo Secondary', type: 'Secondary', rating: 7.5}], amenities: ['Beach Promenade', 'Pier', 'Marine Drive', 'Memorial Park', 'Library', 'Community Centre'] },
+            'Crescent Beach': { walkScore: 42, transitScore: 20, bikeScore: 35, population: 3200, avgHouseholdIncome: 112000, crimeIndex: 12, parksNearby: 4, groceryNearby: 1, restaurantsNearby: 8, schools: [{name: 'Crescent Park Elementary', type: 'Elementary', rating: 7.6}], amenities: ['Beach', 'Blackie Spit Park', 'Dunsmuir Gardens', 'Art Studios'] },
+            'Morgan Creek': { walkScore: 35, transitScore: 25, bikeScore: 30, population: 8500, avgHouseholdIncome: 145000, crimeIndex: 8, parksNearby: 5, groceryNearby: 3, restaurantsNearby: 15, schools: [{name: 'Morgan Elementary', type: 'Elementary', rating: 8.1}, {name: 'Grandview Heights Secondary', type: 'Secondary', rating: 7.3}], amenities: ['Morgan Creek Golf Course', 'South Surrey Athletic Park', 'Nature Trails'] },
+            'Grandview Heights': { walkScore: 52, transitScore: 38, bikeScore: 42, population: 28000, avgHouseholdIncome: 105000, crimeIndex: 15, parksNearby: 7, groceryNearby: 5, restaurantsNearby: 30, schools: [{name: 'Grandview Heights Secondary', type: 'Secondary', rating: 7.3}, {name: 'Sunnyside Elementary', type: 'Elementary', rating: 7.9}], amenities: ['Grandview Corners', 'South Point Exchange', 'Trails', 'New Town Centre'] },
+            'King George Corridor': { walkScore: 58, transitScore: 50, bikeScore: 45, population: 19000, avgHouseholdIncome: 78000, crimeIndex: 28, parksNearby: 4, groceryNearby: 4, restaurantsNearby: 20, schools: [{name: 'King George Secondary', type: 'Secondary', rating: 6.5}, {name: 'Jessie Lee Elementary', type: 'Elementary', rating: 7.0}], amenities: ['King George Hub', 'SkyTrain Access (future)', 'Shopping'] },
+            'Pacific Douglas': { walkScore: 30, transitScore: 15, bikeScore: 25, population: 6000, avgHouseholdIncome: 95000, crimeIndex: 10, parksNearby: 3, groceryNearby: 2, restaurantsNearby: 8, schools: [{name: 'Pacific Academy', type: 'K-12 Private', rating: 8.0}], amenities: ['Peace Arch Provincial Park', 'Border Crossing', 'Nature Reserve'] },
+            'Elgin Chantrell': { walkScore: 25, transitScore: 10, bikeScore: 20, population: 4800, avgHouseholdIncome: 165000, crimeIndex: 5, parksNearby: 3, groceryNearby: 2, restaurantsNearby: 6, schools: [{name: 'Chantrell Creek Elementary', type: 'Elementary', rating: 8.5}, {name: 'Elgin Park Secondary', type: 'Secondary', rating: 7.8}], amenities: ['Chantrell Creek Park', 'Equestrian Trails', 'Exclusive Estates'] },
+            'Sunnyside Park': { walkScore: 45, transitScore: 30, bikeScore: 38, population: 7500, avgHouseholdIncome: 88000, crimeIndex: 18, parksNearby: 5, groceryNearby: 3, restaurantsNearby: 12, schools: [{name: 'Sunnyside Elementary', type: 'Elementary', rating: 7.4}], amenities: ['Sunnyside Park', 'Shops', 'Local Dining'] },
+            'Ocean Park': { walkScore: 48, transitScore: 22, bikeScore: 40, population: 5200, avgHouseholdIncome: 98000, crimeIndex: 14, parksNearby: 6, groceryNearby: 2, restaurantsNearby: 10, schools: [{name: 'Ocean Park Elementary', type: 'Elementary', rating: 7.6}], amenities: ['Ocean Park Village', 'Beach Access', 'Nature Trails', 'Art Galleries'] },
+            'Hazelmere': { walkScore: 10, transitScore: 5, bikeScore: 15, population: 2100, avgHouseholdIncome: 95000, crimeIndex: 6, parksNearby: 2, groceryNearby: 1, restaurantsNearby: 3, schools: [], amenities: ['Hazelmere Golf Course', 'Rural Acreages', 'Farm Markets'] },
+            'Parksville': { walkScore: 62, transitScore: 25, bikeScore: 50, population: 13000, avgHouseholdIncome: 65000, crimeIndex: 25, parksNearby: 6, groceryNearby: 4, restaurantsNearby: 28, schools: [{name: 'Ballenas Secondary', type: 'Secondary', rating: 6.8}, {name: 'Parksville Elementary', type: 'Elementary', rating: 7.2}], amenities: ['Rathtrevor Beach', 'Community Beach', 'Parksville Boardwalk', 'Shops'] },
+            'Qualicum Beach': { walkScore: 58, transitScore: 20, bikeScore: 48, population: 9000, avgHouseholdIncome: 68000, crimeIndex: 18, parksNearby: 5, groceryNearby: 3, restaurantsNearby: 22, schools: [{name: 'Kwalikum Secondary', type: 'Secondary', rating: 7.0}, {name: 'Qualicum Beach Elementary', type: 'Elementary', rating: 7.5}], amenities: ['Beach Walk', 'Heritage Forest', 'Old Town', 'Art Galleries', 'Golf Courses'] },
+            'Nanoose Bay': { walkScore: 18, transitScore: 8, bikeScore: 22, population: 5500, avgHouseholdIncome: 78000, crimeIndex: 10, parksNearby: 4, groceryNearby: 1, restaurantsNearby: 5, schools: [{name: 'Nanoose Bay Elementary', type: 'Elementary', rating: 7.3}], amenities: ['Moorecroft Regional Park', 'Kayaking', 'Private Beaches', 'Nature'] },
+            'Lantzville': { walkScore: 22, transitScore: 10, bikeScore: 28, population: 3800, avgHouseholdIncome: 85000, crimeIndex: 8, parksNearby: 3, groceryNearby: 1, restaurantsNearby: 4, schools: [{name: 'Lantzville Elementary', type: 'Elementary', rating: 7.6}], amenities: ['Copley Ridge Trail', 'Beach Access', 'Village Core', 'Ocean Views'] },
+            'Nanaimo': { walkScore: 65, transitScore: 42, bikeScore: 52, population: 99000, avgHouseholdIncome: 72000, crimeIndex: 42, parksNearby: 15, groceryNearby: 12, restaurantsNearby: 85, schools: [{name: 'Nanaimo District Secondary', type: 'Secondary', rating: 6.5}, {name: 'Dover Bay Secondary', type: 'Secondary', rating: 6.8}, {name: 'VIU Campus', type: 'University', rating: null}], amenities: ['Harbourfront', 'Departure Bay', 'Bowen Park', 'Malls', 'Hospital', 'University'] },
+            'Courtenay': { walkScore: 60, transitScore: 30, bikeScore: 55, population: 28000, avgHouseholdIncome: 68000, crimeIndex: 30, parksNearby: 8, groceryNearby: 5, restaurantsNearby: 35, schools: [{name: 'GP Vanier Secondary', type: 'Secondary', rating: 6.8}, {name: 'Courtenay Elementary', type: 'Elementary', rating: 7.2}], amenities: ['Downtown Core', 'Puntledge River', 'Simms Park', 'Hospital', 'NIC Campus'] },
+            'Comox': { walkScore: 55, transitScore: 25, bikeScore: 50, population: 15000, avgHouseholdIncome: 75000, crimeIndex: 20, parksNearby: 7, groceryNearby: 3, restaurantsNearby: 20, schools: [{name: 'Highland Secondary', type: 'Secondary', rating: 7.0}, {name: 'Airport Elementary', type: 'Elementary', rating: 7.4}], amenities: ['Marina', 'Filberg Park', 'Comox Ave Shops', 'Air Force Base', 'Mountain Views'] },
+            'Cumberland': { walkScore: 68, transitScore: 12, bikeScore: 75, population: 4200, avgHouseholdIncome: 62000, crimeIndex: 15, parksNearby: 4, groceryNearby: 2, restaurantsNearby: 10, schools: [{name: 'Cumberland Community School', type: 'K-8', rating: 7.3}], amenities: ['Mountain Bike Trails', 'Village Core', 'Comox Lake', 'Historic Downtown', 'Brewing'] },
+            'Campbell River': { walkScore: 55, transitScore: 22, bikeScore: 42, population: 35000, avgHouseholdIncome: 70000, crimeIndex: 35, parksNearby: 10, groceryNearby: 6, restaurantsNearby: 40, schools: [{name: 'Carihi Secondary', type: 'Secondary', rating: 6.5}, {name: 'Timberline Secondary', type: 'Secondary', rating: 6.8}], amenities: ['Fishing', 'Discovery Passage', 'Elk Falls', 'Shopping', 'Hospital', 'Whale Watching'] }
+        };
+
+        function renderAreaIntel() {
+            var regionFilter = document.getElementById('areaIntelRegion');
+            var sortBy = document.getElementById('areaIntelSort');
+
+            // Populate region filter
+            if (regionFilter && regionFilter.options.length <= 1) {
+                var regions = [...new Set(rawListings.map(function(l){return l.region;}))].sort();
+                regions.forEach(function(r) {
+                    var opt = document.createElement('option');
+                    opt.value = r; opt.textContent = r;
+                    regionFilter.appendChild(opt);
+                });
+            }
+
+            var neighborhoods = Object.keys(neighborhoodEnrichment);
+            var regionVal = regionFilter ? regionFilter.value : '';
+            if (regionVal) {
+                var regionNeighborhoods = [...new Set(rawListings.filter(function(l){return l.region === regionVal;}).map(function(l){return l.neighborhood;}))];
+                neighborhoods = neighborhoods.filter(function(n){return regionNeighborhoods.includes(n);});
+            }
+
+            // Sort
+            var sortVal = sortBy ? sortBy.value : 'name';
+            neighborhoods.sort(function(a,b) {
+                var da = neighborhoodEnrichment[a], db = neighborhoodEnrichment[b];
+                if (sortVal === 'walk') return (db.walkScore || 0) - (da.walkScore || 0);
+                if (sortVal === 'transit') return (db.transitScore || 0) - (da.transitScore || 0);
+                if (sortVal === 'schools') return (db.schools || []).length - (da.schools || []).length;
+                return a.localeCompare(b);
+            });
+
+            var grid = document.getElementById('areaIntelGrid');
+            var html = '';
+            neighborhoods.forEach(function(name) {
+                var data = neighborhoodEnrichment[name];
+                if (!data) return;
+                var listingCount = rawListings.filter(function(l){return l.neighborhood === name;}).length;
+                var trend = marketTrends[name] || {};
+
+                html += '<div class="enrichment-card">';
+                html += '<h4>' + name + ' <span style="font-size:11px;font-weight:400;color:#888;">(' + listingCount + ' listings)</span></h4>';
+
+                // Scores
+                html += '<div style="display:flex;gap:12px;margin-bottom:12px;justify-content:center;">';
+                html += '<div style="text-align:center;"><div class="score-circle ' + getScoreLevel(data.walkScore) + '">' + data.walkScore + '</div><div style="font-size:10px;color:#888;margin-top:4px;">Walk</div></div>';
+                html += '<div style="text-align:center;"><div class="score-circle ' + getScoreLevel(data.transitScore) + '">' + data.transitScore + '</div><div style="font-size:10px;color:#888;margin-top:4px;">Transit</div></div>';
+                html += '<div style="text-align:center;"><div class="score-circle ' + getScoreLevel(data.bikeScore) + '">' + data.bikeScore + '</div><div style="font-size:10px;color:#888;margin-top:4px;">Bike</div></div>';
+                html += '</div>';
+
+                // Quick stats
+                html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:11px;margin-bottom:12px;">';
+                html += '<div>Population: <strong>' + (data.population || 0).toLocaleString() + '</strong></div>';
+                html += '<div>Avg Income: <strong>$' + (data.avgHouseholdIncome || 0).toLocaleString() + '</strong></div>';
+                html += '<div>Parks: <strong>' + (data.parksNearby || 0) + '</strong></div>';
+                html += '<div>Restaurants: <strong>' + (data.restaurantsNearby || 0) + '</strong></div>';
+                html += '<div>Grocery: <strong>' + (data.groceryNearby || 0) + '</strong></div>';
+                html += '<div>Crime Index: <strong>' + (data.crimeIndex || 0) + '</strong></div>';
+                html += '</div>';
+
+                // Market snapshot
+                if (trend.yoyChange !== undefined) {
+                    html += '<div style="background:var(--light-gray);padding:8px;border-radius:4px;font-size:11px;margin-bottom:10px;">';
+                    html += '<span style="color:' + (trend.yoyChange < 0 ? 'var(--danger)' : 'var(--success)') + ';font-weight:600;">YoY: ' + (trend.yoyChange > 0 ? '+' : '') + trend.yoyChange + '%</span>';
+                    html += ' &bull; DOM: ' + trend.medianDOM + 'd';
+                    html += ' &bull; Sale/List: ' + ((trend.avgSaleToList || 0) * 100).toFixed(0) + '%';
+                    html += '</div>';
+                }
+
+                // Schools
+                if (data.schools && data.schools.length > 0) {
+                    html += '<div style="font-size:11px;font-weight:600;margin-bottom:4px;color:var(--primary);">Schools</div>';
+                    data.schools.forEach(function(s) {
+                        html += '<div class="school-item"><span>' + s.name + ' <span style="color:#888;">(' + s.type + ')</span></span>';
+                        if (s.rating) html += '<span style="font-weight:600;color:' + (s.rating >= 7.5 ? 'var(--success)' : (s.rating >= 6 ? 'var(--warning)' : 'var(--danger)')) + ';">' + s.rating + '/10</span>';
+                        html += '</div>';
+                    });
+                }
+
+                // Amenities
+                if (data.amenities && data.amenities.length > 0) {
+                    html += '<div style="margin-top:8px;">';
+                    data.amenities.forEach(function(a) {
+                        html += '<span class="amenity-chip">' + a + '</span>';
+                    });
+                    html += '</div>';
+                }
+
+                html += '<div style="margin-top:10px;"><button class="btn-secondary" onclick="filterByNeighborhood(\'' + name + '\')" style="font-size:11px;width:100%;">View Listings</button></div>';
+                html += '</div>';
+            });
+            grid.innerHTML = html;
+        }
+
+        function getScoreLevel(score) {
+            if (score >= 60) return 'high';
+            if (score >= 30) return 'medium';
+            return 'low';
+        }
+
+        // ===================================================================
+        // DATA FRESHNESS / HEALTH DASHBOARD
+        // ===================================================================
+        function getCommunityFlags() {
+            var saved = localStorage.getItem('communityFlags');
+            return saved ? JSON.parse(saved) : [];
+        }
+        function saveCommunityFlags(flags) {
+            localStorage.setItem('communityFlags', JSON.stringify(flags));
+        }
+
+        function initializeDataFreshness() {
+            checkApiConnection();
+
+            // Compute freshness based on data metadata
+            var now = new Date();
+            var dataAge = Math.floor((now - new Date('2026-02-28')) / (1000 * 60 * 60 * 24));
+
+            // For static mode, all listings have the same age
+            // For API mode, each listing can have individual freshness
+            var fresh = 0, recent = 0, aging = 0, stale = 0;
+
+            rawListings.forEach(function(l) {
+                var age = dataAge;
+                if (l._updatedAt) {
+                    age = Math.floor((now - new Date(l._updatedAt)) / (1000 * 60 * 60 * 24));
+                }
+                if (age <= 3) fresh++;
+                else if (age <= 7) recent++;
+                else if (age <= 14) aging++;
+                else stale++;
+            });
+
+            document.getElementById('freshCount').textContent = fresh;
+            document.getElementById('recentCount').textContent = recent;
+            document.getElementById('agingCount').textContent = aging;
+            document.getElementById('staleCount').textContent = stale;
+
+            // Freshness bar
+            var total = rawListings.length || 1;
+            var bar = document.getElementById('freshnessBar');
+            bar.innerHTML = '<div style="width:' + (fresh/total*100) + '%;background:var(--success);"></div>' +
+                '<div style="width:' + (recent/total*100) + '%;background:var(--warning);"></div>' +
+                '<div style="width:' + (aging/total*100) + '%;background:#e65100;"></div>' +
+                '<div style="width:' + (stale/total*100) + '%;background:var(--danger);"></div>';
+
+            // By region
+            var regionEl = document.getElementById('freshnessByRegion');
+            var regions = [...new Set(rawListings.map(function(l){return l.region;}))].sort();
+            var regionHtml = '';
+            regions.forEach(function(r) {
+                var count = rawListings.filter(function(l){return l.region === r;}).length;
+                var regionAge = dataAge;
+                var freshPct = regionAge <= 3 ? 100 : (regionAge <= 7 ? 75 : (regionAge <= 14 ? 40 : 10));
+                regionHtml += '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border-gray);font-size:12px;">';
+                regionHtml += '<span><strong>' + r + '</strong> (' + count + ')</span>';
+                regionHtml += '<span class="freshness-badge ' + (freshPct >= 75 ? 'freshness-fresh' : (freshPct >= 40 ? 'freshness-recent' : 'freshness-stale')) + '">' +
+                    (regionAge <= 0 ? 'Today' : regionAge + ' days old') + '</span>';
+                regionHtml += '</div>';
+            });
+            regionEl.innerHTML = regionHtml;
+
+            // Data sources summary
+            var sourcesEl = document.getElementById('dataSourcesSummary');
+            var sources = {};
+            rawListings.forEach(function(l) {
+                var src = l._source || 'embedded';
+                sources[src] = (sources[src] || 0) + 1;
+            });
+            var sourceHtml = '';
+            for (var src in sources) {
+                sourceHtml += '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border-gray);font-size:12px;">';
+                sourceHtml += '<span>' + src.charAt(0).toUpperCase() + src.slice(1) + '</span>';
+                sourceHtml += '<span><strong>' + sources[src] + '</strong> listings</span>';
+                sourceHtml += '</div>';
+            }
+            sourcesEl.innerHTML = sourceHtml;
+
+            // Community flags
+            renderCommunityFlags();
+        }
+
+        function renderCommunityFlags() {
+            var flags = getCommunityFlags();
+            var listEl = document.getElementById('communityFlagsList');
+            var emptyEl = document.getElementById('emptyCommunityFlags');
+
+            if (flags.length === 0) {
+                listEl.innerHTML = '';
+                emptyEl.style.display = '';
+                return;
+            }
+            emptyEl.style.display = 'none';
+
+            var html = '<table style="width:100%;border-collapse:collapse;font-size:12px;"><thead><tr style="background:var(--light-gray);">' +
+                '<th style="padding:6px;text-align:left;">Property</th><th style="padding:6px;">Flag Type</th><th style="padding:6px;">Details</th><th style="padding:6px;">Status</th><th style="padding:6px;">Date</th><th style="padding:6px;">Action</th></tr></thead><tbody>';
+            flags.forEach(function(f) {
+                var l = rawListings[f.listing_id] || {};
+                html += '<tr>';
+                html += '<td style="padding:6px;">' + (l.addr || 'Unknown') + '</td>';
+                html += '<td style="padding:6px;text-align:center;">' + (f.flag_type || '').replace(/_/g, ' ') + '</td>';
+                html += '<td style="padding:6px;">' + (f.notes || '-') + '</td>';
+                html += '<td style="padding:6px;text-align:center;"><span class="freshness-badge ' + (f.status === 'verified' ? 'freshness-fresh' : (f.status === 'dismissed' ? 'freshness-stale' : 'freshness-recent')) + '">' + f.status + '</span></td>';
+                html += '<td style="padding:6px;text-align:center;">' + new Date(f.created_at).toLocaleDateString() + '</td>';
+                html += '<td style="padding:6px;text-align:center;">';
+                if (f.status === 'pending') html += '<button class="btn-secondary" onclick="resolveCommunityFlag(' + f.id + ',\'verified\')" style="font-size:10px;padding:2px 6px;">Verify</button> <button class="btn-secondary" onclick="resolveCommunityFlag(' + f.id + ',\'dismissed\')" style="font-size:10px;padding:2px 6px;">Dismiss</button>';
+                html += '</td></tr>';
+            });
+            html += '</tbody></table>';
+            listEl.innerHTML = html;
+        }
+
+        function flagListing(listingIndex) {
+            var listing = rawListings[listingIndex];
+            if (!listing) return;
+
+            var flagType = prompt('Flag type:\n1. Sold\n2. Price wrong\n3. Delisted\n4. Info incorrect\n5. Duplicate\n\nEnter number (1-5):');
+            var types = ['sold', 'price_wrong', 'delisted', 'info_incorrect', 'duplicate'];
+            var typeIdx = parseInt(flagType) - 1;
+            if (isNaN(typeIdx) || typeIdx < 0 || typeIdx > 4) { alert('Invalid selection.'); return; }
+
+            var notes = prompt('Additional details (optional):') || '';
+            var flags = getCommunityFlags();
+            var newId = flags.length > 0 ? Math.max.apply(null, flags.map(function(f){return f.id;})) + 1 : 1;
+            flags.push({
+                id: newId,
+                listing_id: listingIndex,
+                flag_type: types[typeIdx],
+                notes: notes,
+                status: 'pending',
+                created_at: new Date().toISOString()
+            });
+            saveCommunityFlags(flags);
+            if (apiConnected) apiPost('/listings/' + listingIndex + '/flag', { flag_type: types[typeIdx], notes: notes });
+            alert('Flag submitted. Thank you for helping keep the data accurate!');
+        }
+
+        function resolveCommunityFlag(id, status) {
+            var flags = getCommunityFlags();
+            var flag = flags.find(function(f){return f.id === id;});
+            if (flag) { flag.status = status; saveCommunityFlags(flags); }
+            if (status === 'verified' && flag) {
+                // If verified as sold/delisted, could mark the listing
+                if (flag.flag_type === 'sold' || flag.flag_type === 'delisted') {
+                    // Mark in our local data
+                    if (rawListings[flag.listing_id]) {
+                        rawListings[flag.listing_id]._status = flag.flag_type;
+                    }
+                }
+            }
+            renderCommunityFlags();
+        }
+
+        // ===================================================================
+        // ENHANCED COMPARISON TOOL
+        // ===================================================================
+        var _origOpenComparisonTool = typeof openComparisonTool === 'function' ? openComparisonTool : null;
+        function enhancedOpenComparisonTool() {
+            var compareSet = [];
+            rawListings.forEach(function(l, idx) {
+                if (l._compare) compareSet.push(idx);
+            });
+            if (compareSet.length < 2) {
+                // Fall back to shortlisted properties
+                compareSet = [...shortlistedIds];
+            }
+            if (compareSet.length < 2) {
+                alert('Please shortlist or select at least 2 properties to compare.\n\nUse the star icon on any listing to add it to your shortlist.');
+                return;
+            }
+
+            var listings = compareSet.slice(0, 5).map(function(idx) { return { listing: rawListings[idx], index: idx }; });
+
+            var modal = document.getElementById('comparisonModal');
+            var body = document.getElementById('comparisonBody');
+
+            // Build enhanced comparison table
+            var html = '<div style="font-size:18px;font-weight:700;color:var(--primary);margin-bottom:16px;">Property Comparison</div>';
+
+            // Properties header row
+            html += '<div style="overflow-x:auto;"><table class="comparison-table" style="width:100%;border-collapse:collapse;font-size:12px;">';
+            html += '<thead><tr><th style="padding:10px;text-align:left;min-width:120px;">Feature</th>';
+            listings.forEach(function(item) {
+                html += '<th style="padding:10px;text-align:center;min-width:160px;">' + item.listing.addr + '<br><span style="font-weight:400;color:#888;">' + item.listing.neighborhood + '</span></th>';
+            });
+            html += '</tr></thead><tbody>';
+
+            // Comparison rows with highlighting
+            var rows = [
+                { label: 'Price', key: 'price', format: function(v) { return formatPrice(v); }, best: 'min' },
+                { label: 'Type', key: 'type', format: function(v) { return v; } },
+                { label: 'Bedrooms', key: 'beds', format: function(v) { return v; }, best: 'max' },
+                { label: 'Bathrooms', key: 'baths', format: function(v) { return v; }, best: 'max' },
+                { label: 'Square Feet', key: 'sqft', format: function(v) { return v.toLocaleString(); }, best: 'max' },
+                { label: '$/SqFt', key: '_ppsf', format: function(v) { return '$' + v; }, best: 'min', compute: function(l) { return l.sqft > 0 ? Math.round(l.price / l.sqft) : 0; } },
+                { label: 'Days on Market', key: 'dom', format: function(v) { return v; }, best: 'max' },
+                { label: 'Year Built', key: 'yearBuilt', format: function(v) { return v; }, best: 'max' },
+                { label: 'Lot Size', key: 'lot', format: function(v) { return v || 'N/A'; } },
+                { label: 'Water View', key: 'waterView', format: function(v) { return v ? 'Yes' : 'No'; }, best: 'yes' },
+                { label: 'Deal Score', key: 'score', format: function(v) { return Math.round(v) + '/100'; }, best: 'max' },
+                { label: 'Walk Score', key: '_walk', format: function(v) { return v || 'N/A'; }, best: 'max', compute: function(l) { var e = neighborhoodEnrichment[l.neighborhood]; return e ? e.walkScore : null; } },
+                { label: 'Transit Score', key: '_transit', format: function(v) { return v || 'N/A'; }, best: 'max', compute: function(l) { var e = neighborhoodEnrichment[l.neighborhood]; return e ? e.transitScore : null; } },
+                { label: 'Market Trend (YoY)', key: '_yoy', format: function(v) { return v !== null ? (v > 0 ? '+' : '') + v + '%' : 'N/A'; }, best: 'min', compute: function(l) { var t = marketTrends[l.neighborhood]; return t ? t.yoyChange : null; } },
+                { label: 'Agent', key: 'agent', format: function(v) { return v; } },
+                { label: 'Region', key: 'region', format: function(v) { return v; } }
+            ];
+
+            rows.forEach(function(row) {
+                html += '<tr><td style="padding:8px;font-weight:600;background:var(--light-gray);">' + row.label + '</td>';
+                var values = listings.map(function(item) {
+                    return row.compute ? row.compute(item.listing) : item.listing[row.key];
+                });
+
+                // Determine best value
+                var bestIdx = -1;
+                if (row.best === 'min') { var numVals = values.filter(function(v){return typeof v === 'number';}); if (numVals.length > 0) { var min = Math.min.apply(null, numVals); bestIdx = values.indexOf(min); } }
+                if (row.best === 'max') { var numVals = values.filter(function(v){return typeof v === 'number';}); if (numVals.length > 0) { var max = Math.max.apply(null, numVals); bestIdx = values.indexOf(max); } }
+                if (row.best === 'yes') { bestIdx = values.indexOf(true); }
+
+                values.forEach(function(v, i) {
+                    var cls = i === bestIdx ? ' class="comparison-highlight"' : '';
+                    html += '<td style="padding:8px;text-align:center;"' + cls + '>' + row.format(v) + (i === bestIdx && row.best ? ' <span style="color:var(--success);font-size:10px;">&#9733;</span>' : '') + '</td>';
+                });
+                html += '</tr>';
+            });
+
+            // Monthly payment row
+            html += '<tr><td style="padding:8px;font-weight:600;background:var(--light-gray);">Est. Monthly (20% down)</td>';
+            listings.forEach(function(item) {
+                var payment = Math.round(item.listing.price * 0.8 * (0.055/12 * Math.pow(1+0.055/12,300)) / (Math.pow(1+0.055/12,300)-1));
+                html += '<td style="padding:8px;text-align:center;">$' + payment.toLocaleString() + '/mo</td>';
+            });
+            html += '</tr>';
+
+            html += '</tbody></table></div>';
+
+            // Action buttons
+            html += '<div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;">';
+            listings.forEach(function(item) {
+                html += '<button class="btn-primary" onclick="document.getElementById(\'comparisonModal\').classList.remove(\'active\');showDetailModal(' + item.index + ')" style="font-size:11px;">' + item.listing.addr.substring(0, 20) + '...</button>';
+            });
+            html += '</div>';
+
+            body.innerHTML = html;
+            modal.classList.add('active');
+        }
+
+        // Override the comparison tool
+        if (typeof openComparisonTool !== 'undefined') {
+            openComparisonTool = enhancedOpenComparisonTool;
+        }
+
+        // ===================================================================
+        // ADD FLAG BUTTON TO DETAIL MODAL
+        // ===================================================================
+        var _origShowDetailModal = showDetailModal;
+        showDetailModal = function(listingIndex) {
+            _origShowDetailModal(listingIndex);
+            // Add flag button and price history to modal
+            var modalBody = document.getElementById('modalBody');
+            if (modalBody) {
+                // Add flag button at the top
+                var headerDiv = modalBody.querySelector('.modal-header');
+                if (headerDiv && !headerDiv.querySelector('.flag-btn')) {
+                    var flagBtn = document.createElement('button');
+                    flagBtn.className = 'flag-btn';
+                    flagBtn.textContent = 'Flag Issue';
+                    flagBtn.onclick = function() { flagListing(listingIndex); };
+                    flagBtn.style.marginLeft = '8px';
+                    headerDiv.appendChild(flagBtn);
+                }
+
+                // Add freshness indicator
+                var listing = rawListings[listingIndex];
+                var freshHtml = '<div style="margin:8px 0;font-size:11px;">';
+                var dataAge = Math.floor((new Date() - new Date('2026-02-28')) / (1000*60*60*24));
+                if (listing._updatedAt) dataAge = Math.floor((new Date() - new Date(listing._updatedAt)) / (1000*60*60*24));
+                var freshClass = dataAge <= 3 ? 'freshness-fresh' : (dataAge <= 7 ? 'freshness-recent' : (dataAge <= 14 ? 'freshness-aging' : 'freshness-stale'));
+                freshHtml += 'Data: <span class="freshness-badge ' + freshClass + '">' + (dataAge <= 0 ? 'Today' : dataAge + ' days ago') + '</span>';
+                if (listing._source) freshHtml += ' &bull; Source: ' + listing._source;
+                freshHtml += ' &bull; <button class="flag-btn" onclick="flagListing(' + listingIndex + ')">Report Issue</button>';
+                freshHtml += '</div>';
+
+                // Add schedule viewing button
+                freshHtml += '<button class="btn-secondary" onclick="closeDetailModal();switchTabDirect(\'viewings\');setTimeout(function(){showScheduleViewingForm();document.getElementById(\'viewingProperty\').value=\'' + listingIndex + '\';},200);" style="font-size:11px;margin-top:4px;">Schedule Viewing</button>';
+
+                // Insert after the modal header
+                if (headerDiv) {
+                    headerDiv.insertAdjacentHTML('afterend', freshHtml);
+                }
+            }
+        };
+
+        // ===================================================================
+        // STATS BAR DATA FRESHNESS INDICATOR
+        // ===================================================================
+        (function() {
+            var statsBar = document.querySelector('.stats-bar');
+            if (statsBar) {
+                var freshStat = document.createElement('div');
+                freshStat.className = 'stat-item';
+                freshStat.innerHTML = '<div class="stat-value" id="dataHealthScore" style="font-size: 16px;">--</div><div class="stat-label">Data Health</div>';
+                statsBar.appendChild(freshStat);
+
+                // Update data health on load
+                setTimeout(function() {
+                    var dataAge = Math.floor((new Date() - new Date('2026-02-28')) / (1000*60*60*24));
+                    var healthEl = document.getElementById('dataHealthScore');
+                    if (healthEl) {
+                        if (dataAge <= 3) { healthEl.textContent = 'Fresh'; healthEl.style.color = 'var(--success)'; }
+                        else if (dataAge <= 7) { healthEl.textContent = 'Recent'; healthEl.style.color = 'var(--warning)'; }
+                        else if (dataAge <= 14) { healthEl.textContent = 'Aging'; healthEl.style.color = '#e65100'; }
+                        else { healthEl.textContent = 'Stale'; healthEl.style.color = 'var(--danger)'; }
+                    }
+                }, 500);
+            }
+        })();
 
     </script>
 
