@@ -6982,25 +6982,37 @@ Competitive: ${formatPrice(offers.competitive)}`;
             else ptt = 2000 + 36000 + 30000 + (price - 3000000) * 0.05;
 
             var savings = 0;
-            // April 2024+ FTHB thresholds
-            if (isFTHB && !isNewBuild) {
-                // Existing homes: full exemption up to $835K, partial $835K-$860K
-                if (price <= 835000) { savings = ptt; ptt = 0; }
-                else if (price <= 860000) {
-                    var ratio = (860000 - price) / 25000;
+
+            if (isFTHB && isNewBuild) {
+                // Newly Built Home Exemption: full exemption up to $1.1M, partial $1.1M-$1.15M
+                if (price <= 1100000) {
+                    savings = ptt;
+                    ptt = 0;
+                } else if (price <= 1150000) {
+                    var ratio = (1150000 - price) / 50000;
                     savings = ptt * ratio;
                     ptt = ptt - savings;
                 }
-            }
-            if (isFTHB && isNewBuild) {
-                // New builds: full exemption up to $1.1M, partial $1.1M-$1.15M
-                if (price <= 1100000) { savings = ptt; ptt = 0; }
-                else if (price <= 1150000) {
-                    var ratio2 = (1150000 - price) / 50000;
-                    savings = ptt * ratio2;
-                    ptt = ptt - savings;
+            } else if (isFTHB && !isNewBuild) {
+                // FTHB Existing Home Exemption (April 2024+ rules from gov.bc.ca):
+                // - Under $500K: full exemption (PTT = $0)
+                // - $500K to $835K: fixed $8,000 exemption (PTT on first $500K is waived)
+                // - $835K to $860K: $8,000 exemption proportionally reduced
+                // - Over $860K: no exemption
+                if (price <= 500000) {
+                    savings = ptt;
+                    ptt = 0;
+                } else if (price <= 835000) {
+                    savings = 8000;
+                    ptt = ptt - 8000;
+                } else if (price < 860000) {
+                    var exemption = 8000 * ((860000 - price) / 25000);
+                    savings = Math.round(exemption);
+                    ptt = ptt - exemption;
                 }
+                // else: price >= 860000, no exemption
             }
+
             return { ptt: Math.round(ptt), savings: Math.round(savings) };
         }
 
