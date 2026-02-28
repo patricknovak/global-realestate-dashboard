@@ -1365,7 +1365,7 @@
     <!-- Header -->
     <div class="header">
         <h1>Real Estate Investment Dashboard</h1>
-        <p>Find deals, analyze neighborhoods, and generate offers — no realtor required <span id="streetViewIndicator" style="margin-left:12px;"></span></p>
+        <p>Find deals, analyze neighborhoods, compare mortgage rates, and generate offers — connect directly with sellers and lenders, no realtor required <span id="streetViewIndicator" style="margin-left:12px;"></span></p>
     </div>
     
     <!-- Stats Bar -->
@@ -1535,22 +1535,90 @@
         <!-- Main Content -->
         <div class="main-content">
             <div class="tabs">
-                <button class="tab-button active" onclick="switchTab('listings')">All Listings</button>
+                <button class="tab-button active" onclick="switchTab('dashboard')">Dashboard</button>
+                <button class="tab-button" onclick="switchTab('listings')">All Listings</button>
                 <button class="tab-button" onclick="switchTab('map')">Map View</button>
-                <button class="tab-button" onclick="switchTab('neighborhood')">Neighborhood Analysis</button>
+                <button class="tab-button" onclick="switchTab('neighborhood')">Neighborhoods</button>
                 <button class="tab-button" onclick="switchTab('deals')">Deal Analysis</button>
-                <button class="tab-button" onclick="switchTab('offers')">Offer Generator</button>
-                <button class="tab-button" onclick="switchTab('mortgage')">Calculator</button>
                 <span class="tab-group-divider"></span>
+                <button class="tab-button" onclick="switchTab('offers')">Offer Generator</button>
+                <button class="tab-button" onclick="switchTab('myoffers')">My Offers</button>
                 <button class="tab-button" onclick="switchTab('shortlist')">Shortlist</button>
                 <button class="tab-button" onclick="openComparisonTool()">Compare</button>
                 <span class="tab-group-divider"></span>
+                <button class="tab-button" onclick="switchTab('mortgage')">Financing Hub</button>
+                <button class="tab-button" onclick="switchTab('roi')">ROI Calculator</button>
+                <button class="tab-button" onclick="switchTab('lenders')">Lender Directory</button>
+                <span class="tab-group-divider"></span>
+                <button class="tab-button" onclick="switchTab('buyerprofile')">My Profile</button>
                 <button class="tab-button" onclick="switchTab('norealtorguide')">No-Realtor Guide</button>
                 <button class="tab-button" onclick="switchTab('help')">Help</button>
             </div>
             
+            <!-- Tab: Dashboard Home -->
+            <div id="dashboard" class="tab-content active" style="overflow: auto; padding: 24px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 24px;">
+                    <div style="background: linear-gradient(135deg, #1B3A5C 0%, #2E75B6 100%); color: white; padding: 20px; border-radius: 10px;">
+                        <div style="font-size: 12px; opacity: 0.8; text-transform: uppercase; font-weight: 600;">Shortlisted Properties</div>
+                        <div id="dashShortlistCount" style="font-size: 32px; font-weight: 700; margin: 8px 0;">0</div>
+                        <div style="font-size: 12px; opacity: 0.8;">Click to review your saved properties</div>
+                        <button onclick="switchTabDirect('shortlist')" style="margin-top:10px;padding:6px 14px;border:1px solid rgba(255,255,255,0.4);background:transparent;color:white;border-radius:4px;cursor:pointer;font-size:11px;font-weight:600;">View Shortlist</button>
+                    </div>
+                    <div style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; padding: 20px; border-radius: 10px;">
+                        <div style="font-size: 12px; opacity: 0.8; text-transform: uppercase; font-weight: 600;">Offers Generated</div>
+                        <div id="dashOfferCount" style="font-size: 32px; font-weight: 700; margin: 8px 0;">0</div>
+                        <div style="font-size: 12px; opacity: 0.8;">Track all your submitted offers</div>
+                        <button onclick="switchTabDirect('myoffers')" style="margin-top:10px;padding:6px 14px;border:1px solid rgba(255,255,255,0.4);background:transparent;color:white;border-radius:4px;cursor:pointer;font-size:11px;font-weight:600;">View Offers</button>
+                    </div>
+                    <div style="background: linear-gradient(135deg, #fd7e14 0%, #e83e8c 100%); color: white; padding: 20px; border-radius: 10px;">
+                        <div style="font-size: 12px; opacity: 0.8; text-transform: uppercase; font-weight: 600;">Hot Deals Available</div>
+                        <div id="dashHotDeals" style="font-size: 32px; font-weight: 700; margin: 8px 0;">0</div>
+                        <div style="font-size: 12px; opacity: 0.8;">Properties scoring 70+ (best value)</div>
+                        <button onclick="switchTabDirect('deals')" style="margin-top:10px;padding:6px 14px;border:1px solid rgba(255,255,255,0.4);background:transparent;color:white;border-radius:4px;cursor:pointer;font-size:11px;font-weight:600;">View Deals</button>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-bottom: 24px;">
+                    <div>
+                        <h3 style="color: var(--primary); margin-bottom: 12px; font-size: 16px;">Market Conditions Snapshot</h3>
+                        <div id="dashMarketSnapshot" style="background: var(--light-gray); padding: 16px; border-radius: 8px; font-size: 13px;">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;">
+                                <div><span style="color:#888;font-size:11px;text-transform:uppercase;font-weight:600;">Avg Listing Price</span><div id="dashAvgPrice" style="font-weight:700;font-size:18px;color:var(--primary);margin-top:4px;">--</div></div>
+                                <div><span style="color:#888;font-size:11px;text-transform:uppercase;font-weight:600;">Avg Days on Market</span><div id="dashAvgDOM" style="font-weight:700;font-size:18px;color:var(--primary);margin-top:4px;">--</div></div>
+                                <div><span style="color:#888;font-size:11px;text-transform:uppercase;font-weight:600;">Active Listings</span><div id="dashTotalListings" style="font-weight:700;font-size:18px;color:var(--primary);margin-top:4px;">--</div></div>
+                            </div>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-top: 14px; padding-top: 14px; border-top: 1px solid #ddd;">
+                                <div><span style="color:#888;font-size:11px;text-transform:uppercase;font-weight:600;">Avg Deal Score</span><div id="dashAvgScore" style="font-weight:700;font-size:18px;color:var(--secondary);margin-top:4px;">--</div></div>
+                                <div><span style="color:#888;font-size:11px;text-transform:uppercase;font-weight:600;">Buyer's Market Areas</span><div id="dashBuyerMarkets" style="font-weight:700;font-size:18px;color:var(--success);margin-top:4px;">--</div></div>
+                                <div><span style="color:#888;font-size:11px;text-transform:uppercase;font-weight:600;">Avg Sale/List Ratio</span><div id="dashSaleList" style="font-weight:700;font-size:18px;color:var(--warning);margin-top:4px;">--</div></div>
+                            </div>
+                        </div>
+
+                        <h3 style="color: var(--primary); margin: 20px 0 12px; font-size: 16px;">Recently Listed (Newest First)</h3>
+                        <div id="dashRecentListings" style="display: grid; gap: 8px;"></div>
+                    </div>
+
+                    <div>
+                        <h3 style="color: var(--primary); margin-bottom: 12px; font-size: 16px;">Quick Actions</h3>
+                        <div style="display: grid; gap: 10px;">
+                            <button onclick="switchTabDirect('listings')" style="padding: 14px; background: white; border: 2px solid var(--secondary); border-radius: 8px; cursor: pointer; text-align: left; font-size: 13px; transition: all 0.2s;"><strong style="color:var(--primary);">Browse All Listings</strong><br><span style="color:#888;font-size:11px;">Search and filter properties</span></button>
+                            <button onclick="switchTabDirect('offers')" style="padding: 14px; background: white; border: 2px solid var(--success); border-radius: 8px; cursor: pointer; text-align: left; font-size: 13px; transition: all 0.2s;"><strong style="color:var(--primary);">Generate an Offer</strong><br><span style="color:#888;font-size:11px;">Create a professional offer letter</span></button>
+                            <button onclick="switchTabDirect('mortgage')" style="padding: 14px; background: white; border: 2px solid var(--warning); border-radius: 8px; cursor: pointer; text-align: left; font-size: 13px; transition: all 0.2s;"><strong style="color:var(--primary);">Financing Hub</strong><br><span style="color:#888;font-size:11px;">Mortgage calculator, rates, pre-qualification</span></button>
+                            <button onclick="switchTabDirect('roi')" style="padding: 14px; background: white; border: 2px solid var(--accent); border-radius: 8px; cursor: pointer; text-align: left; font-size: 13px; transition: all 0.2s;"><strong style="color:var(--primary);">Investment ROI Calculator</strong><br><span style="color:#888;font-size:11px;">Cap rate, cash flow, rental analysis</span></button>
+                            <button onclick="switchTabDirect('lenders')" style="padding: 14px; background: white; border: 2px solid #6f42c1; border-radius: 8px; cursor: pointer; text-align: left; font-size: 13px; transition: all 0.2s;"><strong style="color:var(--primary);">Find a Lender</strong><br><span style="color:#888;font-size:11px;">Compare mortgage brokers and banks</span></button>
+                            <button onclick="switchTabDirect('norealtorguide')" style="padding: 14px; background: white; border: 2px solid var(--danger); border-radius: 8px; cursor: pointer; text-align: left; font-size: 13px; transition: all 0.2s;"><strong style="color:var(--primary);">No-Realtor Guide</strong><br><span style="color:#888;font-size:11px;">Buy property on your own in BC</span></button>
+                        </div>
+
+                        <h3 style="color: var(--primary); margin: 20px 0 12px; font-size: 16px;">Your Profile</h3>
+                        <div id="dashProfileSummary" style="background: var(--light-gray); padding: 14px; border-radius: 8px; font-size: 13px;">
+                            <div style="color:#888;text-align:center;padding:10px;">No profile set up yet.<br><a href="#" onclick="switchTabDirect('buyerprofile');return false;" style="color:var(--secondary);font-weight:600;">Set up your buyer profile</a></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Tab 1: All Listings -->
-            <div id="listings" class="tab-content active">
+            <div id="listings" class="tab-content">
                 <div class="view-toggle-bar">
                     <button class="view-toggle-btn active" id="tableViewBtn" onclick="switchListingView('table')">☰ Table</button>
                     <button class="view-toggle-btn" id="cardViewBtn" onclick="switchListingView('cards')">⊞ Cards</button>
@@ -1721,9 +1789,18 @@
             </div>
 
 
-            <!-- Tab: Mortgage Calculator -->
+            <!-- Tab: Financing Hub (formerly Mortgage Calculator) -->
             <div id="mortgage" class="tab-content" style="overflow: auto; padding: 20px;">
-                <h2 style="margin-bottom: 20px; color: var(--primary);">Mortgage &amp; Cost Calculator</h2>
+                <h2 style="margin-bottom: 8px; color: var(--primary);">Financing Hub</h2>
+                <p style="color: #666; margin-bottom: 20px;">Everything you need to understand your mortgage options, costs, and affordability. No realtor referral needed.</p>
+                <div style="display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap;">
+                    <button onclick="document.getElementById('mortCalcSection').scrollIntoView({behavior:'smooth'})" style="padding:8px 14px;border:1px solid var(--secondary);background:white;color:var(--secondary);border-radius:20px;cursor:pointer;font-size:12px;font-weight:600;">Mortgage Calculator</button>
+                    <button onclick="document.getElementById('pttSection').scrollIntoView({behavior:'smooth'})" style="padding:8px 14px;border:1px solid var(--secondary);background:white;color:var(--secondary);border-radius:20px;cursor:pointer;font-size:12px;font-weight:600;">Property Transfer Tax</button>
+                    <button onclick="document.getElementById('closingSection').scrollIntoView({behavior:'smooth'})" style="padding:8px 14px;border:1px solid var(--secondary);background:white;color:var(--secondary);border-radius:20px;cursor:pointer;font-size:12px;font-weight:600;">Closing Costs</button>
+                    <button onclick="switchTabDirect('lenders')" style="padding:8px 14px;border:1px solid var(--success);background:white;color:var(--success);border-radius:20px;cursor:pointer;font-size:12px;font-weight:600;">Rate Comparison &amp; Pre-Qualification &#8594;</button>
+                    <button onclick="switchTabDirect('roi')" style="padding:8px 14px;border:1px solid var(--warning);background:white;color:var(--warning);border-radius:20px;cursor:pointer;font-size:12px;font-weight:600;">ROI Calculator &#8594;</button>
+                </div>
+                <div id="mortCalcSection"></div>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
                     <div>
                         <h3 style="color: var(--secondary); margin-bottom: 12px;">Mortgage Details</h3>
@@ -1769,7 +1846,7 @@
                             </table>
                         </div>
 
-                        <h3 style="color: var(--secondary); margin: 24px 0 12px;">BC Property Transfer Tax</h3>
+                        <h3 id="pttSection" style="color: var(--secondary); margin: 24px 0 12px;">BC Property Transfer Tax</h3>
                         <div id="pttResults" style="font-size: 13px;">
                             <table style="width:100%;border-collapse:collapse;">
                                 <tr style="background:#e7f3ff;"><td style="padding:8px;font-weight:700;">BC Property Transfer Tax</td><td id="pttTotal" style="padding:8px;text-align:right;font-weight:700;">$0</td></tr>
@@ -1780,7 +1857,7 @@
                             </table>
                         </div>
 
-                        <h3 style="color: var(--secondary); margin: 24px 0 12px;">Estimated Closing Costs</h3>
+                        <h3 id="closingSection" style="color: var(--secondary); margin: 24px 0 12px;">Estimated Closing Costs</h3>
                         <div id="closingResults">
                             <table style="width:100%;border-collapse:collapse;font-size:13px;">
                                 <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;">Property Transfer Tax</td><td id="ccPTT" style="padding:6px 8px;text-align:right;border-bottom:1px solid #eee;">$0</td></tr>
@@ -1793,6 +1870,376 @@
                             </table>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            <!-- Tab: My Offers Tracking -->
+            <div id="myoffers" class="tab-content" style="overflow: auto; padding: 20px;">
+                <h2 style="margin-bottom: 8px; color: var(--primary);">My Offers</h2>
+                <p style="color: #666; margin-bottom: 16px;">Track all offers you've generated. Update statuses as negotiations progress.</p>
+                <div style="display: flex; gap: 12px; margin-bottom: 20px;">
+                    <div style="background:var(--light-gray);padding:12px 20px;border-radius:8px;text-align:center;flex:1;">
+                        <div style="font-size:11px;color:#888;text-transform:uppercase;font-weight:600;">Total Offers</div>
+                        <div id="myoffersTotal" style="font-size:24px;font-weight:700;color:var(--primary);">0</div>
+                    </div>
+                    <div style="background:#d4edda;padding:12px 20px;border-radius:8px;text-align:center;flex:1;">
+                        <div style="font-size:11px;color:#155724;text-transform:uppercase;font-weight:600;">Accepted</div>
+                        <div id="myoffersAccepted" style="font-size:24px;font-weight:700;color:#155724;">0</div>
+                    </div>
+                    <div style="background:#fff3cd;padding:12px 20px;border-radius:8px;text-align:center;flex:1;">
+                        <div style="font-size:11px;color:#856404;text-transform:uppercase;font-weight:600;">Pending</div>
+                        <div id="myoffersPending" style="font-size:24px;font-weight:700;color:#856404;">0</div>
+                    </div>
+                    <div style="background:#f8d7da;padding:12px 20px;border-radius:8px;text-align:center;flex:1;">
+                        <div style="font-size:11px;color:#721c24;text-transform:uppercase;font-weight:600;">Rejected</div>
+                        <div id="myoffersRejected" style="font-size:24px;font-weight:700;color:#721c24;">0</div>
+                    </div>
+                </div>
+                <div style="overflow-x: auto;">
+                    <table class="listings-table" id="myoffersTable">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Property</th>
+                                <th>Asking Price</th>
+                                <th>Offer Price</th>
+                                <th>Discount</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="myoffersTableBody"></tbody>
+                    </table>
+                </div>
+                <div id="emptyOffers" class="empty-state">
+                    <div class="empty-state-title">No Offers Yet</div>
+                    <p>Go to the Offer Generator tab to create your first offer. All offers will be tracked here automatically.</p>
+                </div>
+            </div>
+
+            <!-- Tab: Investment ROI Calculator -->
+            <div id="roi" class="tab-content" style="overflow: auto; padding: 20px;">
+                <h2 style="margin-bottom: 8px; color: var(--primary);">Investment ROI Calculator</h2>
+                <p style="color: #666; margin-bottom: 20px;">Analyze potential rental income and returns for investment properties.</p>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+                    <div>
+                        <h3 style="color: var(--secondary); margin-bottom: 12px;">Property &amp; Purchase</h3>
+                        <div class="form-group">
+                            <label>Select Property (or enter manually)</label>
+                            <select id="roiPropertySelect" onchange="roiLoadProperty()">
+                                <option value="">Enter manually below...</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Purchase Price ($)</label>
+                            <input type="number" id="roiPrice" value="600000" oninput="calcROI()">
+                        </div>
+                        <div class="form-group">
+                            <label>Down Payment (%)</label>
+                            <input type="number" id="roiDown" value="20" step="1" oninput="calcROI()">
+                        </div>
+                        <div class="form-group">
+                            <label>Mortgage Rate (%)</label>
+                            <input type="number" id="roiRate" value="5.5" step="0.1" oninput="calcROI()">
+                        </div>
+                        <div class="form-group">
+                            <label>Closing Costs ($)</label>
+                            <input type="number" id="roiClosing" value="15000" oninput="calcROI()">
+                        </div>
+
+                        <h3 style="color: var(--secondary); margin: 20px 0 12px;">Monthly Income</h3>
+                        <div class="form-group">
+                            <label>Expected Monthly Rent ($)</label>
+                            <input type="number" id="roiRent" value="2800" oninput="calcROI()">
+                        </div>
+                        <div class="form-group">
+                            <label>Other Monthly Income ($) <span style="font-weight:normal;color:#888;">(parking, laundry, etc.)</span></label>
+                            <input type="number" id="roiOtherIncome" value="0" oninput="calcROI()">
+                        </div>
+
+                        <h3 style="color: var(--secondary); margin: 20px 0 12px;">Monthly Expenses</h3>
+                        <div class="form-group">
+                            <label>Property Tax ($/month)</label>
+                            <input type="number" id="roiTax" value="350" oninput="calcROI()">
+                        </div>
+                        <div class="form-group">
+                            <label>Insurance ($/month)</label>
+                            <input type="number" id="roiInsurance" value="150" oninput="calcROI()">
+                        </div>
+                        <div class="form-group">
+                            <label>Maintenance Reserve ($/month)</label>
+                            <input type="number" id="roiMaintenance" value="200" oninput="calcROI()">
+                        </div>
+                        <div class="form-group">
+                            <label>Property Management (% of rent)</label>
+                            <input type="number" id="roiMgmt" value="0" step="1" oninput="calcROI()">
+                        </div>
+                        <div class="form-group">
+                            <label>Strata/HOA Fees ($/month)</label>
+                            <input type="number" id="roiStrata" value="0" oninput="calcROI()">
+                        </div>
+                        <div class="form-group">
+                            <label>Vacancy Rate (%)</label>
+                            <input type="number" id="roiVacancy" value="5" step="1" oninput="calcROI()">
+                        </div>
+                        <button class="btn-primary" onclick="calcROI()" style="width: auto; margin-top: 8px;">Calculate ROI</button>
+                    </div>
+                    <div>
+                        <h3 style="color: var(--secondary); margin-bottom: 12px;">Investment Returns</h3>
+                        <div style="background: var(--primary); color: white; padding: 20px; border-radius: 10px; text-align: center; margin-bottom: 16px;">
+                            <div style="font-size: 12px; opacity: 0.8;">Monthly Cash Flow</div>
+                            <div id="roiCashFlow" style="font-size: 32px; font-weight: 700;">$0</div>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+                            <div style="background:#d4edda;padding:14px;border-radius:8px;text-align:center;">
+                                <div style="font-size:11px;color:#155724;text-transform:uppercase;font-weight:600;">Cap Rate</div>
+                                <div id="roiCapRate" style="font-size:22px;font-weight:700;color:#155724;">0%</div>
+                            </div>
+                            <div style="background:#e7f3ff;padding:14px;border-radius:8px;text-align:center;">
+                                <div style="font-size:11px;color:#004085;text-transform:uppercase;font-weight:600;">Cash-on-Cash Return</div>
+                                <div id="roiCashOnCash" style="font-size:22px;font-weight:700;color:#004085;">0%</div>
+                            </div>
+                        </div>
+                        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+                            <tr><td style="padding:8px;border-bottom:1px solid #eee;">Total Investment (Down + Closing)</td><td id="roiTotalInvestment" style="padding:8px;text-align:right;border-bottom:1px solid #eee;font-weight:600;">$0</td></tr>
+                            <tr><td style="padding:8px;border-bottom:1px solid #eee;">Mortgage Payment (monthly)</td><td id="roiMortPayment" style="padding:8px;text-align:right;border-bottom:1px solid #eee;font-weight:600;">$0</td></tr>
+                            <tr><td style="padding:8px;border-bottom:1px solid #eee;">Gross Monthly Income</td><td id="roiGrossIncome" style="padding:8px;text-align:right;border-bottom:1px solid #eee;font-weight:600;">$0</td></tr>
+                            <tr><td style="padding:8px;border-bottom:1px solid #eee;">Effective Income (after vacancy)</td><td id="roiEffIncome" style="padding:8px;text-align:right;border-bottom:1px solid #eee;font-weight:600;">$0</td></tr>
+                            <tr><td style="padding:8px;border-bottom:1px solid #eee;">Total Monthly Expenses</td><td id="roiTotalExpenses" style="padding:8px;text-align:right;border-bottom:1px solid #eee;font-weight:600;">$0</td></tr>
+                            <tr><td style="padding:8px;border-bottom:1px solid #eee;">Net Operating Income (annual)</td><td id="roiNOI" style="padding:8px;text-align:right;border-bottom:1px solid #eee;font-weight:600;">$0</td></tr>
+                            <tr><td style="padding:8px;border-bottom:1px solid #eee;">Annual Cash Flow</td><td id="roiAnnualCF" style="padding:8px;text-align:right;border-bottom:1px solid #eee;font-weight:600;">$0</td></tr>
+                            <tr><td style="padding:8px;border-bottom:1px solid #eee;">Gross Rent Multiplier (GRM)</td><td id="roiGRM" style="padding:8px;text-align:right;border-bottom:1px solid #eee;font-weight:600;">--</td></tr>
+                        </table>
+
+                        <h3 style="color: var(--secondary); margin: 24px 0 12px;">Investment Verdict</h3>
+                        <div id="roiVerdict" style="background:var(--light-gray);padding:16px;border-radius:8px;font-size:13px;line-height:1.6;">
+                            Enter property details and click Calculate to see your investment analysis.
+                        </div>
+
+                        <h3 style="color: var(--secondary); margin: 24px 0 12px;">5-Year Projection</h3>
+                        <table style="width:100%;border-collapse:collapse;font-size:12px;">
+                            <thead><tr style="background:var(--light-gray);"><th style="padding:8px;text-align:left;">Year</th><th style="padding:8px;text-align:right;">Annual Cash Flow</th><th style="padding:8px;text-align:right;">Equity Built</th><th style="padding:8px;text-align:right;">Total Return</th></tr></thead>
+                            <tbody id="roiProjectionBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab: Lender Directory -->
+            <div id="lenders" class="tab-content" style="overflow: auto; padding: 20px;">
+                <h2 style="margin-bottom: 8px; color: var(--primary);">Lender Directory</h2>
+                <p style="color: #666; margin-bottom: 20px;">Compare mortgage options from major Canadian lenders and BC mortgage brokers. Contact them directly -- no realtor needed.</p>
+
+                <h3 style="color: var(--secondary); margin-bottom: 12px;">Current Posted Mortgage Rates (February 2026)</h3>
+                <div style="background: #e7f3ff; border: 1px solid #b8daff; border-radius: 6px; padding: 10px 14px; margin-bottom: 16px; font-size: 11px; color: #004085;">
+                    <strong>Note:</strong> Posted rates are for comparison only. Actual rates depend on your credit score, down payment, and property type. Mortgage brokers can often negotiate below posted rates. Always get multiple quotes.
+                </div>
+                <div style="overflow-x: auto; margin-bottom: 30px;">
+                    <table class="listings-table" id="rateTable">
+                        <thead>
+                            <tr>
+                                <th>Lender</th>
+                                <th>Type</th>
+                                <th>5-Yr Fixed</th>
+                                <th>3-Yr Fixed</th>
+                                <th>Variable</th>
+                                <th>Insured Discount</th>
+                                <th>Contact</th>
+                            </tr>
+                        </thead>
+                        <tbody id="rateTableBody"></tbody>
+                    </table>
+                </div>
+
+                <h3 style="color: var(--secondary); margin-bottom: 12px;">Mortgage Brokers &amp; Specialists (BC)</h3>
+                <p style="font-size:12px;color:#666;margin-bottom:16px;">Mortgage brokers compare rates from multiple lenders on your behalf. Their service is typically free to the buyer (paid by the lender).</p>
+                <div id="brokerDirectory" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; margin-bottom: 30px;"></div>
+
+                <h3 style="color: var(--secondary); margin-bottom: 12px;">Mortgage Pre-Qualification Estimator</h3>
+                <p style="font-size:12px;color:#666;margin-bottom:16px;">Estimate how much you can afford based on Canadian mortgage qualification rules (GDS/TDS ratios + stress test).</p>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+                    <div>
+                        <div class="form-group">
+                            <label>Gross Annual Household Income ($)</label>
+                            <input type="number" id="pqIncome" value="120000" oninput="calcPreQual()">
+                        </div>
+                        <div class="form-group">
+                            <label>Monthly Debt Payments ($) <span style="font-weight:normal;color:#888;">(car, student loans, credit cards min)</span></label>
+                            <input type="number" id="pqDebts" value="500" oninput="calcPreQual()">
+                        </div>
+                        <div class="form-group">
+                            <label>Down Payment Available ($)</label>
+                            <input type="number" id="pqDown" value="150000" oninput="calcPreQual()">
+                        </div>
+                        <div class="form-group">
+                            <label>Estimated Property Tax ($/month)</label>
+                            <input type="number" id="pqTax" value="350" oninput="calcPreQual()">
+                        </div>
+                        <div class="form-group">
+                            <label>Estimated Heating ($/month)</label>
+                            <input type="number" id="pqHeat" value="150" oninput="calcPreQual()">
+                        </div>
+                        <div class="form-group">
+                            <label>Strata/Condo Fees ($/month, if applicable)</label>
+                            <input type="number" id="pqStrata" value="0" oninput="calcPreQual()">
+                        </div>
+                        <button class="btn-primary" onclick="calcPreQual()" style="width: auto; margin-top: 8px;">Calculate Pre-Qualification</button>
+                    </div>
+                    <div>
+                        <div style="background: var(--primary); color: white; padding: 20px; border-radius: 10px; text-align: center; margin-bottom: 16px;">
+                            <div style="font-size: 12px; opacity: 0.8;">Maximum Purchase Price (Estimated)</div>
+                            <div id="pqMaxPrice" style="font-size: 32px; font-weight: 700;">$0</div>
+                        </div>
+                        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+                            <tr><td style="padding:8px;border-bottom:1px solid #eee;">Max Mortgage (GDS limited)</td><td id="pqGDSMax" style="padding:8px;text-align:right;border-bottom:1px solid #eee;font-weight:600;">$0</td></tr>
+                            <tr><td style="padding:8px;border-bottom:1px solid #eee;">Max Mortgage (TDS limited)</td><td id="pqTDSMax" style="padding:8px;text-align:right;border-bottom:1px solid #eee;font-weight:600;">$0</td></tr>
+                            <tr><td style="padding:8px;border-bottom:1px solid #eee;">Stress Test Rate Used</td><td id="pqStressRate" style="padding:8px;text-align:right;border-bottom:1px solid #eee;font-weight:600;">--</td></tr>
+                            <tr><td style="padding:8px;border-bottom:1px solid #eee;">GDS Ratio</td><td id="pqGDS" style="padding:8px;text-align:right;border-bottom:1px solid #eee;font-weight:600;">--</td></tr>
+                            <tr><td style="padding:8px;border-bottom:1px solid #eee;">TDS Ratio</td><td id="pqTDS" style="padding:8px;text-align:right;border-bottom:1px solid #eee;font-weight:600;">--</td></tr>
+                            <tr><td style="padding:8px;border-bottom:1px solid #eee;">CMHC Insurance Required</td><td id="pqCMHC" style="padding:8px;text-align:right;border-bottom:1px solid #eee;font-weight:600;">--</td></tr>
+                        </table>
+                        <div style="background:#fff3cd;padding:12px;border-radius:6px;margin-top:12px;font-size:12px;color:#856404;border-left:4px solid #ffc107;">
+                            <strong>Stress test:</strong> Canadian regulations require you to qualify at the greater of your contract rate + 2% or the benchmark rate (5.25%). This calculator applies the stress test automatically.
+                        </div>
+                    </div>
+                </div>
+
+                <h3 style="color: var(--secondary); margin: 24px 0 12px;">Mortgage Scenario Comparison</h3>
+                <p style="font-size:12px;color:#666;margin-bottom:16px;">Compare up to 3 different mortgage scenarios side-by-side to find the best option.</p>
+                <div style="overflow-x: auto;">
+                    <table class="comparison-table" id="scenarioTable">
+                        <thead>
+                            <tr>
+                                <th style="width:180px;"></th>
+                                <th style="text-align:center;">Scenario A</th>
+                                <th style="text-align:center;">Scenario B</th>
+                                <th style="text-align:center;">Scenario C</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <th>Purchase Price ($)</th>
+                                <td><input type="number" id="scA_price" value="800000" oninput="calcScenarios()" style="width:100%;padding:6px;border:1px solid #ddd;border-radius:4px;text-align:center;"></td>
+                                <td><input type="number" id="scB_price" value="800000" oninput="calcScenarios()" style="width:100%;padding:6px;border:1px solid #ddd;border-radius:4px;text-align:center;"></td>
+                                <td><input type="number" id="scC_price" value="800000" oninput="calcScenarios()" style="width:100%;padding:6px;border:1px solid #ddd;border-radius:4px;text-align:center;"></td>
+                            </tr>
+                            <tr>
+                                <th>Down Payment (%)</th>
+                                <td><input type="number" id="scA_down" value="20" oninput="calcScenarios()" style="width:100%;padding:6px;border:1px solid #ddd;border-radius:4px;text-align:center;"></td>
+                                <td><input type="number" id="scB_down" value="10" oninput="calcScenarios()" style="width:100%;padding:6px;border:1px solid #ddd;border-radius:4px;text-align:center;"></td>
+                                <td><input type="number" id="scC_down" value="5" oninput="calcScenarios()" style="width:100%;padding:6px;border:1px solid #ddd;border-radius:4px;text-align:center;"></td>
+                            </tr>
+                            <tr>
+                                <th>Interest Rate (%)</th>
+                                <td><input type="number" id="scA_rate" value="4.99" step="0.01" oninput="calcScenarios()" style="width:100%;padding:6px;border:1px solid #ddd;border-radius:4px;text-align:center;"></td>
+                                <td><input type="number" id="scB_rate" value="5.29" step="0.01" oninput="calcScenarios()" style="width:100%;padding:6px;border:1px solid #ddd;border-radius:4px;text-align:center;"></td>
+                                <td><input type="number" id="scC_rate" value="5.49" step="0.01" oninput="calcScenarios()" style="width:100%;padding:6px;border:1px solid #ddd;border-radius:4px;text-align:center;"></td>
+                            </tr>
+                            <tr>
+                                <th>Amortization (years)</th>
+                                <td><select id="scA_amort" onchange="calcScenarios()" style="width:100%;padding:6px;border:1px solid #ddd;border-radius:4px;text-align:center;"><option value="25" selected>25</option><option value="30">30</option><option value="20">20</option><option value="15">15</option></select></td>
+                                <td><select id="scB_amort" onchange="calcScenarios()" style="width:100%;padding:6px;border:1px solid #ddd;border-radius:4px;text-align:center;"><option value="25" selected>25</option><option value="30">30</option><option value="20">20</option><option value="15">15</option></select></td>
+                                <td><select id="scC_amort" onchange="calcScenarios()" style="width:100%;padding:6px;border:1px solid #ddd;border-radius:4px;text-align:center;"><option value="25" selected>25</option><option value="30">30</option><option value="20">20</option><option value="15">15</option></select></td>
+                            </tr>
+                        </tbody>
+                        <tbody id="scenarioResults"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Tab: Buyer Profile -->
+            <div id="buyerprofile" class="tab-content" style="overflow: auto; padding: 20px;">
+                <h2 style="margin-bottom: 8px; color: var(--primary);">My Buyer Profile</h2>
+                <p style="color: #666; margin-bottom: 20px;">Save your details here. They'll auto-fill into offers, inquiries, and pre-qualification tools across the dashboard.</p>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; max-width: 900px;">
+                    <div>
+                        <h3 style="color: var(--secondary); margin-bottom: 12px;">Personal Information</h3>
+                        <div class="form-group">
+                            <label>Full Legal Name</label>
+                            <input type="text" id="bpName" placeholder="John Smith" oninput="saveBuyerProfile()">
+                        </div>
+                        <div class="form-group">
+                            <label>Email Address</label>
+                            <input type="email" id="bpEmail" placeholder="john@example.com" oninput="saveBuyerProfile()">
+                        </div>
+                        <div class="form-group">
+                            <label>Phone Number</label>
+                            <input type="tel" id="bpPhone" placeholder="604-555-1234" oninput="saveBuyerProfile()">
+                        </div>
+                        <div class="form-group">
+                            <label>Company / Corporation (optional)</label>
+                            <input type="text" id="bpCompany" placeholder="If purchasing under a corporation" oninput="saveBuyerProfile()">
+                        </div>
+                        <div class="form-group">
+                            <label>Mailing Address</label>
+                            <textarea id="bpAddress" rows="2" placeholder="123 Main St, Vancouver, BC V6A 1A1" oninput="saveBuyerProfile()"></textarea>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 style="color: var(--secondary); margin-bottom: 12px;">Purchase Preferences</h3>
+                        <div class="form-group">
+                            <label>Budget Range</label>
+                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                                <input type="number" id="bpBudgetMin" placeholder="Min ($)" oninput="saveBuyerProfile()">
+                                <input type="number" id="bpBudgetMax" placeholder="Max ($)" oninput="saveBuyerProfile()">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Pre-Approval Amount ($)</label>
+                            <input type="number" id="bpPreApproval" placeholder="e.g. 750000" oninput="saveBuyerProfile()">
+                        </div>
+                        <div class="form-group">
+                            <label>Pre-Approval Lender</label>
+                            <input type="text" id="bpPreApprovalLender" placeholder="e.g. TD Bank" oninput="saveBuyerProfile()">
+                        </div>
+                        <div class="form-group">
+                            <label>Purchase Purpose</label>
+                            <select id="bpPurpose" onchange="saveBuyerProfile()">
+                                <option value="">Select...</option>
+                                <option value="primary">Primary Residence</option>
+                                <option value="investment">Investment Property</option>
+                                <option value="vacation">Vacation Home</option>
+                                <option value="flip">Fix &amp; Flip</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Preferred Areas</label>
+                            <input type="text" id="bpAreas" placeholder="e.g. White Rock, Crescent Beach" oninput="saveBuyerProfile()">
+                        </div>
+                        <div class="form-group">
+                            <label>Preferred Property Types</label>
+                            <input type="text" id="bpTypes" placeholder="e.g. House, Townhouse" oninput="saveBuyerProfile()">
+                        </div>
+                        <div class="form-group">
+                            <label>Timeline</label>
+                            <select id="bpTimeline" onchange="saveBuyerProfile()">
+                                <option value="">Select...</option>
+                                <option value="asap">As soon as possible</option>
+                                <option value="1-3months">1-3 months</option>
+                                <option value="3-6months">3-6 months</option>
+                                <option value="6-12months">6-12 months</option>
+                                <option value="exploring">Just exploring</option>
+                            </select>
+                        </div>
+
+                        <h3 style="color: var(--secondary); margin: 20px 0 12px;">Your Professional Team</h3>
+                        <div class="form-group">
+                            <label>Real Estate Lawyer / Notary</label>
+                            <input type="text" id="bpLawyer" placeholder="Name and firm" oninput="saveBuyerProfile()">
+                        </div>
+                        <div class="form-group">
+                            <label>Mortgage Broker / Lender Contact</label>
+                            <input type="text" id="bpMortBroker" placeholder="Name and company" oninput="saveBuyerProfile()">
+                        </div>
+                        <div class="form-group">
+                            <label>Home Inspector</label>
+                            <input type="text" id="bpInspector" placeholder="Name and company" oninput="saveBuyerProfile()">
+                        </div>
+                    </div>
+                </div>
+                <div style="margin-top: 20px; padding: 16px; background: #d4edda; border-radius: 8px; font-size: 13px; color: #155724; max-width: 900px;">
+                    Your profile is saved automatically in your browser's local storage. It is never sent to any server. Your details will auto-populate when generating offers and contacting agents.
                 </div>
             </div>
 
@@ -2264,6 +2711,7 @@
             updateApiKeyStatus();
             loadFilterPresetList();
             calcMortgage();
+            initializeDashboard();
 
             // GitHub Issues feedback form handler
             var feedbackForm = document.getElementById('feedbackForm');
@@ -2607,22 +3055,51 @@
         
         function switchTab(tabName) {
             document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
-            
+            if (event && event.target) event.target.classList.add('active');
+
             document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
-            
+
             if (tabName === 'map') {
                 document.getElementById('map').classList.add('active');
                 initializeMapTab();
             } else {
                 document.getElementById(tabName).classList.add('active');
+                if (tabName === 'dashboard') initializeDashboard();
                 if (tabName === 'neighborhood') initializeNeighborhoodTab();
                 if (tabName === 'deals') initializeDealsTab();
                 if (tabName === 'offers') initializeOffersTab();
                 if (tabName === 'mortgage') calcMortgage();
                 if (tabName === 'shortlist') initializeShortlistTab();
                 if (tabName === 'listings') renderListingsTable();
+                if (tabName === 'myoffers') initializeMyOffers();
+                if (tabName === 'roi') initializeROI();
+                if (tabName === 'lenders') initializeLenders();
+                if (tabName === 'buyerprofile') loadBuyerProfile();
             }
+        }
+
+        function switchTabDirect(tabName) {
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.getAttribute('onclick') && btn.getAttribute('onclick').includes("'" + tabName + "'")) {
+                    btn.classList.add('active');
+                }
+            });
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.getElementById(tabName).classList.add('active');
+            if (tabName === 'dashboard') initializeDashboard();
+            if (tabName === 'neighborhood') initializeNeighborhoodTab();
+            if (tabName === 'deals') initializeDealsTab();
+            if (tabName === 'offers') initializeOffersTab();
+            if (tabName === 'mortgage') calcMortgage();
+            if (tabName === 'shortlist') initializeShortlistTab();
+            if (tabName === 'listings') renderListingsTable();
+            if (tabName === 'map') initializeMapTab();
+            if (tabName === 'myoffers') initializeMyOffers();
+            if (tabName === 'roi') initializeROI();
+            if (tabName === 'lenders') initializeLenders();
+            if (tabName === 'buyerprofile') loadBuyerProfile();
+            if (tabName === 'norealtorguide' || tabName === 'help') { /* static tabs */ }
         }
         
         function toggleAccordion(btn) {
@@ -2636,12 +3113,14 @@
             const activeTab = document.querySelector('.tab-content.active');
             if (!activeTab) return;
             const tabId = activeTab.id;
+            if (tabId === 'dashboard') initializeDashboard();
             if (tabId === 'listings') renderListingsTable();
             if (tabId === 'neighborhood') initializeNeighborhoodTab();
             if (tabId === 'deals') initializeDealsTab();
             if (tabId === 'offers') initializeOffersTab();
             if (tabId === 'shortlist') initializeShortlistTab();
             if (tabId === 'map') initializeMapTab();
+            if (tabId === 'myoffers') initializeMyOffers();
         }
         
         function renderListingsTable() {
@@ -3781,20 +4260,52 @@
                     return h;
                 })()}
 
+                <div style="background:var(--light-gray);padding:14px 16px;border-radius:4px;margin:16px 0;">
+                    <div style="font-weight:700;color:var(--primary);margin-bottom:10px;">Quick Mortgage Estimate</div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;font-size:12px;">
+                        <div><span style="color:#888;">20% down</span><br><strong>$${Math.round(listing.price * 0.8 * (0.055/12 * Math.pow(1+0.055/12,300)) / (Math.pow(1+0.055/12,300)-1)).toLocaleString()}/mo</strong></div>
+                        <div><span style="color:#888;">10% down</span><br><strong>$${Math.round((listing.price * 0.9 * 1.031) * (0.055/12 * Math.pow(1+0.055/12,300)) / (Math.pow(1+0.055/12,300)-1)).toLocaleString()}/mo</strong></div>
+                        <div><span style="color:#888;">5% down</span><br><strong>$${Math.round((listing.price * 0.95 * 1.04) * (0.055/12 * Math.pow(1+0.055/12,300)) / (Math.pow(1+0.055/12,300)-1)).toLocaleString()}/mo</strong></div>
+                    </div>
+                    <div style="font-size:10px;color:#999;margin-top:6px;">Based on 5.5% rate, 25-year amortization. Includes CMHC insurance where applicable.</div>
+                </div>
+
                 <div style="display: flex; gap: 8px; margin: 16px 0;">
-                    <button class="btn-primary" onclick="copyOfferToClipboard(${listingIndex})">Copy Offer Details</button>
                     <button class="btn-primary" style="background: var(--success);" onclick="openOfferBuilder(${listingIndex})">Generate Offer</button>
-                    <button class="btn-secondary" onclick="window.open('${getGoogleMapsUrl(listing)}')" target="_blank">📍 Maps</button>
+                    <button class="btn-primary" onclick="closeDetailModal();switchTabDirect('mortgage');document.getElementById('mortPrice').value=${listing.price};calcMortgage();">Mortgage Calculator</button>
+                    <button class="btn-primary" style="background: var(--accent);" onclick="closeDetailModal();switchTabDirect('roi');document.getElementById('roiPrice').value=${listing.price};calcROI();">ROI Calculator</button>
                 </div>
 
                 <div style="display: flex; gap: 8px; margin: 16px 0; flex-wrap: wrap;">
-                    <a href="${getRewSearchUrl(listing)}" target="_blank" class="btn-secondary" style="text-decoration: none; text-align: center; flex: 1; min-width: 100px;">REW.ca</a>
-                    <a href="${getRealtorUrl(listing)}" target="_blank" class="btn-secondary" style="text-decoration: none; text-align: center; flex: 1; min-width: 100px;">REALTOR.ca</a>
-                    <a href="${getBcAssessUrl(listing)}" target="_blank" class="btn-secondary" style="text-decoration: none; text-align: center; flex: 1; min-width: 100px;">BC Assessment</a>
+                    <button class="btn-secondary" onclick="contactListingAgent(${listingIndex})" style="flex: 1; min-width: 100px; background: var(--secondary); color: white;">Email Agent</button>
+                    <button class="btn-secondary" onclick="copyOfferToClipboard(${listingIndex})" style="flex: 1; min-width: 100px;">Copy Details</button>
+                    <button class="btn-secondary" onclick="window.open('${getGoogleMapsUrl(listing)}')" style="flex: 1; min-width: 100px;">Maps</button>
                 </div>
-                
+
+                <div style="font-weight:700;color:var(--primary);margin:16px 0 8px;font-size:13px;">Research Links</div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 8px; margin: 0 0 16px 0;">
+                    <a href="${getRewSearchUrl(listing)}" target="_blank" class="btn-secondary" style="text-decoration: none; text-align: center; font-size: 11px;">REW.ca</a>
+                    <a href="${getRealtorUrl(listing)}" target="_blank" class="btn-secondary" style="text-decoration: none; text-align: center; font-size: 11px;">REALTOR.ca</a>
+                    <a href="${getBcAssessUrl(listing)}" target="_blank" class="btn-secondary" style="text-decoration: none; text-align: center; font-size: 11px;">BC Assessment</a>
+                    <a href="https://www.google.com/maps/@${listing.latitude},${listing.longitude},3a,75y,90t/data=!3m6!1e1!3m4" target="_blank" class="btn-secondary" style="text-decoration: none; text-align: center; font-size: 11px;">Street View</a>
+                </div>
+
+                ${(function() {
+                    var nbr = listing.neighborhood;
+                    var trend = marketTrends[nbr];
+                    if (!trend) return '';
+                    return '<div style="background:#e7f3ff;padding:12px 14px;border-radius:4px;margin:0 0 16px 0;font-size:12px;">' +
+                        '<strong style="color:var(--primary);">Neighborhood Insight: ' + nbr + '</strong><br>' +
+                        '<span style="color:' + (trend.yoyChange < 0 ? 'var(--danger)' : 'var(--success)') + ';font-weight:600;">YoY: ' + (trend.yoyChange > 0 ? '+' : '') + trend.yoyChange + '%</span>' +
+                        ' &bull; Inventory: <strong>' + trend.inventory + '</strong>' +
+                        ' &bull; Sale/List: <strong>' + (trend.avgSaleToList * 100).toFixed(0) + '%</strong>' +
+                        ' &bull; Median DOM: <strong>' + trend.medianDOM + ' days</strong>' +
+                        (trend.yoyChange < -3 ? '<br><span style="color:var(--success);font-weight:600;">Strong buyer\'s market - prices declining. Good negotiating position.</span>' : '') +
+                        '</div>';
+                })()}
+
                 <button class="btn-success" onclick="toggleShortlist(${listingIndex}); closeDetailModal(); initializeShortlistTab();" style="width: 100%;">
-                    ${isShortlisted ? '✓ Remove from Shortlist' : '+ Add to Shortlist'}
+                    ${isShortlisted ? 'Remove from Shortlist' : 'Add to Shortlist'}
                 </button>
             `;
             
@@ -5168,6 +5679,18 @@ Competitive: ${formatPrice(offers.competitive)}`;
                 offerPrice: offerPrice,
                 propertyType: listing.type
             });
+
+            // Track in local offer history
+            if (typeof saveOfferToHistory === 'function') {
+                saveOfferToHistory({
+                    address: listing.addr,
+                    neighborhood: listing.neighborhood,
+                    askingPrice: listing.price,
+                    offerPrice: offerPrice,
+                    propertyType: listing.type,
+                    buyerName: buyerName
+                });
+            }
           } catch(err) {
             console.error('PDF generation error:', err);
             var status = document.getElementById('offerStatus');
@@ -5547,6 +6070,497 @@ Competitive: ${formatPrice(offers.competitive)}`;
             var note = document.getElementById('note_' + idx).value;
             shortlistNotes[idx] = note;
             localStorage.setItem('shortlistNotes', JSON.stringify(shortlistNotes));
+        }
+
+        // ===== CONTACT LISTING AGENT =====
+        function contactListingAgent(listingIndex) {
+            var listing = rawListings[listingIndex];
+            var profile = JSON.parse(localStorage.getItem('buyerProfile') || '{}');
+            var buyerName = profile.name || 'Prospective Buyer';
+            var buyerEmail = profile.email || '';
+            var buyerPhone = profile.phone || '';
+            var city = getCityForListing(listing);
+
+            var subject = encodeURIComponent('Inquiry: ' + listing.addr + ', ' + city + ', BC - ' + formatPrice(listing.price));
+            var body = encodeURIComponent(
+                'Dear ' + listing.agent.split(',')[0] + ',\n\n' +
+                'I am writing to inquire about the property listed at:\n\n' +
+                listing.addr + ', ' + city + ', BC\n' +
+                'Listed at: ' + formatPrice(listing.price) + '\n' +
+                'MLS Type: ' + listing.type + '\n\n' +
+                'I am an unrepresented buyer and would like to:\n' +
+                '- Schedule a viewing at your earliest convenience\n' +
+                '- Request the Property Disclosure Statement\n' +
+                '- Receive any additional property information available\n\n' +
+                'I am a serious, financially prepared buyer' +
+                (profile.preApproval ? ' with mortgage pre-approval in place' : '') + '.\n\n' +
+                'Best regards,\n' +
+                buyerName + '\n' +
+                (buyerEmail ? 'Email: ' + buyerEmail + '\n' : '') +
+                (buyerPhone ? 'Phone: ' + buyerPhone : '')
+            );
+
+            window.open('mailto:?subject=' + subject + '&body=' + body);
+        }
+
+        // ===== DASHBOARD HOME =====
+        function initializeDashboard() {
+            // Shortlist count
+            document.getElementById('dashShortlistCount').textContent = shortlistedIds.size;
+
+            // Offer count
+            var offers = JSON.parse(localStorage.getItem('offerHistory') || '[]');
+            document.getElementById('dashOfferCount').textContent = offers.length;
+
+            // Hot deals
+            var hotCount = 0;
+            rawListings.forEach(function(l) {
+                var s = calculateScore(l);
+                if (s >= 70) hotCount++;
+            });
+            document.getElementById('dashHotDeals').textContent = hotCount;
+
+            // Market snapshot
+            var totalPrice = 0, totalDOM = 0, totalScore = 0, count = rawListings.length;
+            rawListings.forEach(function(l) {
+                totalPrice += l.price;
+                totalDOM += l.dom;
+                totalScore += calculateScore(l);
+            });
+            document.getElementById('dashAvgPrice').textContent = formatPrice(Math.round(totalPrice / count));
+            document.getElementById('dashAvgDOM').textContent = Math.round(totalDOM / count) + ' days';
+            document.getElementById('dashTotalListings').textContent = count;
+            document.getElementById('dashAvgScore').textContent = Math.round(totalScore / count) + '/100';
+
+            var buyerMarkets = 0;
+            var totalSaleList = 0, slCount = 0;
+            Object.keys(marketTrends).forEach(function(k) {
+                if (marketTrends[k].inventory === 'high') buyerMarkets++;
+                totalSaleList += marketTrends[k].avgSaleToList;
+                slCount++;
+            });
+            document.getElementById('dashBuyerMarkets').textContent = buyerMarkets + ' areas';
+            document.getElementById('dashSaleList').textContent = (totalSaleList / slCount * 100).toFixed(1) + '%';
+
+            // Recent listings
+            var recent = rawListings.slice().sort(function(a, b) { return a.dom - b.dom; }).slice(0, 5);
+            var recentHtml = '';
+            recent.forEach(function(l) {
+                var idx = rawListings.indexOf(l);
+                recentHtml += '<div onclick="showDetailModal(' + idx + ')" style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:white;border:1px solid #eee;border-radius:6px;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.borderColor=\'var(--secondary)\'" onmouseout="this.style.borderColor=\'#eee\'">';
+                recentHtml += '<div><strong style="color:var(--primary);font-size:13px;">' + l.addr + '</strong><br><span style="font-size:11px;color:#888;">' + l.neighborhood + ' &bull; ' + l.type + ' &bull; ' + l.dom + ' days on market</span></div>';
+                recentHtml += '<div style="text-align:right;"><span style="font-weight:700;color:var(--primary);font-size:15px;">' + formatPrice(l.price) + '</span></div>';
+                recentHtml += '</div>';
+            });
+            document.getElementById('dashRecentListings').innerHTML = recentHtml;
+
+            // Profile summary
+            var profile = JSON.parse(localStorage.getItem('buyerProfile') || '{}');
+            if (profile.name) {
+                var phtml = '<div style="font-size:13px;">';
+                phtml += '<strong style="color:var(--primary);">' + profile.name + '</strong><br>';
+                if (profile.email) phtml += '<span style="color:#666;">' + profile.email + '</span><br>';
+                if (profile.preApproval) phtml += '<span style="color:var(--success);font-weight:600;">Pre-approved: ' + formatPrice(parseInt(profile.preApproval)) + '</span><br>';
+                if (profile.budgetMin || profile.budgetMax) phtml += '<span style="color:#888;">Budget: ' + (profile.budgetMin ? formatPrice(parseInt(profile.budgetMin)) : '$0') + ' - ' + (profile.budgetMax ? formatPrice(parseInt(profile.budgetMax)) : 'no max') + '</span>';
+                phtml += '</div>';
+                document.getElementById('dashProfileSummary').innerHTML = phtml;
+            }
+        }
+
+        // ===== BUYER PROFILE =====
+        function saveBuyerProfile() {
+            var profile = {
+                name: document.getElementById('bpName').value,
+                email: document.getElementById('bpEmail').value,
+                phone: document.getElementById('bpPhone').value,
+                company: document.getElementById('bpCompany').value,
+                address: document.getElementById('bpAddress').value,
+                budgetMin: document.getElementById('bpBudgetMin').value,
+                budgetMax: document.getElementById('bpBudgetMax').value,
+                preApproval: document.getElementById('bpPreApproval').value,
+                preApprovalLender: document.getElementById('bpPreApprovalLender').value,
+                purpose: document.getElementById('bpPurpose').value,
+                areas: document.getElementById('bpAreas').value,
+                types: document.getElementById('bpTypes').value,
+                timeline: document.getElementById('bpTimeline').value,
+                lawyer: document.getElementById('bpLawyer').value,
+                mortBroker: document.getElementById('bpMortBroker').value,
+                inspector: document.getElementById('bpInspector').value
+            };
+            localStorage.setItem('buyerProfile', JSON.stringify(profile));
+        }
+
+        function loadBuyerProfile() {
+            var profile = JSON.parse(localStorage.getItem('buyerProfile') || '{}');
+            var fields = ['name','email','phone','company','address','budgetMin','budgetMax','preApproval','preApprovalLender','purpose','areas','types','timeline','lawyer','mortBroker','inspector'];
+            var idMap = { name:'bpName', email:'bpEmail', phone:'bpPhone', company:'bpCompany', address:'bpAddress', budgetMin:'bpBudgetMin', budgetMax:'bpBudgetMax', preApproval:'bpPreApproval', preApprovalLender:'bpPreApprovalLender', purpose:'bpPurpose', areas:'bpAreas', types:'bpTypes', timeline:'bpTimeline', lawyer:'bpLawyer', mortBroker:'bpMortBroker', inspector:'bpInspector' };
+            fields.forEach(function(f) {
+                var el = document.getElementById(idMap[f]);
+                if (el && profile[f]) el.value = profile[f];
+            });
+        }
+
+        // ===== MY OFFERS TRACKING =====
+        function getOfferHistory() {
+            return JSON.parse(localStorage.getItem('offerHistory') || '[]');
+        }
+
+        function saveOfferToHistory(offerData) {
+            var history = getOfferHistory();
+            offerData.id = Date.now();
+            offerData.status = 'sent';
+            offerData.date = new Date().toISOString().split('T')[0];
+            history.unshift(offerData);
+            localStorage.setItem('offerHistory', JSON.stringify(history));
+        }
+
+        function updateOfferStatus(offerId, newStatus) {
+            var history = getOfferHistory();
+            for (var i = 0; i < history.length; i++) {
+                if (history[i].id === offerId) {
+                    history[i].status = newStatus;
+                    break;
+                }
+            }
+            localStorage.setItem('offerHistory', JSON.stringify(history));
+            initializeMyOffers();
+        }
+
+        function deleteOffer(offerId) {
+            var history = getOfferHistory();
+            history = history.filter(function(o) { return o.id !== offerId; });
+            localStorage.setItem('offerHistory', JSON.stringify(history));
+            initializeMyOffers();
+        }
+
+        function initializeMyOffers() {
+            var history = getOfferHistory();
+            var total = history.length;
+            var accepted = history.filter(function(o) { return o.status === 'accepted'; }).length;
+            var pending = history.filter(function(o) { return o.status === 'sent' || o.status === 'countered'; }).length;
+            var rejected = history.filter(function(o) { return o.status === 'rejected' || o.status === 'withdrawn'; }).length;
+
+            document.getElementById('myoffersTotal').textContent = total;
+            document.getElementById('myoffersAccepted').textContent = accepted;
+            document.getElementById('myoffersPending').textContent = pending;
+            document.getElementById('myoffersRejected').textContent = rejected;
+
+            if (total === 0) {
+                document.getElementById('myoffersTable').style.display = 'none';
+                document.getElementById('emptyOffers').style.display = 'block';
+                return;
+            }
+            document.getElementById('myoffersTable').style.display = 'table';
+            document.getElementById('emptyOffers').style.display = 'none';
+
+            var html = '';
+            history.forEach(function(offer) {
+                var statusColors = {
+                    'sent': 'background:#fff3cd;color:#856404;',
+                    'countered': 'background:#e7f3ff;color:#004085;',
+                    'accepted': 'background:#d4edda;color:#155724;',
+                    'rejected': 'background:#f8d7da;color:#721c24;',
+                    'withdrawn': 'background:#e2e3e5;color:#383d41;',
+                    'draft': 'background:#f8f9fa;color:#666;'
+                };
+                var statusStyle = statusColors[offer.status] || statusColors['draft'];
+                var discount = offer.askingPrice ? Math.round((1 - offer.offerPrice / offer.askingPrice) * 100) : 0;
+
+                html += '<tr>';
+                html += '<td>' + (offer.date || '--') + '</td>';
+                html += '<td><strong>' + (offer.address || 'Unknown') + '</strong><br><span style="font-size:11px;color:#888;">' + (offer.neighborhood || '') + '</span></td>';
+                html += '<td>' + (offer.askingPrice ? formatPrice(offer.askingPrice) : '--') + '</td>';
+                html += '<td style="font-weight:600;color:var(--success);">' + (offer.offerPrice ? formatPrice(offer.offerPrice) : '--') + '</td>';
+                html += '<td>' + (discount > 0 ? discount + '% below' : '--') + '</td>';
+                html += '<td><span style="padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600;' + statusStyle + '">' + (offer.status || 'draft').toUpperCase() + '</span></td>';
+                html += '<td style="white-space:nowrap;">';
+                html += '<select onchange="updateOfferStatus(' + offer.id + ', this.value)" style="padding:4px 6px;border:1px solid #ddd;border-radius:4px;font-size:11px;">';
+                ['sent','countered','accepted','rejected','withdrawn'].forEach(function(s) {
+                    html += '<option value="' + s + '"' + (offer.status === s ? ' selected' : '') + '>' + s.charAt(0).toUpperCase() + s.slice(1) + '</option>';
+                });
+                html += '</select> ';
+                html += '<button onclick="deleteOffer(' + offer.id + ')" style="padding:4px 8px;border:1px solid #ddd;border-radius:4px;background:white;cursor:pointer;font-size:11px;color:#dc3545;" title="Delete">&#10005;</button>';
+                html += '</td>';
+                html += '</tr>';
+            });
+            document.getElementById('myoffersTableBody').innerHTML = html;
+        }
+
+        // ===== INVESTMENT ROI CALCULATOR =====
+        function initializeROI() {
+            var sel = document.getElementById('roiPropertySelect');
+            if (sel.options.length <= 1) {
+                rawListings.forEach(function(l, idx) {
+                    var opt = document.createElement('option');
+                    opt.value = idx;
+                    opt.textContent = l.addr + ' - ' + formatPrice(l.price) + ' (' + l.neighborhood + ')';
+                    sel.appendChild(opt);
+                });
+            }
+            calcROI();
+        }
+
+        function roiLoadProperty() {
+            var sel = document.getElementById('roiPropertySelect');
+            if (!sel.value) return;
+            var l = rawListings[parseInt(sel.value)];
+            document.getElementById('roiPrice').value = l.price;
+            calcROI();
+        }
+
+        function calcROI() {
+            var price = parseFloat(document.getElementById('roiPrice').value) || 0;
+            var downPct = parseFloat(document.getElementById('roiDown').value) || 0;
+            var rate = parseFloat(document.getElementById('roiRate').value) || 0;
+            var closing = parseFloat(document.getElementById('roiClosing').value) || 0;
+            var rent = parseFloat(document.getElementById('roiRent').value) || 0;
+            var otherIncome = parseFloat(document.getElementById('roiOtherIncome').value) || 0;
+            var tax = parseFloat(document.getElementById('roiTax').value) || 0;
+            var insurance = parseFloat(document.getElementById('roiInsurance').value) || 0;
+            var maintenance = parseFloat(document.getElementById('roiMaintenance').value) || 0;
+            var mgmtPct = parseFloat(document.getElementById('roiMgmt').value) || 0;
+            var strata = parseFloat(document.getElementById('roiStrata').value) || 0;
+            var vacancyPct = parseFloat(document.getElementById('roiVacancy').value) || 0;
+
+            var downPayment = price * downPct / 100;
+            var mortgageAmount = price - downPayment;
+            var totalInvestment = downPayment + closing;
+
+            var monthlyRate = rate / 100 / 12;
+            var nPayments = 25 * 12;
+            var mortPayment = 0;
+            if (monthlyRate > 0 && mortgageAmount > 0) {
+                mortPayment = mortgageAmount * (monthlyRate * Math.pow(1 + monthlyRate, nPayments)) / (Math.pow(1 + monthlyRate, nPayments) - 1);
+            }
+
+            var grossIncome = rent + otherIncome;
+            var effectiveIncome = grossIncome * (1 - vacancyPct / 100);
+            var mgmtFee = rent * mgmtPct / 100;
+            var operatingExpenses = tax + insurance + maintenance + mgmtFee + strata;
+            var noi = (effectiveIncome - operatingExpenses) * 12;
+            var monthlyCashFlow = effectiveIncome - operatingExpenses - mortPayment;
+            var annualCashFlow = monthlyCashFlow * 12;
+
+            var capRate = price > 0 ? (noi / price) * 100 : 0;
+            var cashOnCash = totalInvestment > 0 ? (annualCashFlow / totalInvestment) * 100 : 0;
+            var grm = grossIncome > 0 ? (price / (grossIncome * 12)).toFixed(1) : '--';
+
+            document.getElementById('roiCashFlow').textContent = (monthlyCashFlow >= 0 ? '' : '-') + '$' + Math.abs(Math.round(monthlyCashFlow)).toLocaleString();
+            document.getElementById('roiCashFlow').parentElement.style.background = monthlyCashFlow >= 0 ? 'linear-gradient(135deg, #28a745 0%, #20c997 100%)' : 'linear-gradient(135deg, #dc3545 0%, #e83e8c 100%)';
+            document.getElementById('roiCapRate').textContent = capRate.toFixed(2) + '%';
+            document.getElementById('roiCashOnCash').textContent = cashOnCash.toFixed(2) + '%';
+            document.getElementById('roiTotalInvestment').textContent = '$' + Math.round(totalInvestment).toLocaleString();
+            document.getElementById('roiMortPayment').textContent = '$' + Math.round(mortPayment).toLocaleString();
+            document.getElementById('roiGrossIncome').textContent = '$' + Math.round(grossIncome).toLocaleString();
+            document.getElementById('roiEffIncome').textContent = '$' + Math.round(effectiveIncome).toLocaleString();
+            document.getElementById('roiTotalExpenses').textContent = '$' + Math.round(operatingExpenses + mortPayment).toLocaleString();
+            document.getElementById('roiNOI').textContent = '$' + Math.round(noi).toLocaleString();
+            document.getElementById('roiAnnualCF').textContent = (annualCashFlow >= 0 ? '' : '-') + '$' + Math.abs(Math.round(annualCashFlow)).toLocaleString();
+            document.getElementById('roiGRM').textContent = grm;
+
+            // Verdict
+            var verdict = '';
+            if (capRate >= 6) verdict = '<div style="color:#155724;font-weight:700;">Excellent Investment</div><p>Cap rate of ' + capRate.toFixed(1) + '% is well above average for BC.</p>';
+            else if (capRate >= 4) verdict = '<div style="color:#004085;font-weight:700;">Good Investment</div><p>Cap rate of ' + capRate.toFixed(1) + '% is competitive. Solid returns with potential for appreciation.</p>';
+            else if (capRate >= 2) verdict = '<div style="color:#856404;font-weight:700;">Moderate Investment</div><p>Cap rate of ' + capRate.toFixed(1) + '% is typical for BC markets. Returns are modest but you may benefit from property appreciation.</p>';
+            else verdict = '<div style="color:#721c24;font-weight:700;">Low Return / Appreciation Play</div><p>Cap rate of ' + capRate.toFixed(1) + '% is low. This property relies heavily on appreciation for returns.</p>';
+
+            if (monthlyCashFlow < 0) verdict += '<p style="background:#f8d7da;padding:8px 12px;border-radius:4px;margin-top:8px;"><strong>Warning:</strong> Negative cash flow of $' + Math.abs(Math.round(monthlyCashFlow)).toLocaleString() + '/month.</p>';
+            else if (monthlyCashFlow > 0) verdict += '<p style="background:#d4edda;padding:8px 12px;border-radius:4px;margin-top:8px;"><strong>Positive cash flow</strong> of $' + Math.round(monthlyCashFlow).toLocaleString() + '/month.</p>';
+            document.getElementById('roiVerdict').innerHTML = verdict;
+
+            // 5-year projection
+            var projHtml = '';
+            var cumCF = 0;
+            var remainingMort = mortgageAmount;
+            for (var yr = 1; yr <= 5; yr++) {
+                cumCF += annualCashFlow;
+                var principalPaid = 0;
+                var tempBal = remainingMort;
+                for (var m = 0; m < 12; m++) {
+                    var intPmt = tempBal * monthlyRate;
+                    var prinPmt = mortPayment - intPmt;
+                    if (prinPmt > 0) { principalPaid += prinPmt; tempBal -= prinPmt; }
+                }
+                remainingMort = tempBal;
+                var totalReturn = cumCF + (mortgageAmount - remainingMort);
+                projHtml += '<tr><td style="padding:6px 8px;border-bottom:1px solid #eee;">Year ' + yr + '</td>';
+                projHtml += '<td style="padding:6px 8px;text-align:right;border-bottom:1px solid #eee;color:' + (annualCashFlow >= 0 ? 'var(--success)' : 'var(--danger)') + ';font-weight:600;">' + (annualCashFlow >= 0 ? '' : '-') + '$' + Math.abs(Math.round(annualCashFlow)).toLocaleString() + '</td>';
+                projHtml += '<td style="padding:6px 8px;text-align:right;border-bottom:1px solid #eee;font-weight:600;">$' + Math.round(mortgageAmount - remainingMort).toLocaleString() + '</td>';
+                projHtml += '<td style="padding:6px 8px;text-align:right;border-bottom:1px solid #eee;font-weight:600;">$' + Math.round(totalReturn).toLocaleString() + '</td></tr>';
+            }
+            document.getElementById('roiProjectionBody').innerHTML = projHtml;
+        }
+
+        // ===== LENDER DIRECTORY =====
+        function initializeLenders() {
+            renderRateTable();
+            renderBrokerDirectory();
+            calcPreQual();
+            calcScenarios();
+        }
+
+        function renderRateTable() {
+            var lenders = [
+                { name: 'RBC Royal Bank', type: 'Big 5 Bank', fix5: '4.99%', fix3: '5.19%', variable: '5.85%', insured: '-0.10%', url: 'https://www.rbcroyalbank.com/mortgages/' },
+                { name: 'TD Canada Trust', type: 'Big 5 Bank', fix5: '4.94%', fix3: '5.14%', variable: '5.80%', insured: '-0.15%', url: 'https://www.td.com/ca/en/personal-banking/products/mortgages/' },
+                { name: 'BMO', type: 'Big 5 Bank', fix5: '4.99%', fix3: '5.24%', variable: '5.90%', insured: '-0.10%', url: 'https://www.bmo.com/main/personal/mortgages/' },
+                { name: 'Scotiabank', type: 'Big 5 Bank', fix5: '5.04%', fix3: '5.29%', variable: '5.75%', insured: '-0.10%', url: 'https://www.scotiabank.com/ca/en/personal/mortgages.html' },
+                { name: 'CIBC', type: 'Big 5 Bank', fix5: '4.99%', fix3: '5.19%', variable: '5.85%', insured: '-0.10%', url: 'https://www.cibc.com/en/personal-banking/mortgages.html' },
+                { name: 'National Bank', type: 'Bank', fix5: '4.94%', fix3: '5.09%', variable: '5.70%', insured: '-0.15%', url: 'https://www.nbc.ca/personal/mortgages.html' },
+                { name: 'Coast Capital', type: 'Credit Union', fix5: '4.89%', fix3: '5.09%', variable: '5.65%', insured: '-0.15%', url: 'https://www.coastcapitalsavings.com/mortgages' },
+                { name: 'Vancity', type: 'Credit Union', fix5: '4.94%', fix3: '5.14%', variable: '5.70%', insured: '-0.15%', url: 'https://www.vancity.com/Mortgages/' },
+                { name: 'MCAP', type: 'Monoline', fix5: '4.79%', fix3: '4.99%', variable: '5.50%', insured: '-0.20%', url: 'https://www.mcap.com/' },
+                { name: 'First National', type: 'Monoline', fix5: '4.84%', fix3: '5.04%', variable: '5.55%', insured: '-0.20%', url: 'https://www.firstnational.ca/' },
+                { name: 'RMG Mortgages', type: 'Monoline', fix5: '4.79%', fix3: '4.99%', variable: '5.55%', insured: '-0.20%', url: 'https://www.rmgmortgages.ca/' },
+                { name: 'Tangerine', type: 'Online', fix5: '4.89%', fix3: '5.09%', variable: '5.60%', insured: '-0.15%', url: 'https://www.tangerine.ca/en/products/borrowing/mortgages' },
+                { name: 'EQ Bank', type: 'Online', fix5: '4.84%', fix3: '5.04%', variable: '5.55%', insured: '-0.15%', url: 'https://www.eqbank.ca/personal-banking/mortgages' }
+            ];
+            var html = '';
+            lenders.forEach(function(l) {
+                html += '<tr>';
+                html += '<td style="font-weight:600;">' + l.name + '</td>';
+                html += '<td><span style="padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600;background:#e7f3ff;color:#004085;">' + l.type + '</span></td>';
+                html += '<td style="font-weight:600;">' + l.fix5 + '</td>';
+                html += '<td>' + l.fix3 + '</td>';
+                html += '<td>' + l.variable + '</td>';
+                html += '<td style="color:var(--success);">' + l.insured + '</td>';
+                html += '<td><a href="' + l.url + '" target="_blank" rel="noopener" style="color:var(--secondary);font-weight:600;text-decoration:none;font-size:12px;">Visit Site</a></td>';
+                html += '</tr>';
+            });
+            document.getElementById('rateTableBody').innerHTML = html;
+        }
+
+        function renderBrokerDirectory() {
+            var brokers = [
+                { name: 'Dominion Lending Centres', specialty: 'Full-service mortgage broker network', region: 'All BC', phone: '1-888-806-8080', note: 'Canada\'s largest mortgage brokerage. Access to 60+ lenders.', color: '#1B3A5C' },
+                { name: 'Mortgage Alliance', specialty: 'First-time buyers, self-employed', region: 'All BC', phone: '1-877-420-2627', note: 'Specializes in non-traditional income verification.', color: '#2E75B6' },
+                { name: 'True North Mortgage', specialty: 'Low-rate specialists', region: 'All BC', phone: '1-866-407-0004', note: 'Online-first broker known for negotiating the lowest rates.', color: '#17a2b8' },
+                { name: 'CanWise Financial', specialty: 'Digital-first mortgage platform', region: 'All BC', phone: 'Online only', note: 'Fully digital application. Often has the best published rates.', color: '#28a745' },
+                { name: 'Outline Financial', specialty: 'Investment properties, HELOCs', region: 'Metro Vancouver', phone: '604-339-4488', note: 'Specialists in investment property financing and equity extraction.', color: '#fd7e14' },
+                { name: 'BC Mortgage Group', specialty: 'White Rock & South Surrey', region: 'South Surrey / White Rock', phone: '604-531-4499', note: 'Local expertise in the South Surrey and White Rock market.', color: '#e83e8c' },
+                { name: 'Nanaimo Mortgage Broker', specialty: 'Vancouver Island specialists', region: 'Vancouver Island', phone: '250-585-2150', note: 'Deep knowledge of the Island market. Serves Nanaimo to Campbell River.', color: '#6f42c1' },
+                { name: 'Parksville Qualicum Mortgage', specialty: 'Retirement & vacation properties', region: 'Parksville / Qualicum', phone: '250-248-1341', note: 'Specializes in financing for retirees and vacation homes.', color: '#20c997' }
+            ];
+            var html = '';
+            brokers.forEach(function(b) {
+                html += '<div style="background:white;border:1px solid #eee;border-radius:8px;padding:16px;border-left:4px solid ' + b.color + ';">';
+                html += '<div style="font-weight:700;color:var(--primary);font-size:14px;margin-bottom:4px;">' + b.name + '</div>';
+                html += '<div style="font-size:11px;color:#888;margin-bottom:8px;">' + b.specialty + '</div>';
+                html += '<div style="font-size:12px;color:#555;margin-bottom:4px;"><strong>Region:</strong> ' + b.region + '</div>';
+                html += '<div style="font-size:12px;color:#555;margin-bottom:8px;"><strong>Contact:</strong> ' + b.phone + '</div>';
+                html += '<div style="font-size:11px;color:#888;font-style:italic;">' + b.note + '</div>';
+                html += '</div>';
+            });
+            document.getElementById('brokerDirectory').innerHTML = html;
+        }
+
+        // ===== MORTGAGE PRE-QUALIFICATION =====
+        function calcPreQual() {
+            var income = parseFloat(document.getElementById('pqIncome').value) || 0;
+            var debts = parseFloat(document.getElementById('pqDebts').value) || 0;
+            var down = parseFloat(document.getElementById('pqDown').value) || 0;
+            var propTax = parseFloat(document.getElementById('pqTax').value) || 0;
+            var heat = parseFloat(document.getElementById('pqHeat').value) || 0;
+            var strata = parseFloat(document.getElementById('pqStrata').value) || 0;
+
+            var monthlyIncome = income / 12;
+            var contractRate = 5.0;
+            var stressRate = Math.max(contractRate + 2, 5.25);
+            var monthlyStressRate = stressRate / 100 / 12;
+            var nPayments = 25 * 12;
+
+            var gdsLimit = monthlyIncome * 0.39;
+            var gdsAvailable = gdsLimit - propTax - heat - strata * 0.5;
+            if (gdsAvailable < 0) gdsAvailable = 0;
+
+            var tdsLimit = monthlyIncome * 0.44;
+            var tdsAvailable = tdsLimit - propTax - heat - strata * 0.5 - debts;
+            if (tdsAvailable < 0) tdsAvailable = 0;
+
+            function mortgageFromPayment(payment) {
+                if (payment <= 0 || monthlyStressRate <= 0) return 0;
+                return payment * (Math.pow(1 + monthlyStressRate, nPayments) - 1) / (monthlyStressRate * Math.pow(1 + monthlyStressRate, nPayments));
+            }
+
+            var gdsMaxMortgage = mortgageFromPayment(gdsAvailable);
+            var tdsMaxMortgage = mortgageFromPayment(tdsAvailable);
+            var maxMortgage = Math.min(gdsMaxMortgage, tdsMaxMortgage);
+            var maxPrice = maxMortgage + down;
+            var downPct = maxPrice > 0 ? (down / maxPrice) * 100 : 0;
+            var cmhcNeeded = downPct < 20;
+
+            var maxPayment = Math.min(gdsAvailable, tdsAvailable);
+            var actualGDS = monthlyIncome > 0 ? ((maxPayment + propTax + heat + strata * 0.5) / monthlyIncome * 100).toFixed(1) : '0';
+            var actualTDS = monthlyIncome > 0 ? ((maxPayment + propTax + heat + strata * 0.5 + debts) / monthlyIncome * 100).toFixed(1) : '0';
+
+            document.getElementById('pqMaxPrice').textContent = '$' + Math.round(maxPrice).toLocaleString();
+            document.getElementById('pqGDSMax').textContent = '$' + Math.round(gdsMaxMortgage).toLocaleString();
+            document.getElementById('pqTDSMax').textContent = '$' + Math.round(tdsMaxMortgage).toLocaleString();
+            document.getElementById('pqStressRate').textContent = stressRate.toFixed(2) + '%';
+            document.getElementById('pqGDS').textContent = actualGDS + '% (max 39%)';
+            document.getElementById('pqTDS').textContent = actualTDS + '% (max 44%)';
+            document.getElementById('pqCMHC').textContent = cmhcNeeded ? 'Yes (down < 20%)' : 'No (down >= 20%)';
+        }
+
+        // ===== MORTGAGE SCENARIO COMPARISON =====
+        function calcScenarios() {
+            var scenarios = ['A', 'B', 'C'];
+            var results = [];
+
+            scenarios.forEach(function(s) {
+                var price = parseFloat(document.getElementById('sc' + s + '_price').value) || 0;
+                var downPct = parseFloat(document.getElementById('sc' + s + '_down').value) || 0;
+                var rate = parseFloat(document.getElementById('sc' + s + '_rate').value) || 0;
+                var amort = parseInt(document.getElementById('sc' + s + '_amort').value) || 25;
+
+                var down = price * downPct / 100;
+                var mortgage = price - down;
+                var cmhc = 0;
+                if (downPct < 20 && mortgage > 0) {
+                    if (downPct >= 15) cmhc = mortgage * 0.028;
+                    else if (downPct >= 10) cmhc = mortgage * 0.031;
+                    else cmhc = mortgage * 0.04;
+                    mortgage += cmhc;
+                }
+
+                var monthlyRate = rate / 100 / 12;
+                var n = amort * 12;
+                var payment = 0;
+                if (monthlyRate > 0 && mortgage > 0) {
+                    payment = mortgage * (monthlyRate * Math.pow(1 + monthlyRate, n)) / (Math.pow(1 + monthlyRate, n) - 1);
+                }
+                var totalPaid = payment * n;
+                var totalInterest = totalPaid - (price - down);
+
+                results.push({ down: down, mortgage: mortgage, cmhc: cmhc, payment: payment, totalPaid: totalPaid, totalInterest: totalInterest });
+            });
+
+            var minPayment = Math.min.apply(null, results.map(function(r) { return r.payment || Infinity; }));
+            var minInterest = Math.min.apply(null, results.map(function(r) { return r.totalInterest || Infinity; }));
+            var minTotal = Math.min.apply(null, results.map(function(r) { return r.totalPaid || Infinity; }));
+
+            var rows = [
+                { label: 'Down Payment ($)', key: 'down' },
+                { label: 'Mortgage Amount', key: 'mortgage' },
+                { label: 'CMHC Insurance', key: 'cmhc' },
+                { label: 'Monthly Payment', key: 'payment', best: minPayment },
+                { label: 'Total Interest Paid', key: 'totalInterest', best: minInterest },
+                { label: 'Total Cost of Ownership', key: 'totalPaid', best: minTotal }
+            ];
+
+            var html = '';
+            rows.forEach(function(row) {
+                html += '<tr><th>' + row.label + '</th>';
+                results.forEach(function(r) {
+                    var val = Math.round(r[row.key]);
+                    var cls = '';
+                    if (row.best !== undefined && val === Math.round(row.best) && val > 0) cls = ' class="comp-better"';
+                    html += '<td' + cls + ' style="text-align:center;font-weight:600;">$' + val.toLocaleString() + '</td>';
+                });
+                html += '</tr>';
+            });
+            document.getElementById('scenarioResults').innerHTML = html;
         }
 
     </script>
