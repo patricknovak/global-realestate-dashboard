@@ -2836,7 +2836,10 @@
                 }
                 html += '<div class="property-card-footer">';
                 html += '<span class="property-card-dom">' + listing.dom + ' days on market</span>';
+                html += '<span style="display:flex;align-items:center;gap:6px;">';
+                html += '<span onclick="event.stopPropagation();openOfferBuilder(' + listing.listingIndex + ')" style="cursor:pointer;font-size:16px;color:var(--warning);" title="Quick Offer">&#9889;</span>';
                 html += '<span class="property-card-score ' + scoreClass + '" style="color: white; padding: 2px 8px; border-radius: 10px;">' + score + ' Score</span>';
+                html += '</span>';
                 html += '</div>';
                 html += '</div>';
             });
