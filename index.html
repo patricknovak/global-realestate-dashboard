@@ -4007,7 +4007,7 @@ Competitive: ${formatPrice(offers.competitive)}`;
                         </div>
                         <div class="offer-input-group">
                             <label>Deposit Held By</label>
-                            <input type="text" id="offerDepositTrustee" value="Buyer's solicitor in trust">
+                            <input type="text" id="offerDepositTrustee" value="Buyer's lawyer/notary in trust">
                         </div>
                     </div>
                     <div class="offer-input-row">
@@ -4016,7 +4016,7 @@ Competitive: ${formatPrice(offers.competitive)}`;
                             <input type="date" id="offerDepositDate" value="${fmtDate(depositDate)}">
                         </div>
                         <div class="offer-input-group" style="display:flex;align-items:flex-end;">
-                            <span style="font-size:11px;color:#666;padding-bottom:8px;">Date by which deposit must be delivered to trustee</span>
+                            <span style="font-size:11px;color:#666;padding-bottom:8px;">Within 24 hours of subject removal. As an unrepresented buyer, your deposit should be held by your own lawyer or notary.</span>
                         </div>
                     </div>
                     <div class="offer-input-row">
@@ -4045,12 +4045,10 @@ Competitive: ${formatPrice(offers.competitive)}`;
                     <h4>Subject Conditions</h4>
                     <div class="subject-checks">
                         <label><input type="checkbox" class="subject-cb" value="Subject to satisfactory home inspection by a qualified inspector at Buyer's expense, to be completed within the subject removal period." checked> Home Inspection</label>
-                        <label><input type="checkbox" class="subject-cb" value="Subject to Buyer arranging satisfactory financing within the subject removal period."> Financing</label>
-                        <label><input type="checkbox" class="subject-cb" value="Subject to Buyer's solicitor approval of title search within the subject removal period." checked> Title Review</label>
-                        <label><input type="checkbox" class="subject-cb" value="Subject to Buyer's lawyer reviewing and approving the Contract of Purchase and Sale within the subject removal period."> Lawyer Review</label>
+                        <label><input type="checkbox" class="subject-cb" value="Subject to Buyer obtaining satisfactory financing within the subject removal period." checked> Financing</label>
+                        <label><input type="checkbox" class="subject-cb" value="Subject to Buyer's lawyer or notary reviewing and approving title, property disclosure statement, and the Contract of Purchase and Sale within the subject removal period." checked> Lawyer/Notary Review (Title &amp; Disclosure)</label>
                         ${listing.type === 'Apt/Condo' || listing.type === 'Townhouse' ? `
-                        <label><input type="checkbox" class="subject-cb" value="Subject to Buyer's review and approval of strata documents including minutes, bylaws, financials, depreciation report, and Form B within the subject removal period." checked> Strata Docs Review</label>
-                        <label><input type="checkbox" class="subject-cb" value="Subject to Buyer's review and approval of the strata corporation's current insurance and coverage."> Strata Insurance</label>
+                        <label><input type="checkbox" class="subject-cb" value="Subject to Buyer reviewing and approving strata documents (Form B information certificate, meeting minutes, bylaws, financial statements, depreciation report, and current insurance certificate) within the subject removal period." checked> Strata Documents Review</label>
                         ` : ''}
                         <label><input type="checkbox" class="subject-cb" value="Subject to Buyer's review and approval of a current property appraisal."> Property Appraisal</label>
                         <label><input type="checkbox" class="subject-cb" value="Subject to satisfactory environmental assessment at Buyer's expense."> Environmental Assessment</label>
@@ -4114,6 +4112,9 @@ Competitive: ${formatPrice(offers.competitive)}`;
                     </div>
                 </div>
 
+                <div style="background:#fff3cd;border:1px solid #ffc107;border-radius:6px;padding:10px 14px;margin-bottom:12px;font-size:12px;color:#856404;">
+                    <strong>Disclaimer:</strong> This offer template is for informational purposes only. It is not legal advice. Have a BC lawyer or notary review any offer before submission.
+                </div>
                 <div class="offer-actions">
                     <button class="btn-generate-pdf" onclick="generateOfferPDF()">Generate PDF Offer</button>
                     <button class="btn-email-agent" id="emailAgentBtn" onclick="emailOfferToAgent()" ${offerPdfGenerated ? '' : 'disabled'} title="${offerPdfGenerated ? '' : 'Generate PDF first'}">Email to Agent</button>
@@ -4274,7 +4275,7 @@ Competitive: ${formatPrice(offers.competitive)}`;
             doc.setFont('helvetica', 'normal');
             doc.setFontSize(6.5);
             doc.setTextColor(120, 60, 10);
-            var disclaimerText = 'This document is generated by an automated tool for informational purposes only and does not constitute legal advice. It is not a standard BCREA Contract of Purchase and Sale. The Buyer is strongly advised to retain a qualified BC lawyer or notary to review this offer before submission. Use at your own risk.';
+            var disclaimerText = 'This offer template is for informational purposes only. It is not legal advice. It is not a standard BCREA Contract of Purchase and Sale (Form B). Have a BC lawyer or notary review any offer before submission. The buyer accepts all responsibility for reliance on this document.';
             var disclaimerLines = doc.splitTextToSize(disclaimerText, contentW - 6);
             doc.text(disclaimerLines, margin + 3, y + 7);
             y += 16;
@@ -4330,7 +4331,7 @@ Competitive: ${formatPrice(offers.competitive)}`;
                 body: [
                     ['Offer Price', fmtCur(offerPrice)],
                     ['Deposit Amount', fmtCur(deposit)],
-                    ['Deposit Delivery', (depositDeliveryDate ? 'On or before ' + fmtDt(depositDeliveryDate) : 'Within 24 hours of acceptance') + ', to be held by ' + depositTrustee],
+                    ['Deposit Delivery', (depositDeliveryDate ? 'On or before ' + fmtDt(depositDeliveryDate) : 'Within 24 hours of subject removal') + ', held in trust by ' + depositTrustee],
                     ['Balance of Purchase Price', fmtCur(offerPrice - deposit) + ' due on Completion Date'],
                     ['Property Transfer Tax', 'Buyer acknowledges responsibility for BC Property Transfer Tax payable on completion'],
                     ['GST', 'If applicable, included in or in addition to the Purchase Price as required by law'],
@@ -4425,7 +4426,7 @@ Competitive: ${formatPrice(offers.competitive)}`;
             // ===== SECTION 7: FINANCING =====
             const secNum7 = secNum6 + 1;
             y = addSectionHeading(secNum7 + '. FINANCING AND ABILITY TO CLOSE', y);
-            y = addText('The Buyer confirms financial capacity to complete this purchase and is prepared to provide proof of funds or a mortgage pre-approval letter upon request. The deposit of ' + fmtCur(deposit) + ' will be delivered to ' + depositTrustee + (depositDeliveryDate ? ' on or before ' + fmtDt(depositDeliveryDate) + '.' : ' within 24 hours of acceptance by all parties.'), margin, y, {fontSize: 9.5});
+            y = addText('The Buyer confirms financial capacity to complete this purchase and is prepared to provide proof of funds or a mortgage pre-approval letter upon request. The deposit of ' + fmtCur(deposit) + ' shall be held in trust by ' + depositTrustee + ' and delivered' + (depositDeliveryDate ? ' on or before ' + fmtDt(depositDeliveryDate) + '.' : ' within 24 hours of subject removal.'), margin, y, {fontSize: 9.5});
             y += 4;
 
             // ===== SECTION 8: BUYER ACKNOWLEDGMENTS =====
