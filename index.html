@@ -1688,6 +1688,12 @@
                     <strong>IMPORTANT:</strong> In BC, the Home Buyer Rescission Period (3 business days, 0.25% fee) applies to private residential sales just as it does to MLS transactions. You still need a BC lawyer or notary to handle conveyancing. The standard Contract of Purchase and Sale (BCREA form) is recommended even for private transactions.
                 </div>
 
+                <!-- Campaign Stats Bar -->
+                <div id="privateCampaignStats" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;margin-bottom:20px;"></div>
+
+                <!-- Follow-up Reminders -->
+                <div id="privateFollowupBanner" style="display:none;background:#fff3cd;border:1px solid #ffc107;border-radius:8px;padding:12px 16px;margin-bottom:20px;font-size:12px;"></div>
+
                 <!-- Target Property Manager -->
                 <div style="margin-bottom:24px;">
                     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
@@ -8371,6 +8377,25 @@ Competitive: ${formatPrice(offers.competitive)}`;
                 if (daysSince > 0) html += '<span><strong>Added:</strong> ' + daysSince + ' days ago</span>';
                 html += '</div>';
                 if (t.notes) html += '<div style="font-size:12px;color:#666;margin-bottom:10px;font-style:italic;">' + t.notes + '</div>';
+                // 8C: Status timeline
+                if (t.statusHistory && t.statusHistory.length > 0) {
+                    html += '<div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap;margin-bottom:10px;font-size:10px;">';
+                    t.statusHistory.forEach(function(h) {
+                        var hColor = _statusColors[h.status] || '#6c757d';
+                        var hDate = h.date ? new Date(h.date).toLocaleDateString() : '';
+                        html += '<span style="padding:2px 6px;border-radius:8px;background:' + hColor + '22;color:' + hColor + ';border:1px solid ' + hColor + '44;" title="' + hDate + '">' + h.status + '</span><span style="color:#ccc;">&rarr;</span>';
+                    });
+                    html += '<span style="padding:2px 6px;border-radius:8px;background:' + statusColor + ';color:white;font-weight:600;">' + t.status + '</span>';
+                    html += '</div>';
+                }
+                // 8D: Duplicate detection
+                var dupeMatch = checkPrivateTargetDuplicate(t.address);
+                if (dupeMatch) {
+                    html += '<div style="background:#e7f3ff;border:1px solid #b8daff;border-radius:4px;padding:6px 10px;font-size:11px;color:#004085;margin-bottom:10px;">';
+                    html += '<strong>Match found in listings:</strong> ' + dupeMatch.addr + ' — ' + formatPrice(dupeMatch.price) + ' (' + dupeMatch.dom + ' DOM)';
+                    html += ' <button onclick="showDetailModal(' + dupeMatch.listingIndex + ')" style="padding:2px 8px;font-size:10px;border:1px solid var(--primary);color:var(--primary);border-radius:4px;background:white;cursor:pointer;margin-left:6px;">View</button>';
+                    html += '</div>';
+                }
                 html += '<div style="display:flex;gap:8px;flex-wrap:wrap;">';
                 html += '<button onclick="editPrivateTarget(' + i + ')" style="padding:4px 12px;font-size:11px;border:1px solid #ccc;border-radius:4px;background:white;cursor:pointer;">Edit</button>';
                 html += '<button onclick="showLetterGenerator(' + i + ')" style="padding:4px 12px;font-size:11px;border:1px solid var(--secondary);color:var(--secondary);border-radius:4px;background:white;cursor:pointer;">Draft Letter</button>';
@@ -8385,6 +8410,8 @@ Competitive: ${formatPrice(offers.competitive)}`;
             });
             html += '</div>';
             container.innerHTML = html;
+            renderCampaignStats();
+            renderFollowupReminders();
         }
 
         function addPrivateTarget() {
@@ -8474,10 +8501,15 @@ Competitive: ${formatPrice(offers.competitive)}`;
 
         function updateTargetStatus(index, status) {
             var targets = loadPrivateTargets();
+            // 8C: Track status history
+            if (!targets[index].statusHistory) targets[index].statusHistory = [];
+            targets[index].statusHistory.push({ status: targets[index].status, date: targets[index].statusDate || targets[index].addedDate || new Date().toISOString() });
             targets[index].status = status;
             targets[index].statusDate = new Date().toISOString();
             savePrivateTargets(targets);
             renderPrivateTargets();
+            renderCampaignStats();
+            renderFollowupReminders();
         }
 
         function getPrivateTargetStats() {
@@ -8485,6 +8517,64 @@ Competitive: ${formatPrice(offers.competitive)}`;
             var lettersSent = targets.filter(function(t) { return ['Letter Sent','Response Received','Negotiating','Offer Submitted','Accepted','Declined','No Response'].indexOf(t.status) >= 0; }).length;
             var offersOut = targets.filter(function(t) { return ['Offer Submitted','Accepted'].indexOf(t.status) >= 0; }).length;
             return { total: targets.length, lettersSent: lettersSent, offersOut: offersOut };
+        }
+
+        // 8B: Campaign Statistics Bar
+        function renderCampaignStats() {
+            var targets = loadPrivateTargets();
+            var el = document.getElementById('privateCampaignStats');
+            if (!el || targets.length === 0) { if (el) el.style.display = 'none'; return; }
+            el.style.display = 'grid';
+            var counts = {};
+            _privateTargetStatuses.forEach(function(s) { counts[s] = 0; });
+            targets.forEach(function(t) { counts[t.status] = (counts[t.status] || 0) + 1; });
+            var totalValue = targets.reduce(function(s,t) { return s + (t.estimatedValue||0); }, 0);
+            var responseRate = targets.length > 0 ? (targets.filter(function(t) { return ['Response Received','Negotiating','Offer Submitted','Accepted','Declined'].indexOf(t.status) >= 0; }).length / targets.length * 100) : 0;
+
+            el.innerHTML =
+                '<div style="background:white;border:1px solid #e0e0e0;border-radius:8px;padding:12px;text-align:center;"><div style="font-size:22px;font-weight:700;color:var(--primary);">' + targets.length + '</div><div style="font-size:11px;color:#888;">Total Targets</div></div>' +
+                '<div style="background:white;border:1px solid #e0e0e0;border-radius:8px;padding:12px;text-align:center;"><div style="font-size:22px;font-weight:700;color:#0d6efd;">' + (counts['Letter Sent']||0) + '</div><div style="font-size:11px;color:#888;">Letters Sent</div></div>' +
+                '<div style="background:white;border:1px solid #e0e0e0;border-radius:8px;padding:12px;text-align:center;"><div style="font-size:22px;font-weight:700;color:#fd7e14;">' + (counts['Negotiating']||0) + '</div><div style="font-size:11px;color:#888;">Negotiating</div></div>' +
+                '<div style="background:white;border:1px solid #e0e0e0;border-radius:8px;padding:12px;text-align:center;"><div style="font-size:22px;font-weight:700;color:#198754;">' + responseRate.toFixed(0) + '%</div><div style="font-size:11px;color:#888;">Response Rate</div></div>' +
+                '<div style="background:white;border:1px solid #e0e0e0;border-radius:8px;padding:12px;text-align:center;"><div style="font-size:22px;font-weight:700;color:var(--accent);">' + formatPrice(totalValue) + '</div><div style="font-size:11px;color:#888;">Pipeline Value</div></div>';
+        }
+
+        // 8A: Follow-up Reminders
+        function renderFollowupReminders() {
+            var targets = loadPrivateTargets();
+            var banner = document.getElementById('privateFollowupBanner');
+            if (!banner) return;
+            var now = new Date();
+            var needFollowup = [];
+            targets.forEach(function(t, i) {
+                if (t.status === 'Letter Sent' || t.status === 'No Response') {
+                    var lastDate = new Date(t.statusDate || t.addedDate || now);
+                    var daysSince = Math.floor((now - lastDate) / (1000*60*60*24));
+                    if (daysSince >= 7) needFollowup.push({ target: t, index: i, days: daysSince });
+                }
+            });
+            if (needFollowup.length === 0) { banner.style.display = 'none'; return; }
+            banner.style.display = 'block';
+            banner.innerHTML = '<strong style="font-size:13px;">Follow-up Reminders (' + needFollowup.length + ')</strong>' +
+                needFollowup.map(function(f) {
+                    return '<div style="margin-top:6px;display:flex;justify-content:space-between;align-items:center;">' +
+                        '<span>' + f.target.address + ' — <strong>' + f.days + ' days</strong> since last update (' + f.target.status + ')</span>' +
+                        '<button onclick="editPrivateTarget(' + f.index + ')" style="padding:3px 10px;font-size:10px;border:1px solid #856404;color:#856404;border-radius:4px;background:transparent;cursor:pointer;">Follow Up</button></div>';
+                }).join('');
+        }
+
+        // 8D: Duplicate Detection
+        function checkPrivateTargetDuplicate(address) {
+            if (!address) return null;
+            var normalized = address.toLowerCase().replace(/[^a-z0-9]/g, '');
+            for (var i = 0; i < rawListings.length; i++) {
+                if (rawListings[i].addr.toLowerCase().replace(/[^a-z0-9]/g, '') === normalized) {
+                    var match = rawListings[i];
+                    match.listingIndex = i;
+                    return match;
+                }
+            }
+            return null;
         }
 
         // ===================================================================
