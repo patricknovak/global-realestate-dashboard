@@ -1,0 +1,164 @@
+{
+  "sources": [
+    {
+      "name": "rew",
+      "displayName": "REW.ca",
+      "baseUrl": "https://www.rew.ca",
+      "type": "web",
+      "regions": {
+        "south-surrey-white-rock": {
+          "searchUrl": "/properties/search/south-surrey-white-rock?type=all&status=active",
+          "neighborhoods": [
+            "White Rock",
+            "Crescent Beach",
+            "Morgan Creek",
+            "Grandview Heights",
+            "King George Corridor",
+            "Pacific Douglas",
+            "Elgin Chantrell",
+            "Sunnyside Park",
+            "Ocean Park",
+            "Hazelmere"
+          ]
+        },
+        "vancouver-island": {
+          "searchUrl": "/properties/search/vancouver-island?type=all&status=active",
+          "neighborhoods": [
+            "Parksville",
+            "Qualicum Beach",
+            "Nanoose Bay",
+            "Lantzville",
+            "Nanaimo",
+            "Courtenay",
+            "Comox",
+            "Cumberland",
+            "Campbell River"
+          ]
+        }
+      },
+      "selectors": {
+        "listingContainer": ".listing-card",
+        "address": ".listing-address",
+        "price": ".listing-price",
+        "beds": ".listing-beds",
+        "baths": ".listing-baths",
+        "sqft": ".listing-sqft",
+        "type": ".listing-type",
+        "agent": ".listing-agent"
+      },
+      "rateLimit": {
+        "requestsPerMinute": 10,
+        "delayMs": 6000
+      },
+      "enabled": true
+    },
+    {
+      "name": "realtor",
+      "displayName": "Realtor.ca",
+      "baseUrl": "https://www.realtor.ca",
+      "type": "api",
+      "apiEndpoint": "https://api.realtor.ca/Listing.svc/PropertySearch_Post",
+      "regions": {
+        "south-surrey-white-rock": {
+          "apiParams": {
+            "LatitudeMin": 49.0,
+            "LatitudeMax": 49.1,
+            "LongitudeMin": -122.9,
+            "LongitudeMax": -122.7
+          }
+        },
+        "vancouver-island": {
+          "apiParams": {
+            "LatitudeMin": 48.7,
+            "LatitudeMax": 50.1,
+            "LongitudeMin": -126.0,
+            "LongitudeMax": -123.5
+          }
+        }
+      },
+      "headers": {
+        "Origin": "https://www.realtor.ca",
+        "Referer": "https://www.realtor.ca/",
+        "Content-Type": "application/x-www-form-urlencoded",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+      },
+      "rateLimit": {
+        "requestsPerMinute": 5,
+        "delayMs": 12000
+      },
+      "enabled": true
+    },
+    {
+      "name": "bcAssessment",
+      "displayName": "BC Assessment",
+      "baseUrl": "https://www.bcassessment.ca",
+      "type": "supplementary",
+      "description": "Used to verify assessed values and property details, not for listing discovery",
+      "enabled": false
+    }
+  ],
+  "output": {
+    "format": "json",
+    "path": "../../data/listings.json",
+    "backupPath": "../../data/backups/"
+  },
+  "scheduling": {
+    "defaultInterval": "daily",
+    "fullScrapeDay": "sunday",
+    "incrementalInterval": "6h"
+  },
+  "validation": {
+    "requiredFields": ["addr", "price", "neighborhood", "region"],
+    "priceRange": {
+      "min": 50000,
+      "max": 50000000
+    },
+    "validTypes": ["House", "Apt/Condo", "Townhouse", "Land/Lot", "Duplex", "Mfd Home"],
+    "validRegions": ["South Surrey / White Rock", "Vancouver Island"]
+  },
+  "geocoding": {
+    "provider": "nominatim",
+    "baseUrl": "https://nominatim.openstreetmap.org/search",
+    "rateLimit": {
+      "requestsPerMinute": 1,
+      "delayMs": 1100
+    },
+    "defaultCountry": "Canada",
+    "defaultProvince": "British Columbia"
+  },
+  "regionBounds": {
+    "South Surrey / White Rock": {
+      "latMin": 48.95,
+      "latMax": 49.15,
+      "lngMin": -122.95,
+      "lngMax": -122.65
+    },
+    "Vancouver Island": {
+      "latMin": 48.3,
+      "latMax": 50.3,
+      "lngMin": -126.5,
+      "lngMax": -123.2
+    }
+  },
+  "neighborhoodRegionMap": {
+    "White Rock": "South Surrey / White Rock",
+    "Crescent Beach": "South Surrey / White Rock",
+    "Morgan Creek": "South Surrey / White Rock",
+    "Grandview Heights": "South Surrey / White Rock",
+    "King George Corridor": "South Surrey / White Rock",
+    "Pacific Douglas": "South Surrey / White Rock",
+    "Elgin Chantrell": "South Surrey / White Rock",
+    "Sunnyside Park": "South Surrey / White Rock",
+    "Ocean Park": "South Surrey / White Rock",
+    "Hazelmere": "South Surrey / White Rock",
+    "Parksville": "Vancouver Island",
+    "Qualicum Beach": "Vancouver Island",
+    "Nanoose Bay": "Vancouver Island",
+    "Lantzville": "Vancouver Island",
+    "Nanaimo": "Vancouver Island",
+    "Courtenay": "Vancouver Island",
+    "Comox": "Vancouver Island",
+    "Cumberland": "Vancouver Island",
+    "Campbell River": "Vancouver Island"
+  }
+}

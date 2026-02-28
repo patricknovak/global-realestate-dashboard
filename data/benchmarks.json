@@ -1,0 +1,58 @@
+{
+  "metadata": {
+    "lastUpdated": "2026-02-28T00:00:00Z",
+    "source": "FVREB Dec 2025, VIREB Jan 2026, BC Assessment 2026",
+    "description": "Median prices by neighborhood and property type"
+  },
+  "neighborhoodBenchmarks": {
+    "White Rock": { "House": 1732300, "Townhouse": 885700, "Apt/Condo": 570600, "Land/Lot": 1000000, "Duplex": 1200000, "Mfd Home": 400000 },
+    "Crescent Beach": { "House": 2200000, "Townhouse": 1100000, "Apt/Condo": 650000, "Land/Lot": 2000000, "Duplex": 1300000, "Mfd Home": 450000 },
+    "Morgan Creek": { "House": 2100000, "Townhouse": 1000000, "Apt/Condo": 600000, "Land/Lot": 1800000, "Duplex": 1100000, "Mfd Home": 400000 },
+    "Grandview Heights": { "House": 1600000, "Townhouse": 950000, "Apt/Condo": 550000, "Land/Lot": 1200000, "Duplex": 1100000, "Mfd Home": 400000 },
+    "King George Corridor": { "House": 1450000, "Townhouse": 850000, "Apt/Condo": 520000, "Land/Lot": 900000, "Duplex": 1100000, "Mfd Home": 400000 },
+    "Pacific Douglas": { "House": 1550000, "Townhouse": 900000, "Apt/Condo": 550000, "Land/Lot": 1300000, "Duplex": 1200000, "Mfd Home": 400000 },
+    "Elgin Chantrell": { "House": 2500000, "Townhouse": 1200000, "Apt/Condo": 650000, "Land/Lot": 1800000, "Duplex": 1300000, "Mfd Home": 450000 },
+    "Sunnyside Park": { "House": 1600000, "Townhouse": 900000, "Apt/Condo": 500000, "Land/Lot": 1000000, "Duplex": 1200000, "Mfd Home": 400000 },
+    "Ocean Park": { "House": 1800000, "Townhouse": 950000, "Apt/Condo": 580000, "Land/Lot": 1200000, "Duplex": 1100000, "Mfd Home": 400000 },
+    "Hazelmere": { "House": 1800000, "Townhouse": 900000, "Apt/Condo": 500000, "Land/Lot": 2000000, "Duplex": 1100000, "Mfd Home": 400000 },
+    "Parksville": { "House": 850000, "Townhouse": 600000, "Apt/Condo": 450000, "Land/Lot": 400000, "Duplex": 700000, "Mfd Home": 350000 },
+    "Qualicum Beach": { "House": 900000, "Townhouse": 650000, "Apt/Condo": 500000, "Land/Lot": 450000, "Duplex": 750000, "Mfd Home": 350000 },
+    "Nanoose Bay": { "House": 1200000, "Townhouse": 750000, "Apt/Condo": 550000, "Land/Lot": 600000, "Duplex": 900000, "Mfd Home": 400000 },
+    "Lantzville": { "House": 950000, "Townhouse": 650000, "Apt/Condo": 500000, "Land/Lot": 450000, "Duplex": 800000, "Mfd Home": 400000 },
+    "Nanaimo": { "House": 800000, "Townhouse": 550000, "Apt/Condo": 400000, "Land/Lot": 350000, "Duplex": 650000, "Mfd Home": 300000 },
+    "Courtenay": { "House": 750000, "Townhouse": 550000, "Apt/Condo": 400000, "Land/Lot": 350000, "Duplex": 650000, "Mfd Home": 300000 },
+    "Comox": { "House": 850000, "Townhouse": 600000, "Apt/Condo": 450000, "Land/Lot": 400000, "Duplex": 700000, "Mfd Home": 350000 },
+    "Cumberland": { "House": 700000, "Townhouse": 500000, "Apt/Condo": 400000, "Land/Lot": 300000, "Duplex": 600000, "Mfd Home": 300000 },
+    "Campbell River": { "House": 650000, "Townhouse": 500000, "Apt/Condo": 350000, "Land/Lot": 300000, "Duplex": 550000, "Mfd Home": 280000 }
+  },
+  "trendBonus": {
+    "White Rock": 9, "Crescent Beach": 8, "Ocean Park": 8, "Elgin Chantrell": 8,
+    "Sunnyside Park": 8, "Morgan Creek": 7, "Grandview Heights": 7,
+    "King George Corridor": 7, "Pacific Douglas": 7, "Hazelmere": 9,
+    "Parksville": 5, "Qualicum Beach": 5, "Nanoose Bay": 5, "Lantzville": 5,
+    "Nanaimo": 6, "Courtenay": 4, "Comox": 4, "Cumberland": 4, "Campbell River": 5
+  },
+  "marketTrends": {
+    "White Rock": { "yoyChange": -6.6, "medianDOM": 42, "inventory": "high", "avgSaleToList": 0.94, "recentSales": 28 },
+    "Crescent Beach": { "yoyChange": -5.8, "medianDOM": 48, "inventory": "high", "avgSaleToList": 0.93, "recentSales": 6 },
+    "Morgan Creek": { "yoyChange": -4.2, "medianDOM": 38, "inventory": "high", "avgSaleToList": 0.94, "recentSales": 14 },
+    "Grandview Heights": { "yoyChange": -3.5, "medianDOM": 35, "inventory": "high", "avgSaleToList": 0.95, "recentSales": 22 },
+    "King George Corridor": { "yoyChange": -3.8, "medianDOM": 36, "inventory": "high", "avgSaleToList": 0.94, "recentSales": 18 },
+    "Pacific Douglas": { "yoyChange": -4.5, "medianDOM": 52, "inventory": "high", "avgSaleToList": 0.93, "recentSales": 5 },
+    "Elgin Chantrell": { "yoyChange": -5.0, "medianDOM": 55, "inventory": "high", "avgSaleToList": 0.92, "recentSales": 4 },
+    "Sunnyside Park": { "yoyChange": -4.8, "medianDOM": 40, "inventory": "high", "avgSaleToList": 0.94, "recentSales": 8 },
+    "Ocean Park": { "yoyChange": -5.2, "medianDOM": 44, "inventory": "high", "avgSaleToList": 0.93, "recentSales": 10 },
+    "Hazelmere": { "yoyChange": -6.0, "medianDOM": 65, "inventory": "high", "avgSaleToList": 0.91, "recentSales": 3 },
+    "Semiahmoo": { "yoyChange": -4.0, "medianDOM": 38, "inventory": "high", "avgSaleToList": 0.94, "recentSales": 12 },
+    "South Surrey": { "yoyChange": -4.5, "medianDOM": 40, "inventory": "high", "avgSaleToList": 0.94, "recentSales": 16 },
+    "Parksville": { "yoyChange": 2.8, "medianDOM": 32, "inventory": "balanced", "avgSaleToList": 0.97, "recentSales": 18 },
+    "Qualicum Beach": { "yoyChange": 2.5, "medianDOM": 36, "inventory": "balanced", "avgSaleToList": 0.96, "recentSales": 12 },
+    "Nanoose Bay": { "yoyChange": 1.5, "medianDOM": 38, "inventory": "balanced", "avgSaleToList": 0.96, "recentSales": 7 },
+    "Lantzville": { "yoyChange": 0.5, "medianDOM": 35, "inventory": "balanced", "avgSaleToList": 0.96, "recentSales": 6 },
+    "Nanaimo": { "yoyChange": -1.0, "medianDOM": 30, "inventory": "balanced", "avgSaleToList": 0.97, "recentSales": 40 },
+    "Courtenay": { "yoyChange": 2.0, "medianDOM": 32, "inventory": "balanced", "avgSaleToList": 0.97, "recentSales": 22 },
+    "Comox": { "yoyChange": 1.8, "medianDOM": 34, "inventory": "balanced", "avgSaleToList": 0.96, "recentSales": 16 },
+    "Cumberland": { "yoyChange": 1.0, "medianDOM": 30, "inventory": "balanced", "avgSaleToList": 0.98, "recentSales": 8 },
+    "Campbell River": { "yoyChange": 0.8, "medianDOM": 34, "inventory": "balanced", "avgSaleToList": 0.95, "recentSales": 18 }
+  }
+}
