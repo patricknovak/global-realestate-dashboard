@@ -28,6 +28,12 @@
         <div style="font-size: 13px; color: #888;">Fetching listings and market data...</div>
     </div>
 
+    <!-- Fallback Data Warning -->
+    <div id="fallbackWarning" class="fallback-warning">
+        <button class="dismiss-btn" onclick="this.parentElement.style.display='none'">&times;</button>
+        Could not load live listing data. Showing built-in sample listings which may be outdated.
+    </div>
+
     <!-- Staleness Warning (populated by JS) -->
     <div id="stalenessWarning" style="display:none;"></div>
     <!-- Header -->
@@ -1620,7 +1626,10 @@
                     rawListings = listingsData.listings || listingsData;
                 }
             } catch(e) { console.warn('Failed to load data/listings.json, using fallback'); }
-            if (rawListings.length === 0) rawListings = FALLBACK_LISTINGS;
+            if (rawListings.length === 0) {
+                rawListings = FALLBACK_LISTINGS;
+                window._usingFallbackData = true;
+            }
 
             try {
                 var resp2 = await fetch('data.json');
@@ -1643,6 +1652,10 @@
         document.addEventListener('DOMContentLoaded', async () => {
             await loadExternalData();
             document.getElementById('loadingOverlay').classList.add('hidden');
+            if (window._usingFallbackData) {
+                var fw = document.getElementById('fallbackWarning');
+                if (fw) fw.style.display = 'block';
+            }
             loadShortlist();
             initializeFilters();
             applyFilters();
