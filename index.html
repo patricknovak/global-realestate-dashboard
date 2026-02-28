@@ -163,6 +163,27 @@
                 </div>
             </div>
             
+            <h3>Investor Mode</h3>
+            <div class="filter-group">
+                <div class="checkbox-group">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="investorModeToggle" onchange="toggleInvestorMode()">
+                        <label for="investorModeToggle" style="font-weight:600;">Show Cap Rate &amp; Cash Flow</label>
+                    </div>
+                </div>
+                <div id="investorModeOptions" style="display:none;margin-top:8px;">
+                    <div style="font-size:11px;color:#666;margin-bottom:6px;">Estimates based on area rent-to-price ratios</div>
+                    <div class="input-pair" style="margin-bottom:4px;">
+                        <label style="font-size:11px;width:80px;">Min Cap Rate</label>
+                        <input type="number" id="investorMinCap" placeholder="e.g. 3" step="0.5" oninput="debouncedApply()">
+                    </div>
+                    <div class="input-pair">
+                        <label style="font-size:11px;width:80px;">Min Cash Flow</label>
+                        <input type="number" id="investorMinCF" placeholder="$/mo" oninput="debouncedApply()">
+                    </div>
+                </div>
+            </div>
+
             <h3>Deal Score</h3>
             <div class="filter-group">
                 <div class="input-pair">
@@ -189,6 +210,8 @@
                     <option value="price-desc">Price High → Low</option>
                     <option value="ppsf-asc">$/SqFt Low → High</option>
                     <option value="gap-desc">Value Gap</option>
+                    <option value="caprate-desc">Cap Rate (Best)</option>
+                    <option value="cashflow-desc">Cash Flow (Best)</option>
                 </select>
             </div>
             
@@ -203,6 +226,10 @@
                     <option value="">Load preset...</option>
                 </select>
             </div>
+            <div class="button-group" style="margin-top:4px;">
+                <button class="btn-secondary" onclick="saveSearchAlert()" style="font-size:11px;background:#e7f3ff;color:#004085;border-color:#b8daff;">Save as Alert</button>
+            </div>
+            <div id="savedAlertsList" style="margin-top:8px;font-size:11px;"></div>
             
             <div class="button-group">
                 <button class="btn-success" onclick="exportFilteredCSV()">Export CSV</button>
@@ -211,6 +238,43 @@
         
         <!-- Main Content -->
         <div class="main-content">
+            <div class="mobile-tab-nav" style="display:none;">
+                <select id="mobileTabSelect" onchange="switchTabDirect(this.value);this.blur();" style="width:100%;padding:10px 12px;font-size:14px;font-weight:600;border:2px solid var(--secondary);border-radius:6px;color:var(--primary);background:white;cursor:pointer;">
+                    <optgroup label="Browse">
+                        <option value="dashboard">Dashboard</option>
+                        <option value="listings">All Listings</option>
+                        <option value="map">Map View</option>
+                        <option value="neighborhood">Neighborhoods</option>
+                        <option value="deals">Deal Analysis</option>
+                    </optgroup>
+                    <optgroup label="Offers &amp; Shortlist">
+                        <option value="offers">Offer Generator</option>
+                        <option value="myoffers">My Offers</option>
+                        <option value="shortlist">Shortlist</option>
+                        <option value="privateoffers">Private Offers</option>
+                    </optgroup>
+                    <optgroup label="Financial">
+                        <option value="mortgage">Financing Hub</option>
+                        <option value="roi">ROI Calculator</option>
+                        <option value="lenders">Lender Directory</option>
+                    </optgroup>
+                    <optgroup label="My Activity">
+                        <option value="buyerprofile">My Profile</option>
+                        <option value="contactlog">Contact Log</option>
+                        <option value="viewings">Viewings</option>
+                        <option value="documents">Documents</option>
+                    </optgroup>
+                    <optgroup label="Market Data">
+                        <option value="pricehistory">Price History</option>
+                        <option value="neighborhooddata">Area Intel</option>
+                        <option value="datafreshness">Data Health</option>
+                    </optgroup>
+                    <optgroup label="Resources">
+                        <option value="norealtorguide">No-Realtor Guide</option>
+                        <option value="help">Help &amp; Settings</option>
+                    </optgroup>
+                </select>
+            </div>
             <div class="tabs">
                 <button class="tab-button active" onclick="switchTab('dashboard')">Dashboard</button>
                 <button class="tab-button" onclick="switchTab('listings')">All Listings</button>
@@ -237,6 +301,7 @@
                 <button class="tab-button" onclick="switchTab('datafreshness')">Data Health</button>
                 <span class="tab-group-divider"></span>
                 <button class="tab-button" onclick="switchTab('norealtorguide')">No-Realtor Guide</button>
+                <button class="tab-button" onclick="switchTab('privateoffers')">Private Offers</button>
                 <button class="tab-button" onclick="switchTab('help')">Help</button>
             </div>
             
@@ -253,7 +318,7 @@
                         <button onclick="dismissWelcome()" style="opacity: 0.7;">Dismiss</button>
                     </div>
                 </div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 24px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 16px; margin-bottom: 24px;">
                     <div style="background: linear-gradient(135deg, #1B3A5C 0%, #2E75B6 100%); color: white; padding: 20px; border-radius: 10px;">
                         <div style="font-size: 12px; opacity: 0.8; text-transform: uppercase; font-weight: 600;">Shortlisted Properties</div>
                         <div id="dashShortlistCount" style="font-size: 32px; font-weight: 700; margin: 8px 0;">0</div>
@@ -271,6 +336,12 @@
                         <div id="dashHotDeals" style="font-size: 32px; font-weight: 700; margin: 8px 0;">0</div>
                         <div style="font-size: 12px; opacity: 0.8;">Properties scoring 70+ (best value)</div>
                         <button onclick="switchTabDirect('deals')" style="margin-top:10px;padding:6px 14px;border:1px solid rgba(255,255,255,0.4);background:transparent;color:white;border-radius:4px;cursor:pointer;font-size:11px;font-weight:600;">View Deals</button>
+                    </div>
+                    <div style="background: linear-gradient(135deg, #6f42c1 0%, #9b59b6 100%); color: white; padding: 20px; border-radius: 10px;">
+                        <div style="font-size: 12px; opacity: 0.8; text-transform: uppercase; font-weight: 600;">Private Targets</div>
+                        <div id="dashPrivateTargets" style="font-size: 32px; font-weight: 700; margin: 8px 0;">0</div>
+                        <div style="font-size: 11px; opacity: 0.8;"><span id="dashLettersSent">0</span> letters sent &bull; <span id="dashOffersOut">0</span> offers out</div>
+                        <button onclick="switchTabDirect('privateoffers')" style="margin-top:10px;padding:6px 14px;border:1px solid rgba(255,255,255,0.4);background:transparent;color:white;border-radius:4px;cursor:pointer;font-size:11px;font-weight:600;">View Private Offers &rarr;</button>
                     </div>
                 </div>
 
@@ -331,6 +402,7 @@
                             <button onclick="switchTabDirect('roi')" style="padding: 14px; background: white; border: 2px solid var(--accent); border-radius: 8px; cursor: pointer; text-align: left; font-size: 13px; transition: all 0.2s;"><strong style="color:var(--primary);">Investment ROI Calculator</strong><br><span style="color:#888;font-size:11px;">Cap rate, cash flow, rental analysis</span></button>
                             <button onclick="switchTabDirect('lenders')" style="padding: 14px; background: white; border: 2px solid #6f42c1; border-radius: 8px; cursor: pointer; text-align: left; font-size: 13px; transition: all 0.2s;"><strong style="color:var(--primary);">Find a Lender</strong><br><span style="color:#888;font-size:11px;">Compare mortgage brokers and banks</span></button>
                             <button onclick="switchTabDirect('norealtorguide')" style="padding: 14px; background: white; border: 2px solid var(--danger); border-radius: 8px; cursor: pointer; text-align: left; font-size: 13px; transition: all 0.2s;"><strong style="color:var(--primary);">No-Realtor Guide</strong><br><span style="color:#888;font-size:11px;">Buy property on your own in BC</span></button>
+                            <button onclick="switchTabDirect('privateoffers')" style="padding: 14px; background: white; border: 2px solid #6f42c1; border-radius: 8px; cursor: pointer; text-align: left; font-size: 13px; transition: all 0.2s;"><strong style="color:var(--primary);">Private Offers</strong><br><span style="color:#888;font-size:11px;">Target off-market properties directly</span></button>
                         </div>
 
                         <h3 style="color: var(--primary); margin: 20px 0 12px; font-size: 16px;">Your Profile</h3>
@@ -350,7 +422,7 @@
                 </div>
                 <div style="overflow-x: auto; flex: 1; display: flex; flex-direction: column;">
                     <table class="listings-table">
-                        <thead>
+                        <thead id="listingsTableHead">
                             <tr>
                                 <th style="width: 40px;">★</th>
                                 <th class="sortable-th" onclick="sortTable('addr')">Address</th>
@@ -471,8 +543,31 @@
                     
                     <div id="offerSummary" style="display: none; margin-top: 20px;"></div>
                 </div>
+
+                <div style="margin-top:24px;padding-top:24px;border-top:2px solid #eee;">
+                    <h3 style="color:var(--secondary);margin-bottom:8px;">Home Buyer Rescission Period Calculator</h3>
+                    <p style="font-size:12px;color:#666;margin-bottom:16px;">Under BC's <em>Property Law Act</em>, buyers have a <strong>3 business day</strong> rescission (cooling-off) period after an accepted offer. Weekends and BC statutory holidays are excluded. A <strong>0.25% rescission fee</strong> applies if you rescind.</p>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;max-width:800px;">
+                        <div>
+                            <div class="form-group">
+                                <label>Offer Acceptance Date</label>
+                                <input type="date" id="rescissionDate" onchange="calcRescission()">
+                            </div>
+                            <div class="form-group">
+                                <label>Offer Price ($)</label>
+                                <input type="number" id="rescissionPrice" value="900000" oninput="calcRescission()">
+                            </div>
+                            <button class="btn-primary" onclick="calcRescission()" style="width:auto;margin-top:8px;">Calculate Rescission Deadline</button>
+                        </div>
+                        <div>
+                            <div id="rescissionResult" style="background:var(--light-gray);padding:16px;border-radius:8px;font-size:13px;min-height:120px;">
+                                <p style="color:#888;">Enter the acceptance date to see your rescission deadline and fee.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-            
+
             <!-- Tab 6: Shortlist -->
             <div id="shortlist" class="tab-content">
                 <div class="shortlist-controls">
@@ -529,6 +624,7 @@
                     <button onclick="document.getElementById('closingSection').scrollIntoView({behavior:'smooth'})" style="padding:8px 14px;border:1px solid var(--secondary);background:white;color:var(--secondary);border-radius:20px;cursor:pointer;font-size:12px;font-weight:600;">Closing Costs</button>
                     <button onclick="switchTabDirect('lenders')" style="padding:8px 14px;border:1px solid var(--success);background:white;color:var(--success);border-radius:20px;cursor:pointer;font-size:12px;font-weight:600;">Rate Comparison &amp; Pre-Qualification &#8594;</button>
                     <button onclick="switchTabDirect('roi')" style="padding:8px 14px;border:1px solid var(--warning);background:white;color:var(--warning);border-radius:20px;cursor:pointer;font-size:12px;font-weight:600;">ROI Calculator &#8594;</button>
+                    <button onclick="document.getElementById('cashToCloseSection').scrollIntoView({behavior:'smooth'})" style="padding:8px 14px;border:1px solid #6f42c1;background:white;color:#6f42c1;border-radius:20px;cursor:pointer;font-size:12px;font-weight:600;">Cash to Close</button>
                 </div>
                 <div id="mortCalcSection"></div>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
@@ -603,6 +699,90 @@
                                 <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;">CMHC Insurance (if &lt;20% down)</td><td id="ccCMHC" style="padding:6px 8px;text-align:right;border-bottom:1px solid #eee;">$0</td></tr>
                                 <tr style="background:#f8d7da;font-weight:700;"><td style="padding:10px 8px;">Estimated Total Closing Costs</td><td id="ccTotal" style="padding:10px 8px;text-align:right;">$0</td></tr>
                             </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="cashToCloseSection" style="margin-top:24px;padding-top:24px;border-top:2px solid #eee;">
+                    <h3 style="color: var(--secondary); margin-bottom: 8px;">Cash to Close Calculator</h3>
+                    <p style="font-size:12px;color:#666;margin-bottom:16px;">Total funds needed on closing day, including down payment, closing costs, prepaid expenses, and reserve.</p>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+                        <div>
+                            <div class="form-group">
+                                <label>Purchase Price ($)</label>
+                                <input type="number" id="ctcPrice" value="900000" oninput="calcCashToClose()">
+                            </div>
+                            <div class="form-group">
+                                <label>Down Payment (%)</label>
+                                <input type="number" id="ctcDownPct" value="20" step="1" oninput="calcCashToClose()">
+                            </div>
+                            <div class="form-group">
+                                <label>First-Time Home Buyer?</label>
+                                <select id="ctcFTHB" onchange="calcCashToClose()">
+                                    <option value="no">No</option>
+                                    <option value="yes">Yes - Existing Home</option>
+                                    <option value="new">Yes - New Build</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Legal / Notary Fees ($)</label>
+                                <input type="number" id="ctcLegal" value="2000" oninput="calcCashToClose()">
+                            </div>
+                            <div class="form-group">
+                                <label>Home Inspection ($)</label>
+                                <input type="number" id="ctcInspection" value="550" oninput="calcCashToClose()">
+                            </div>
+                            <div class="form-group">
+                                <label>Appraisal ($)</label>
+                                <input type="number" id="ctcAppraisal" value="400" oninput="calcCashToClose()">
+                            </div>
+                            <div class="form-group">
+                                <label>Title Insurance ($)</label>
+                                <input type="number" id="ctcTitleIns" value="300" oninput="calcCashToClose()">
+                            </div>
+                            <div class="form-group">
+                                <label>Property Tax Adjustment ($) <span style="font-weight:normal;color:#888;">prorated to closing</span></label>
+                                <input type="number" id="ctcTaxAdj" value="0" oninput="calcCashToClose()">
+                            </div>
+                            <div class="form-group">
+                                <label>Home Insurance Prepaid ($) <span style="font-weight:normal;color:#888;">first year</span></label>
+                                <input type="number" id="ctcHomeIns" value="1800" oninput="calcCashToClose()">
+                            </div>
+                            <div class="form-group">
+                                <label>Moving Costs ($)</label>
+                                <input type="number" id="ctcMoving" value="2000" oninput="calcCashToClose()">
+                            </div>
+                            <div class="form-group">
+                                <label>Emergency Reserve ($) <span style="font-weight:normal;color:#888;">recommended 3-6 mo expenses</span></label>
+                                <input type="number" id="ctcReserve" value="10000" oninput="calcCashToClose()">
+                            </div>
+                            <button class="btn-primary" onclick="calcCashToClose()" style="width:auto;margin-top:8px;">Calculate Cash to Close</button>
+                        </div>
+                        <div>
+                            <div style="background:linear-gradient(135deg,#6f42c1 0%,#9b59b6 100%);color:white;padding:20px;border-radius:10px;text-align:center;margin-bottom:16px;">
+                                <div style="font-size:12px;opacity:0.8;">Total Cash to Close</div>
+                                <div id="ctcTotal" style="font-size:32px;font-weight:700;">$0</div>
+                            </div>
+                            <table style="width:100%;border-collapse:collapse;font-size:13px;">
+                                <tr style="background:#e7f3ff;"><td style="padding:8px;font-weight:700;" colspan="2">Down Payment &amp; Mortgage</td></tr>
+                                <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;">Down Payment</td><td id="ctcDownAmt" style="padding:6px 8px;text-align:right;border-bottom:1px solid #eee;font-weight:600;">$0</td></tr>
+                                <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;">CMHC Insurance (if &lt;20% down)</td><td id="ctcCMHC" style="padding:6px 8px;text-align:right;border-bottom:1px solid #eee;font-weight:600;">$0</td></tr>
+                                <tr style="background:#e7f3ff;"><td style="padding:8px;font-weight:700;" colspan="2">Government Taxes</td></tr>
+                                <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;">Property Transfer Tax</td><td id="ctcPTT" style="padding:6px 8px;text-align:right;border-bottom:1px solid #eee;font-weight:600;">$0</td></tr>
+                                <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;">FTHB Exemption Savings</td><td id="ctcFTHBSavings" style="padding:6px 8px;text-align:right;border-bottom:1px solid #eee;font-weight:600;color:var(--success);">$0</td></tr>
+                                <tr style="background:#e7f3ff;"><td style="padding:8px;font-weight:700;" colspan="2">Professional Services</td></tr>
+                                <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;">Legal / Notary</td><td id="ctcLegalAmt" style="padding:6px 8px;text-align:right;border-bottom:1px solid #eee;">$0</td></tr>
+                                <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;">Home Inspection</td><td id="ctcInspAmt" style="padding:6px 8px;text-align:right;border-bottom:1px solid #eee;">$0</td></tr>
+                                <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;">Appraisal</td><td id="ctcApprAmt" style="padding:6px 8px;text-align:right;border-bottom:1px solid #eee;">$0</td></tr>
+                                <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;">Title Insurance</td><td id="ctcTitleAmt" style="padding:6px 8px;text-align:right;border-bottom:1px solid #eee;">$0</td></tr>
+                                <tr style="background:#e7f3ff;"><td style="padding:8px;font-weight:700;" colspan="2">Prepaid &amp; Other</td></tr>
+                                <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;">Property Tax Adjustment</td><td id="ctcTaxAdjAmt" style="padding:6px 8px;text-align:right;border-bottom:1px solid #eee;">$0</td></tr>
+                                <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;">Home Insurance (prepaid)</td><td id="ctcHomeInsAmt" style="padding:6px 8px;text-align:right;border-bottom:1px solid #eee;">$0</td></tr>
+                                <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;">Moving Costs</td><td id="ctcMovingAmt" style="padding:6px 8px;text-align:right;border-bottom:1px solid #eee;">$0</td></tr>
+                                <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;">Emergency Reserve</td><td id="ctcReserveAmt" style="padding:6px 8px;text-align:right;border-bottom:1px solid #eee;">$0</td></tr>
+                                <tr style="background:linear-gradient(135deg,#6f42c1 0%,#9b59b6 100%);color:white;font-weight:700;font-size:14px;"><td style="padding:12px 8px;">TOTAL CASH TO CLOSE</td><td id="ctcGrandTotal" style="padding:12px 8px;text-align:right;">$0</td></tr>
+                            </table>
+                            <div id="ctcNotes" style="margin-top:12px;padding:12px;background:var(--light-gray);border-radius:8px;font-size:12px;color:#666;"></div>
                         </div>
                     </div>
                 </div>
@@ -735,6 +915,16 @@
                             <label>Vacancy Rate (%)</label>
                             <input type="number" id="roiVacancy" value="5" step="1" oninput="calcROI()">
                         </div>
+
+                        <h3 style="color: var(--secondary); margin: 20px 0 12px;">Projections</h3>
+                        <div class="form-group">
+                            <label>Annual Appreciation (%) <span style="font-weight:normal;color:#888;">BC avg ~3-5%</span></label>
+                            <input type="number" id="roiAppreciation" value="3" step="0.5" oninput="calcROI()">
+                        </div>
+                        <div class="form-group">
+                            <label>Annual Rent Increase (%) <span style="font-weight:normal;color:#888;">BC cap varies</span></label>
+                            <input type="number" id="roiRentIncrease" value="2" step="0.5" oninput="calcROI()">
+                        </div>
                         <button class="btn-primary" onclick="calcROI()" style="width: auto; margin-top: 8px;">Calculate ROI</button>
                     </div>
                     <div>
@@ -762,6 +952,10 @@
                             <tr><td style="padding:8px;border-bottom:1px solid #eee;">Net Operating Income (annual)</td><td id="roiNOI" style="padding:8px;text-align:right;border-bottom:1px solid #eee;font-weight:600;">$0</td></tr>
                             <tr><td style="padding:8px;border-bottom:1px solid #eee;">Annual Cash Flow</td><td id="roiAnnualCF" style="padding:8px;text-align:right;border-bottom:1px solid #eee;font-weight:600;">$0</td></tr>
                             <tr><td style="padding:8px;border-bottom:1px solid #eee;">Gross Rent Multiplier (GRM)</td><td id="roiGRM" style="padding:8px;text-align:right;border-bottom:1px solid #eee;font-weight:600;">--</td></tr>
+                            <tr><td style="padding:8px;border-bottom:1px solid #eee;">DSCR (Debt Service Coverage)</td><td id="roiDSCR" style="padding:8px;text-align:right;border-bottom:1px solid #eee;font-weight:600;">--</td></tr>
+                            <tr><td style="padding:8px;border-bottom:1px solid #eee;">Price-to-Rent Ratio</td><td id="roiPriceToRent" style="padding:8px;text-align:right;border-bottom:1px solid #eee;font-weight:600;">--</td></tr>
+                            <tr><td style="padding:8px;border-bottom:1px solid #eee;">1% Rule Check</td><td id="roi1PctRule" style="padding:8px;text-align:right;border-bottom:1px solid #eee;font-weight:600;">--</td></tr>
+                            <tr><td style="padding:8px;border-bottom:1px solid #eee;">Break-Even Point</td><td id="roiBreakEven" style="padding:8px;text-align:right;border-bottom:1px solid #eee;font-weight:600;">--</td></tr>
                         </table>
 
                         <h3 style="color: var(--secondary); margin: 24px 0 12px;">Investment Verdict</h3>
@@ -771,9 +965,12 @@
 
                         <h3 style="color: var(--secondary); margin: 24px 0 12px;">5-Year Projection</h3>
                         <table style="width:100%;border-collapse:collapse;font-size:12px;">
-                            <thead><tr style="background:var(--light-gray);"><th style="padding:8px;text-align:left;">Year</th><th style="padding:8px;text-align:right;">Annual Cash Flow</th><th style="padding:8px;text-align:right;">Equity Built</th><th style="padding:8px;text-align:right;">Total Return</th></tr></thead>
+                            <thead><tr style="background:var(--light-gray);"><th style="padding:8px;text-align:left;">Year</th><th style="padding:8px;text-align:right;">Cash Flow</th><th style="padding:8px;text-align:right;">Est. Value</th><th style="padding:8px;text-align:right;">Equity Built</th><th style="padding:8px;text-align:right;">Total Return</th></tr></thead>
                             <tbody id="roiProjectionBody"></tbody>
                         </table>
+
+                        <h3 style="color: var(--secondary); margin: 24px 0 12px;">Scenario Comparison</h3>
+                        <div id="roiScenarios" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;font-size:12px;"></div>
                     </div>
                 </div>
             </div>
@@ -904,7 +1101,7 @@
             <!-- Tab: Buyer Profile -->
             <div id="buyerprofile" class="tab-content">
                 <h2 style="margin-bottom: 8px; color: var(--primary);">My Buyer Profile</h2>
-                <p style="color: #666; margin-bottom: 20px;">Save your details here. They'll auto-fill into offers, inquiries, and pre-qualification tools across the dashboard.</p>
+                <p style="color: #666; margin-bottom: 20px;">Save your details here. They'll auto-fill into offers, inquiries, pre-qualification tools, and private sale letters and offers across the dashboard.</p>
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; max-width: 900px;">
                     <div>
@@ -1384,6 +1581,103 @@
                 </div>
             </div>
 
+            <!-- Tab: Private Offers -->
+            <div id="privateoffers" class="tab-content">
+                <h2 style="margin-bottom: 8px; color: var(--primary);">Unsolicited Property Acquisition</h2>
+                <p style="color: #666; margin-bottom: 16px;">Approach property owners directly — even when their home isn't listed for sale. Many homeowners will consider selling if presented with a serious, well-structured offer. This tool helps you research target properties, draft professional letters of intent, and manage your outreach campaigns.</p>
+
+                <div style="background:#fff3cd;border:1px solid #ffc107;border-radius:8px;padding:14px 16px;font-size:13px;color:#856404;margin-bottom:20px;">
+                    <strong>IMPORTANT:</strong> In BC, the Home Buyer Rescission Period (3 business days, 0.25% fee) applies to private residential sales just as it does to MLS transactions. You still need a BC lawyer or notary to handle conveyancing. The standard Contract of Purchase and Sale (BCREA form) is recommended even for private transactions.
+                </div>
+
+                <!-- Target Property Manager -->
+                <div style="margin-bottom:24px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                        <h3 style="color:var(--primary);font-size:16px;margin:0;">Target Properties</h3>
+                        <button class="btn-primary" onclick="addPrivateTarget()" style="padding:8px 16px;font-size:12px;">+ Add Target Property</button>
+                    </div>
+                    <div id="privateTargetsList"></div>
+                    <div id="emptyPrivateTargets" style="text-align:center;padding:30px;color:#999;font-size:13px;background:var(--light-gray);border-radius:8px;">
+                        No target properties yet. Click "Add Target Property" to start building your pipeline.
+                    </div>
+                </div>
+
+                <!-- Private Sale Process Guide -->
+                <div style="margin-bottom:24px;">
+                    <h3 style="color:var(--primary);font-size:16px;margin-bottom:12px;">Private Sale Guide</h3>
+
+                    <div class="accordion-item" style="margin-bottom:8px;">
+                        <button class="accordion-btn" onclick="toggleAccordion(this)">How Unsolicited Offers Work in BC</button>
+                        <div class="accordion-panel" style="display:none;padding:16px;background:var(--light-gray);border-radius:0 0 8px 8px;font-size:13px;line-height:1.8;">
+                            <p><strong>Legal basis:</strong> Anyone can make an offer on any property in BC, listed or not.</p>
+                            <p><strong>Standard process:</strong> Letter of intent → Discussion → Contract of Purchase and Sale → Subject period → Completion</p>
+                            <p><strong>BC-specific:</strong> The Home Buyer Rescission Period applies to private sales (3 business days, 0.25% fee).</p>
+                            <p><strong>Commission savings:</strong> The seller saves 4-7% in agent commissions, which can be used as a negotiating lever. Offer to split the savings — e.g., "You save $40K in commissions, I'm asking for a $20K discount."</p>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item" style="margin-bottom:8px;">
+                        <button class="accordion-btn" onclick="toggleAccordion(this)">Finding Owner Information</button>
+                        <div class="accordion-panel" style="display:none;padding:16px;background:var(--light-gray);border-radius:0 0 8px 8px;font-size:13px;line-height:1.8;">
+                            <p><strong>BC Land Title &amp; Survey Authority (ltsa.ca):</strong> Title search gives owner name, legal description, PID, charges/liens. Cost: ~$15-30 per search via BC OnLine.</p>
+                            <p><strong>BC Assessment (bcassessment.ca):</strong> Free lookup for assessed value, lot size, year built, property class.</p>
+                            <p><strong>City/Municipal records:</strong> Zoning, permits, property tax amounts.</p>
+                            <p><strong>Physical approaches:</strong> Check mailbox name, knock on door, leave a letter.</p>
+                            <p style="color:var(--danger);"><strong>Note:</strong> Do NOT use aggressive or harassing tactics. One polite approach is appropriate. Respect "no" answers.</p>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item" style="margin-bottom:8px;">
+                        <button class="accordion-btn" onclick="toggleAccordion(this)">Pricing an Unlisted Property</button>
+                        <div class="accordion-panel" style="display:none;padding:16px;background:var(--light-gray);border-radius:0 0 8px 8px;font-size:13px;line-height:1.8;">
+                            <p><strong>Start with BC Assessment value</strong> — reflects market value as of July 1 of previous year.</p>
+                            <p><strong>Compare to recent sales</strong> in the neighborhood (available through LTSA or BC Assessment).</p>
+                            <p><strong>Consider:</strong> DOM of comparable listed properties, current market conditions, property condition.</p>
+                            <p><strong>Private sale discount:</strong> Sellers often expect 2-5% less than MLS price since they save on commission.</p>
+                            <p><strong>Rule of thumb:</strong> Offer 85-95% of estimated market value as starting point, depending on motivation.</p>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item" style="margin-bottom:8px;">
+                        <button class="accordion-btn" onclick="toggleAccordion(this)">Legal Requirements for Private Sales in BC</button>
+                        <div class="accordion-panel" style="display:none;padding:16px;background:var(--light-gray);border-radius:0 0 8px 8px;font-size:13px;line-height:1.8;">
+                            <p><strong>Contract of Purchase and Sale:</strong> Use the BCREA standard form (available from your lawyer).</p>
+                            <p><strong>Property Transfer Tax:</strong> Same rates as MLS sales. FTHB exemptions apply.</p>
+                            <p><strong>Home Buyer Rescission Period:</strong> 3 business days, 0.25% fee — applies even without agents.</p>
+                            <p><strong>Title transfer:</strong> Must be done by a BC lawyer or notary.</p>
+                            <p><strong>Property Disclosure Statement:</strong> Not legally required in private sales (unlike MLS), but strongly recommended to request one.</p>
+                            <p><strong>GST:</strong> 5% GST may apply on new or substantially renovated homes — check with your lawyer.</p>
+                            <p><strong>Foreign buyer ban / speculation tax:</strong> Same rules apply as MLS sales.</p>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item" style="margin-bottom:8px;">
+                        <button class="accordion-btn" onclick="toggleAccordion(this)">Template: What to Say When You Knock on a Door</button>
+                        <div class="accordion-panel" style="display:none;padding:16px;background:var(--light-gray);border-radius:0 0 8px 8px;font-size:13px;line-height:1.8;">
+                            <div style="background:white;padding:16px;border-radius:8px;border-left:4px solid var(--secondary);font-style:italic;">
+                                "Hi, my name is [name]. I'm looking to buy a home in this neighborhood and I really like your property at [address]. I'm not an agent — I'm a private buyer. I understand you may not be thinking of selling, but if you'd ever consider it, I'd love to have a conversation. Here's my card/letter with my contact details. No pressure at all — just wanted to let you know there's genuine interest. Thank you for your time."
+                            </div>
+                            <p style="margin-top:12px;">Keep it brief and friendly. Leave your letter of intent even if they seem uninterested — they may follow up later.</p>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item" style="margin-bottom:8px;">
+                        <button class="accordion-btn" onclick="toggleAccordion(this)">Red Flags to Watch For in Private Sales</button>
+                        <div class="accordion-panel" style="display:none;padding:16px;background:var(--light-gray);border-radius:0 0 8px 8px;font-size:13px;line-height:1.8;">
+                            <ul style="padding-left:20px;">
+                                <li>Seller refuses to provide title or property disclosure</li>
+                                <li>Existing liens, judgments, or encumbrances on title</li>
+                                <li>Property is in foreclosure or has conduct of sale orders</li>
+                                <li>Seller wants to close without lawyers</li>
+                                <li>Significant discrepancy between asking price and assessment</li>
+                                <li>Unpermitted additions or renovations</li>
+                                <li>Environmental contamination (especially former gas stations, dry cleaners, industrial sites)</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Tab 8: Help -->
             <div id="help" class="tab-content">
                 <h2 style="margin-bottom: 8px; color: var(--primary);">Help &amp; Getting Started</h2>
@@ -1593,6 +1887,17 @@
 
 
     <!-- Comparison Modal -->
+    <!-- Floating Comparison Bar -->
+    <div id="comparisonBar" style="display:none;position:fixed;bottom:0;left:0;right:0;background:var(--primary);color:white;padding:10px 20px;z-index:9999;box-shadow:0 -4px 12px rgba(0,0,0,0.2);display:none;">
+        <div style="display:flex;align-items:center;justify-content:space-between;max-width:1200px;margin:0 auto;">
+            <div id="comparisonBarItems" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;flex:1;"></div>
+            <div style="display:flex;gap:8px;align-items:center;flex-shrink:0;">
+                <button onclick="openComparisonTool()" style="padding:8px 16px;background:white;color:var(--primary);border:none;border-radius:4px;cursor:pointer;font-weight:600;font-size:12px;">Compare Now</button>
+                <button onclick="comparisonSet.clear();updateComparisonBar();renderCurrentTab();" style="padding:8px 12px;background:transparent;color:white;border:1px solid rgba(255,255,255,0.4);border-radius:4px;cursor:pointer;font-size:12px;">Clear</button>
+            </div>
+        </div>
+    </div>
+
     <div id="comparisonModal" class="modal" onclick="if(event.target===this)this.classList.remove('active')">
         <div class="modal-content" style="max-width: 95vw; max-height: 92vh; overflow: auto;">
             <button class="modal-close" onclick="document.getElementById('comparisonModal').classList.remove('active')">&times;</button>
@@ -1704,6 +2009,7 @@
             applyFilters();
             updateApiKeyStatus();
             loadFilterPresetList();
+            renderSearchAlerts();
             calcMortgage();
             initializeDashboard();
             checkViewMode();
@@ -1743,6 +2049,45 @@
             renderCurrentTab();
         }
         
+        // ===== INVESTOR MODE =====
+        var investorModeActive = false;
+
+        function toggleInvestorMode() {
+            investorModeActive = document.getElementById('investorModeToggle').checked;
+            document.getElementById('investorModeOptions').style.display = investorModeActive ? 'block' : 'none';
+            applyFilters();
+        }
+
+        function estimateMonthlyRent(listing) {
+            // Estimate rent based on property type and typical BC rent-to-price ratios
+            var price = listing.price;
+            var type = (listing.type || '').toLowerCase();
+            var ratio;
+            if (type.indexOf('condo') >= 0 || type.indexOf('apartment') >= 0) ratio = 0.0040;
+            else if (type.indexOf('town') >= 0 || type.indexOf('row') >= 0) ratio = 0.0035;
+            else ratio = 0.0030; // house/detached
+            return Math.round(price * ratio);
+        }
+
+        function estimateInvestorMetrics(listing) {
+            var rent = estimateMonthlyRent(listing);
+            var price = listing.price;
+            var annualRent = rent * 12;
+            var vacancyRate = 0.05;
+            var effectiveIncome = annualRent * (1 - vacancyRate);
+            // Estimate operating expenses: property tax + insurance + maintenance ~ 1.5% of price/year
+            var opEx = price * 0.015;
+            var noi = effectiveIncome - opEx;
+            var capRate = price > 0 ? (noi / price) * 100 : 0;
+            // Monthly mortgage estimate (20% down, 5.5%, 25yr)
+            var mortAmount = price * 0.80;
+            var mRate = 0.055 / 12;
+            var nPmt = 300;
+            var mortPayment = mRate > 0 ? mortAmount * (mRate * Math.pow(1 + mRate, nPmt)) / (Math.pow(1 + mRate, nPmt) - 1) : 0;
+            var monthlyCashFlow = rent * (1 - vacancyRate) - (opEx / 12) - mortPayment;
+            return { rent: rent, capRate: capRate, cashFlow: Math.round(monthlyCashFlow), noi: Math.round(noi) };
+        }
+
         // Debounce utility for number inputs
         var _debounceTimer = null;
         function debouncedApply() {
@@ -1957,6 +2302,8 @@
             const filterWaterView = document.getElementById('filterWaterView').checked;
             const filterHasLot = document.getElementById('filterHasLot').checked;
             const searchTerm = (document.getElementById('searchBox').value || '').toLowerCase().trim();
+            const invMinCap = investorModeActive ? (parseFloat(document.getElementById('investorMinCap').value) || 0) : 0;
+            const invMinCF = investorModeActive ? (parseFloat(document.getElementById('investorMinCF').value) || -Infinity) : -Infinity;
 
             filteredListings = rawListings.filter((listing, idx) => {
                 listing.score = calculateScore(listing);
@@ -1974,7 +2321,17 @@
                 if (listing.score < scoreMin || listing.score > scoreMax) return false;
                 if (filterWaterView && !listing.waterView) return false;
                 if (filterHasLot && !listing.lot) return false;
-                
+
+                // Investor mode filters
+                if (investorModeActive && (invMinCap > 0 || invMinCF > -Infinity)) {
+                    var metrics = estimateInvestorMetrics(listing);
+                    listing._investorMetrics = metrics;
+                    if (metrics.capRate < invMinCap) return false;
+                    if (metrics.cashFlow < invMinCF) return false;
+                } else if (investorModeActive) {
+                    listing._investorMetrics = estimateInvestorMetrics(listing);
+                }
+
                 return true;
             });
             
@@ -2016,6 +2373,20 @@
                         return gapB - gapA;
                     });
                     break;
+                case 'caprate-desc':
+                    filteredListings.sort((a, b) => {
+                        const mA = a._investorMetrics || estimateInvestorMetrics(a);
+                        const mB = b._investorMetrics || estimateInvestorMetrics(b);
+                        return mB.capRate - mA.capRate;
+                    });
+                    break;
+                case 'cashflow-desc':
+                    filteredListings.sort((a, b) => {
+                        const mA = a._investorMetrics || estimateInvestorMetrics(a);
+                        const mB = b._investorMetrics || estimateInvestorMetrics(b);
+                        return mB.cashFlow - mA.cashFlow;
+                    });
+                    break;
             }
         }
         
@@ -2033,6 +2404,11 @@
             document.getElementById('scoreMax').value = '';
             document.getElementById('filterWaterView').checked = false;
             document.getElementById('filterHasLot').checked = false;
+            document.getElementById('investorModeToggle').checked = false;
+            document.getElementById('investorMinCap').value = '';
+            document.getElementById('investorMinCF').value = '';
+            investorModeActive = false;
+            document.getElementById('investorModeOptions').style.display = 'none';
             document.getElementById('sortBy').value = 'score-desc';
             applyFilters();
         }
@@ -2054,6 +2430,9 @@
         function switchTab(tabName) {
             document.title = (tabTitles[tabName] || 'Dashboard') + ' — BC Real Estate Dashboard';
             updateBottomNav(tabName);
+            // Sync mobile tab dropdown
+            var mobileSelect = document.getElementById('mobileTabSelect');
+            if (mobileSelect) mobileSelect.value = tabName;
             document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
             if (event && event.target) event.target.classList.add('active');
 
@@ -2087,6 +2466,9 @@
         function switchTabDirect(tabName) {
             document.title = (tabTitles[tabName] || 'Dashboard') + ' — BC Real Estate Dashboard';
             updateBottomNav(tabName);
+            // Sync mobile tab dropdown
+            var mobileSelect = document.getElementById('mobileTabSelect');
+            if (mobileSelect) mobileSelect.value = tabName;
             document.querySelectorAll('.tab-button').forEach(btn => {
                 btn.classList.remove('active');
                 if (btn.getAttribute('onclick') && btn.getAttribute('onclick').includes("'" + tabName + "'")) {
@@ -2113,6 +2495,7 @@
             if (tabName === 'pricehistory') renderPriceHistory();
             if (tabName === 'neighborhooddata') renderAreaIntel();
             if (tabName === 'datafreshness') initializeDataFreshness();
+            if (tabName === 'privateoffers') renderPrivateTargets();
             if (tabName === 'norealtorguide' || tabName === 'help') { /* static tabs */ }
         }
         
@@ -2138,10 +2521,14 @@
         }
         
         function renderListingsTable() {
+            // Update table header for investor mode
+            var investorTh = investorModeActive ? '<th class="sortable-th" onclick="sortTable(\'caprate-desc\')" style="color:#6f42c1;">Cap Rate</th><th class="sortable-th" onclick="sortTable(\'cashflow-desc\')" style="color:#6f42c1;">Cash Flow</th>' : '';
+            document.getElementById('listingsTableHead').innerHTML = '<tr><th style="width:40px;">★</th><th class="sortable-th" onclick="sortTable(\'addr\')">Address</th><th class="sortable-th" onclick="sortTable(\'neighborhood\')">Neighborhood</th><th class="sortable-th" onclick="sortTable(\'type\')">Type</th><th class="sortable-th" onclick="sortTable(\'price-asc\')">Price</th><th>Beds/Baths</th><th class="sortable-th" onclick="sortTable(\'sqft\')">SqFt</th><th class="sortable-th" onclick="sortTable(\'ppsf-asc\')">$/SqFt</th><th class="sortable-th" onclick="sortTable(\'dom-desc\')">DOM</th><th class="sortable-th" onclick="sortTable(\'year\')">Year</th><th class="sortable-th" onclick="sortTable(\'score-desc\')">Score</th>' + investorTh + '<th>Agg. Offer</th><th>Agent</th></tr>';
+
             const start = currentPage * listingsPerPage;
             const end = start + listingsPerPage;
             const pageData = filteredListings.slice(start, end);
-            
+
             if (filteredListings.length === 0) {
                 document.getElementById('listingsTableBody').innerHTML = '<tr><td colspan="13" style="text-align:center;padding:40px;color:#999;"><div style="font-size:18px;font-weight:700;color:#666;margin-bottom:8px;">No Properties Found</div><p>Try adjusting your filters or search terms</p></td></tr>';
                 document.getElementById('listingsPagination').innerHTML = '';
@@ -2160,6 +2547,13 @@
                 const starClass = isShortlisted ? 'shortlisted' : 'not-shortlisted';
                 const scoreClass = getScoreClass(listing.score);
                 
+                var investorCols = '';
+                if (investorModeActive) {
+                    const im = listing._investorMetrics || estimateInvestorMetrics(listing);
+                    const capColor = im.capRate >= 4 ? 'var(--success)' : im.capRate >= 2 ? '#856404' : 'var(--danger)';
+                    const cfColor = im.cashFlow >= 0 ? 'var(--success)' : 'var(--danger)';
+                    investorCols = `<td style="font-weight:600;color:${capColor};">${im.capRate.toFixed(1)}%</td><td style="font-weight:600;color:${cfColor};">${im.cashFlow >= 0 ? '' : '-'}$${Math.abs(im.cashFlow).toLocaleString()}</td>`;
+                }
                 html += `
                     <tr onclick="showDetailModal(${listing.listingIndex})">
                         <td><span class="star-toggle ${starClass}" onclick="event.stopPropagation(); toggleShortlist(${listing.listingIndex})">★</span></td>
@@ -2173,6 +2567,7 @@
                         <td>${listing.dom}</td>
                         <td>${listing.yearBuilt}</td>
                         <td><span class="score-badge ${scoreClass}">${Math.round(listing.score)}</span></td>
+                        ${investorCols}
                         <td>${formatPrice(offers.aggressive)}</td>
                         <td>${listing.agent}</td>
                     </tr>
@@ -2479,6 +2874,8 @@
                 html += '<span class="property-card-type-badge">' + listing.type + '</span>';
                 if (listing.waterView) html += '<span class="property-card-water">🌊</span>';
                 html += '<span class="property-card-star ' + starClass + '" onclick="event.stopPropagation(); toggleShortlist(' + listing.listingIndex + '); renderCardGrid();">★</span>';
+                var isComparing = comparisonSet.has(listing.listingIndex);
+                html += '<span style="position:absolute;top:8px;right:40px;background:' + (isComparing ? 'var(--secondary)' : 'rgba(0,0,0,0.5)') + ';color:white;width:26px;height:26px;display:flex;align-items:center;justify-content:center;border-radius:50%;cursor:pointer;font-size:14px;" onclick="event.stopPropagation(); toggleComparison(' + listing.listingIndex + ', event); renderCardGrid(); updateComparisonBar();" title="' + (isComparing ? 'Remove from comparison' : 'Add to comparison') + '">⚖</span>';
                 html += '</div>';
                 html += '<div class="property-card-body">';
                 html += '<div class="property-card-price">' + formatPrice(listing.price) + '</div>';
@@ -2492,9 +2889,23 @@
                 if (listing.yearBuilt) html += '<span>Built <strong>' + listing.yearBuilt + '</strong></span>';
                 html += '</div>';
                 html += '</div>';
+                if (investorModeActive) {
+                    var im = listing._investorMetrics || estimateInvestorMetrics(listing);
+                    var capColor = im.capRate >= 4 ? '#155724' : im.capRate >= 2 ? '#856404' : '#721c24';
+                    var capBg = im.capRate >= 4 ? '#d4edda' : im.capRate >= 2 ? '#fff3cd' : '#f8d7da';
+                    var cfColor = im.cashFlow >= 0 ? '#155724' : '#721c24';
+                    html += '<div style="display:flex;justify-content:space-between;padding:6px 12px;background:' + capBg + ';font-size:11px;">';
+                    html += '<span style="color:' + capColor + ';font-weight:600;">Cap: ' + im.capRate.toFixed(1) + '%</span>';
+                    html += '<span style="color:' + cfColor + ';font-weight:600;">CF: ' + (im.cashFlow >= 0 ? '' : '-') + '$' + Math.abs(im.cashFlow).toLocaleString() + '/mo</span>';
+                    html += '<span style="color:#666;">Rent: $' + im.rent.toLocaleString() + '/mo</span>';
+                    html += '</div>';
+                }
                 html += '<div class="property-card-footer">';
                 html += '<span class="property-card-dom">' + listing.dom + ' days on market</span>';
+                html += '<span style="display:flex;align-items:center;gap:6px;">';
+                html += '<span onclick="event.stopPropagation();openOfferBuilder(' + listing.listingIndex + ')" style="cursor:pointer;font-size:16px;color:var(--warning);" title="Quick Offer">&#9889;</span>';
                 html += '<span class="property-card-score ' + scoreClass + '" style="color: white; padding: 2px 8px; border-radius: 10px;">' + score + ' Score</span>';
+                html += '</span>';
                 html += '</div>';
                 html += '</div>';
             });
@@ -3204,8 +3615,12 @@
                     <span style="background: #f0f0f0; padding: 4px 12px; border-radius: 4px; font-size: 12px; font-weight: 600;">${listing.neighborhood}</span>
                 </div>
                 ${getMarketBanner(listing)}
-                <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">
+                <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap;">
                     ${getMotivationBadge(calculateMotivationScore(listing))}
+                    <button onclick="toggleComparison(${listingIndex});this.textContent=comparisonSet.has(${listingIndex})?'Remove from Compare':'Add to Compare';this.style.background=comparisonSet.has(${listingIndex})?'var(--secondary)':'white';this.style.color=comparisonSet.has(${listingIndex})?'white':'var(--secondary)';updateComparisonBar();" style="padding:4px 10px;border:1px solid var(--secondary);background:${comparisonSet.has(listingIndex) ? 'var(--secondary)' : 'white'};color:${comparisonSet.has(listingIndex) ? 'white' : 'var(--secondary)'};border-radius:4px;cursor:pointer;font-size:11px;font-weight:600;">
+                        ${comparisonSet.has(listingIndex) ? 'Remove from Compare' : 'Add to Compare'}
+                    </button>
+                    <span style="background:#e7f3ff;color:#004085;padding:4px 10px;border-radius:4px;font-size:11px;font-weight:600;">Est. Rent: $${estimateMonthlyRent(listing).toLocaleString()}/mo</span>
                 </div>
                 
                 <div class="property-detail-grid">
@@ -3300,6 +3715,20 @@
                     <span style="margin-left: 8px; opacity: 0.7;">|</span>
                     <a href="#" onclick="event.preventDefault();switchTab('mortgage');document.getElementById('mortPrice').value=${listing.price};calcMortgage();closeDetailModal();" style="color: var(--primary); margin-left: 8px;">Open in Calculator</a>
                 </div>
+
+                ${(function(){
+                    var trend = marketTrends[listing.neighborhood] || {};
+                    if (!trend.yoyChange && trend.yoyChange !== 0) return '';
+                    var h = '<div style="background:#f0f0f0;padding:14px 16px;border-radius:4px;margin:16px 0;">';
+                    h += '<div style="font-weight:700;color:var(--primary);margin-bottom:10px;">Neighborhood Summary: ' + listing.neighborhood + '</div>';
+                    h += '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;font-size:12px;">';
+                    h += '<div><span style="color:#888;">YoY Change</span><br><strong style="color:' + (trend.yoyChange >= 0 ? 'var(--success)' : 'var(--danger)') + ';">' + (trend.yoyChange > 0 ? '+' : '') + trend.yoyChange + '%</strong></div>';
+                    h += '<div><span style="color:#888;">Median DOM</span><br><strong>' + (trend.medianDOM || 'N/A') + ' days</strong></div>';
+                    h += '<div><span style="color:#888;">Inventory</span><br><strong>' + (trend.inventory || 'N/A') + '</strong></div>';
+                    h += '<div><span style="color:#888;">Sale/List</span><br><strong>' + (trend.avgSaleToList ? (trend.avgSaleToList * 100).toFixed(1) + '%' : 'N/A') + '</strong></div>';
+                    h += '</div></div>';
+                    return h;
+                })()}
 
                 ${(function(){
                     var comps = findComparables(listing);
@@ -4914,6 +5343,210 @@ Competitive: ${formatPrice(offers.competitive)}`;
             applyFilters();
         }
 
+        // ===== SAVED SEARCH ALERTS =====
+        function getSearchAlerts() {
+            return JSON.parse(localStorage.getItem('searchAlerts') || '[]');
+        }
+        function saveSearchAlerts(alerts) {
+            localStorage.setItem('searchAlerts', JSON.stringify(alerts));
+        }
+        function saveSearchAlert() {
+            var name = prompt('Name this search alert:');
+            if (!name) return;
+            var preset = {
+                search: document.getElementById('searchBox').value,
+                priceMin: document.getElementById('priceMin').value,
+                priceMax: document.getElementById('priceMax').value,
+                bedroomMin: document.getElementById('bedroomMin').value,
+                bathroomMin: document.getElementById('bathroomMin').value,
+                domMin: document.getElementById('domMin').value,
+                domMax: document.getElementById('domMax').value,
+                yearMin: document.getElementById('yearMin').value,
+                yearMax: document.getElementById('yearMax').value,
+                scoreMin: document.getElementById('scoreMin').value,
+                scoreMax: document.getElementById('scoreMax').value,
+                waterView: document.getElementById('filterWaterView').checked,
+                hasLot: document.getElementById('filterHasLot').checked,
+                regions: [...document.querySelectorAll('.region-filter:checked')].map(function(e){return e.value;}),
+                neighborhoods: [...document.querySelectorAll('.nbr-filter:checked')].map(function(e){return e.value;}),
+                types: [...document.querySelectorAll('.type-filter:checked')].map(function(e){return e.value;})
+            };
+            // Record current matching listing indices
+            var matchIndices = [];
+            rawListings.forEach(function(l, idx) {
+                if (matchesPreset(l, idx, preset)) matchIndices.push(idx);
+            });
+            var alerts = getSearchAlerts();
+            alerts.push({ name: name, preset: preset, matchedIndices: matchIndices, created: new Date().toISOString(), lastChecked: new Date().toISOString() });
+            saveSearchAlerts(alerts);
+            renderSearchAlerts();
+        }
+        function matchesPreset(listing, idx, p) {
+            var pMin = parseFloat(p.priceMin) || 0;
+            var pMax = parseFloat(p.priceMax) || Infinity;
+            var bedMin = parseInt(p.bedroomMin) || 0;
+            var bathMin = parseInt(p.bathroomMin) || 0;
+            var dMin = parseFloat(p.domMin) || 0;
+            var dMax = parseFloat(p.domMax) || Infinity;
+            var yMin = parseFloat(p.yearMin) || 0;
+            var yMax = parseFloat(p.yearMax) || Infinity;
+            var sMin = parseFloat(p.scoreMin) || 0;
+            var sMax = parseFloat(p.scoreMax) || 100;
+            var search = (p.search || '').toLowerCase().trim();
+            var score = calculateScore(listing);
+            if (search && !(listing.addr.toLowerCase().includes(search) || listing.neighborhood.toLowerCase().includes(search) || listing.type.toLowerCase().includes(search) || listing.region.toLowerCase().includes(search))) return false;
+            if (p.regions && p.regions.length > 0 && !p.regions.includes(listing.region)) return false;
+            if (p.neighborhoods && p.neighborhoods.length > 0 && !p.neighborhoods.includes(listing.neighborhood)) return false;
+            if (p.types && p.types.length > 0 && !p.types.includes(listing.type)) return false;
+            if (listing.price < pMin || listing.price > pMax) return false;
+            if (listing.beds < bedMin) return false;
+            if (listing.baths < bathMin) return false;
+            if (listing.dom < dMin || listing.dom > dMax) return false;
+            if (listing.yearBuilt < yMin || listing.yearBuilt > yMax) return false;
+            if (score < sMin || score > sMax) return false;
+            if (p.waterView && !listing.waterView) return false;
+            if (p.hasLot && !listing.lot) return false;
+            return true;
+        }
+        function checkSearchAlerts() {
+            var alerts = getSearchAlerts();
+            var hasNew = false;
+            alerts.forEach(function(alert) {
+                var currentMatches = [];
+                rawListings.forEach(function(l, idx) {
+                    if (matchesPreset(l, idx, alert.preset)) currentMatches.push(idx);
+                });
+                var newMatches = currentMatches.filter(function(idx) { return alert.matchedIndices.indexOf(idx) < 0; });
+                alert._newCount = newMatches.length;
+                alert._totalCount = currentMatches.length;
+                alert._newIndices = newMatches;
+                if (newMatches.length > 0) hasNew = true;
+            });
+            return { alerts: alerts, hasNew: hasNew };
+        }
+        function renderSearchAlerts() {
+            var result = checkSearchAlerts();
+            var alerts = result.alerts;
+            var el = document.getElementById('savedAlertsList');
+            if (!el || alerts.length === 0) { if (el) el.innerHTML = ''; return; }
+            var html = '<div style="font-weight:600;color:var(--primary);margin-bottom:4px;">Saved Alerts</div>';
+            alerts.forEach(function(alert, i) {
+                var badge = alert._newCount > 0 ? '<span style="background:var(--danger);color:white;padding:1px 6px;border-radius:8px;font-size:10px;margin-left:4px;">' + alert._newCount + ' new</span>' : '';
+                html += '<div style="display:flex;align-items:center;justify-content:space-between;padding:4px 0;border-bottom:1px solid #eee;">';
+                html += '<a href="#" onclick="loadSearchAlert(' + i + ');return false;" style="color:var(--secondary);text-decoration:none;">' + alert.name + ' (' + alert._totalCount + ')' + badge + '</a>';
+                html += '<span onclick="deleteSearchAlert(' + i + ')" style="cursor:pointer;color:#999;font-size:14px;" title="Delete alert">&times;</span>';
+                html += '</div>';
+            });
+            el.innerHTML = html;
+        }
+        function loadSearchAlert(index) {
+            var alerts = getSearchAlerts();
+            var alert = alerts[index];
+            if (!alert) return;
+            var p = alert.preset;
+            document.getElementById('searchBox').value = p.search || '';
+            document.getElementById('priceMin').value = p.priceMin || '';
+            document.getElementById('priceMax').value = p.priceMax || '';
+            document.getElementById('bedroomMin').value = p.bedroomMin || '';
+            document.getElementById('bathroomMin').value = p.bathroomMin || '';
+            document.getElementById('domMin').value = p.domMin || '';
+            document.getElementById('domMax').value = p.domMax || '';
+            document.getElementById('yearMin').value = p.yearMin || '';
+            document.getElementById('yearMax').value = p.yearMax || '';
+            document.getElementById('scoreMin').value = p.scoreMin || '';
+            document.getElementById('scoreMax').value = p.scoreMax || '';
+            document.getElementById('filterWaterView').checked = !!p.waterView;
+            document.getElementById('filterHasLot').checked = !!p.hasLot;
+            if (p.regions) { document.querySelectorAll('.region-filter').forEach(function(e){ e.checked = p.regions.includes(e.value); }); }
+            if (p.neighborhoods) { document.querySelectorAll('.nbr-filter').forEach(function(e){ e.checked = p.neighborhoods.includes(e.value); }); }
+            if (p.types) { document.querySelectorAll('.type-filter').forEach(function(e){ e.checked = p.types.includes(e.value); }); }
+            // Update matched indices to mark as checked
+            var currentMatches = [];
+            rawListings.forEach(function(l, idx) {
+                if (matchesPreset(l, idx, p)) currentMatches.push(idx);
+            });
+            alert.matchedIndices = currentMatches;
+            alert.lastChecked = new Date().toISOString();
+            alerts[index] = alert;
+            saveSearchAlerts(alerts);
+            applyFilters();
+            renderSearchAlerts();
+        }
+        function deleteSearchAlert(index) {
+            var alerts = getSearchAlerts();
+            alerts.splice(index, 1);
+            saveSearchAlerts(alerts);
+            renderSearchAlerts();
+        }
+
+        // ===== HOME BUYER RESCISSION PERIOD CALCULATOR =====
+        function calcRescission() {
+            var dateStr = document.getElementById('rescissionDate').value;
+            var price = parseFloat(document.getElementById('rescissionPrice').value) || 0;
+            if (!dateStr) {
+                document.getElementById('rescissionResult').innerHTML = '<p style="color:#888;">Enter the acceptance date to see your rescission deadline and fee.</p>';
+                return;
+            }
+            // BC statutory holidays (2025-2027 common dates)
+            var bcHolidays = [
+                // 2025
+                '2025-01-01','2025-02-17','2025-04-18','2025-05-19','2025-06-30','2025-07-01','2025-08-04','2025-09-01','2025-09-30','2025-10-13','2025-11-11','2025-12-25',
+                // 2026
+                '2026-01-01','2026-02-16','2026-04-03','2026-05-18','2026-06-21','2026-07-01','2026-08-03','2026-09-07','2026-09-30','2026-10-12','2026-11-11','2026-12-25',
+                // 2027
+                '2027-01-01','2027-02-15','2027-03-26','2027-05-24','2027-06-21','2027-07-01','2027-08-02','2027-09-06','2027-09-30','2027-10-11','2027-11-11','2027-12-25'
+            ];
+            function isBusinessDay(d) {
+                var day = d.getDay();
+                if (day === 0 || day === 6) return false; // weekend
+                var ds = d.toISOString().split('T')[0];
+                return bcHolidays.indexOf(ds) < 0;
+            }
+            function addBusinessDays(start, days) {
+                var current = new Date(start);
+                var added = 0;
+                while (added < days) {
+                    current.setDate(current.getDate() + 1);
+                    if (isBusinessDay(current)) added++;
+                }
+                return current;
+            }
+            var acceptDate = new Date(dateStr + 'T12:00:00');
+            var deadline = addBusinessDays(acceptDate, 3);
+            var rescissionFee = Math.round(price * 0.0025);
+            var dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+            var monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+            var fmtDate = function(d) {
+                return dayNames[d.getDay()] + ', ' + monthNames[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear();
+            };
+
+            // Check if any holidays fell in the period
+            var holidaysInPeriod = [];
+            var check = new Date(acceptDate);
+            for (var i = 0; i < 10; i++) {
+                check.setDate(check.getDate() + 1);
+                if (check > deadline) break;
+                var cs = check.toISOString().split('T')[0];
+                if (bcHolidays.indexOf(cs) >= 0) holidaysInPeriod.push(fmtDate(new Date(check)));
+            }
+
+            var html = '<div style="background:var(--primary);color:white;padding:14px;border-radius:8px;text-align:center;margin-bottom:12px;">';
+            html += '<div style="font-size:11px;opacity:0.8;">Rescission Deadline (end of day)</div>';
+            html += '<div style="font-size:20px;font-weight:700;">' + fmtDate(deadline) + '</div>';
+            html += '</div>';
+            html += '<table style="width:100%;font-size:12px;border-collapse:collapse;">';
+            html += '<tr><td style="padding:4px 0;">Acceptance Date:</td><td style="text-align:right;font-weight:600;">' + fmtDate(acceptDate) + '</td></tr>';
+            html += '<tr><td style="padding:4px 0;">Business Days:</td><td style="text-align:right;font-weight:600;">3 business days</td></tr>';
+            if (holidaysInPeriod.length > 0) {
+                html += '<tr><td style="padding:4px 0;color:var(--danger);">Holidays in period:</td><td style="text-align:right;font-weight:600;color:var(--danger);">' + holidaysInPeriod.join(', ') + '</td></tr>';
+            }
+            html += '<tr><td style="padding:4px 0;border-top:1px solid #ddd;padding-top:8px;">Rescission Fee (0.25%):</td><td style="text-align:right;font-weight:700;color:var(--danger);border-top:1px solid #ddd;padding-top:8px;">$' + rescissionFee.toLocaleString() + '</td></tr>';
+            html += '</table>';
+            html += '<div style="margin-top:10px;padding:8px;background:#fff3cd;border-radius:4px;font-size:11px;color:#856404;"><strong>Important:</strong> You must deliver written notice of rescission before midnight on the deadline date. The 0.25% fee is payable to the seller. Consult a lawyer for proper rescission procedure.</div>';
+            document.getElementById('rescissionResult').innerHTML = html;
+        }
+
         function validateAndGenerateOffer() {
             var prop = document.getElementById('propertySelect').value;
             if (!prop) {
@@ -4953,33 +5586,35 @@ Competitive: ${formatPrice(offers.competitive)}`;
             document.getElementById('mortCMHC').textContent = cmhc > 0 ? '$' + cmhc.toLocaleString() : 'N/A (20%+ down)';
 
             // BC Property Transfer Tax with FTHB exemption
-            var ptt1 = Math.min(price, 200000) * 0.01;
-            var ptt2 = Math.max(0, Math.min(price, 2000000) - 200000) * 0.02;
-            var ptt3 = Math.max(0, price - 2000000) * 0.03;
-            var pttTotal = ptt1 + ptt2 + ptt3;
             var fthbEl = document.getElementById('fthbCheckbox');
             var newBuildEl = document.getElementById('newBuildCheckbox');
             var isFTHB = fthbEl ? fthbEl.checked : false;
             var isNewBuild = newBuildEl ? newBuildEl.checked : false;
+            var standardPtt = calculatePTTWithFTHB(price, false, false).ptt;
+            var fthbResult = calculatePTTWithFTHB(price, isFTHB, isNewBuild);
+            var pttTotal = fthbResult.ptt;
             if (isFTHB) {
-                var fthbResult = calculatePTTWithFTHB(price, isFTHB, isNewBuild);
                 var fthbSavingsEl = document.getElementById('fthbSavings');
                 if (fthbResult.savings > 0 && fthbSavingsEl) {
                     fthbSavingsEl.style.display = 'block';
-                    fthbSavingsEl.innerHTML = '<strong>First-Time Home Buyer Savings: ' + formatPrice(fthbResult.savings) + '</strong><br><span style="font-size:12px;">PTT reduced from ' + formatPrice(Math.round(ptt1+ptt2+ptt3)) + ' to ' + formatPrice(fthbResult.ptt) + '</span>';
+                    fthbSavingsEl.innerHTML = '<strong>First-Time Home Buyer Savings: ' + formatPrice(fthbResult.savings) + '</strong><br><span style="font-size:12px;">PTT reduced from ' + formatPrice(standardPtt) + ' to ' + formatPrice(fthbResult.ptt) + '</span>';
                 } else if (fthbSavingsEl) {
                     fthbSavingsEl.style.display = 'block';
                     fthbSavingsEl.innerHTML = '<span style="font-size:12px;">FTHB exemption does not apply at this price (' + (isNewBuild ? 'max $1.15M new builds' : 'max $860K existing') + ').</span>';
                 }
-                pttTotal = fthbResult.ptt;
             } else {
                 var fthbSavingsEl2 = document.getElementById('fthbSavings');
                 if (fthbSavingsEl2) fthbSavingsEl2.style.display = 'none';
             }
 
-            document.getElementById('pttTier1').textContent = '$' + Math.round(ptt1).toLocaleString();
-            document.getElementById('pttTier2').textContent = '$' + Math.round(ptt2).toLocaleString();
-            document.getElementById('pttTier3').textContent = '$' + Math.round(ptt3).toLocaleString();
+            // PTT tier breakdown for display
+            var _ptt1 = Math.min(price, 200000) * 0.01;
+            var _ptt2 = Math.max(0, Math.min(price, 2000000) - 200000) * 0.02;
+            var _ptt3 = Math.max(0, Math.min(price, 3000000) - 2000000) * 0.03;
+            var _ptt4 = Math.max(0, price - 3000000) * 0.05;
+            document.getElementById('pttTier1').textContent = '$' + Math.round(_ptt1).toLocaleString();
+            document.getElementById('pttTier2').textContent = '$' + Math.round(_ptt2).toLocaleString();
+            document.getElementById('pttTier3').textContent = '$' + Math.round(_ptt3 + _ptt4).toLocaleString();
             document.getElementById('pttTotal').textContent = '$' + Math.round(pttTotal).toLocaleString();
             document.getElementById('ccPTT').textContent = '$' + Math.round(pttTotal).toLocaleString();
             document.getElementById('ccCMHC').textContent = cmhc > 0 ? '$' + cmhc.toLocaleString() : '$0';
@@ -5073,7 +5708,7 @@ Competitive: ${formatPrice(offers.competitive)}`;
                 { key: 'agg', label: 'Aggressive Offer', fmt: function(l) { return formatPrice(calculateOffers(l).aggressive); }, compare: 'lower' },
                 { key: 'str', label: 'Strategic Offer', fmt: function(l) { return formatPrice(calculateOffers(l).strategic); }, compare: 'lower' },
                 { key: 'comp', label: 'Competitive Offer', fmt: function(l) { return formatPrice(calculateOffers(l).competitive); }, compare: 'lower' },
-                { key: 'closingCost', label: 'Est. Closing Costs', fmt: function(l) { var p=l.price; var ptt=Math.min(p,200000)*0.01+Math.max(0,Math.min(p,2000000)-200000)*0.02+Math.max(0,p-2000000)*0.03; return '$'+Math.round(ptt+2500).toLocaleString(); }, compare: 'lower' },
+                { key: 'closingCost', label: 'Est. Closing Costs', fmt: function(l) { return '$'+Math.round(calculatePTTWithFTHB(l.price,false,false).ptt+2500).toLocaleString(); }, compare: 'lower' },
                 { key: 'waterView', label: 'Water View', fmt: function(l) { return l.waterView ? 'Yes' : 'No'; } }
             ];
 
@@ -5091,7 +5726,7 @@ Competitive: ${formatPrice(offers.competitive)}`;
                     if (field.key === 'agg') return calculateOffers(l).aggressive;
                     if (field.key === 'str') return calculateOffers(l).strategic;
                     if (field.key === 'comp') return calculateOffers(l).competitive;
-                    if (field.key === 'closingCost') { var p=l.price; return Math.min(p,200000)*0.01+Math.max(0,Math.min(p,2000000)-200000)*0.02+Math.max(0,p-2000000)*0.03+2500; }
+                    if (field.key === 'closingCost') { return calculatePTTWithFTHB(l.price,false,false).ptt+2500; }
                     return l[field.key];
                 });
                 var best = field.compare === 'lower' ? Math.min(...vals.filter(function(v){return typeof v==='number'&&isFinite(v);})) : (field.compare === 'higher' ? Math.max(...vals.filter(function(v){return typeof v==='number'&&isFinite(v);})) : null);
@@ -5108,6 +5743,24 @@ Competitive: ${formatPrice(offers.competitive)}`;
             html += '<div style="margin-top:16px;font-size:12px;color:#666;">Green highlights indicate the best value for that metric. Comparing ' + items.length + ' properties.</div>';
             document.getElementById('comparisonBody').innerHTML = html;
             document.getElementById('comparisonModal').classList.add('active');
+        }
+
+        function updateComparisonBar() {
+            var bar = document.getElementById('comparisonBar');
+            if (comparisonSet.size === 0) {
+                bar.style.display = 'none';
+                return;
+            }
+            bar.style.display = 'block';
+            var html = '<span style="font-size:11px;opacity:0.8;margin-right:8px;">' + comparisonSet.size + '/4 selected:</span>';
+            [...comparisonSet].forEach(function(idx) {
+                var l = rawListings[idx];
+                html += '<span style="background:rgba(255,255,255,0.2);padding:4px 8px;border-radius:12px;font-size:11px;display:inline-flex;align-items:center;gap:4px;">';
+                html += l.addr.substring(0, 25) + (l.addr.length > 25 ? '...' : '');
+                html += ' <span onclick="comparisonSet.delete(' + idx + ');updateComparisonBar();renderCurrentTab();" style="cursor:pointer;opacity:0.7;font-size:14px;" title="Remove">&times;</span>';
+                html += '</span>';
+            });
+            document.getElementById('comparisonBarItems').innerHTML = html;
         }
 
         // ===== TABLE COLUMN SORTING =====
@@ -5127,6 +5780,8 @@ Competitive: ${formatPrice(offers.competitive)}`;
                     case 'dom-desc': return dir * (b.dom - a.dom);
                     case 'year': return dir * ((b.yearBuilt||0) - (a.yearBuilt||0));
                     case 'score-desc': return dir * (b.score - a.score);
+                    case 'caprate-desc': var mA2 = a._investorMetrics || estimateInvestorMetrics(a); var mB2 = b._investorMetrics || estimateInvestorMetrics(b); return dir * (mB2.capRate - mA2.capRate);
+                    case 'cashflow-desc': var mA3 = a._investorMetrics || estimateInvestorMetrics(a); var mB3 = b._investorMetrics || estimateInvestorMetrics(b); return dir * (mB3.cashFlow - mA3.cashFlow);
                     default: return 0;
                 }
             });
@@ -5151,11 +5806,71 @@ Competitive: ${formatPrice(offers.competitive)}`;
 
         // ===== CLOSING COST ESTIMATOR =====
         function estimateClosingCosts(price) {
-            var ptt1 = Math.min(price, 200000) * 0.01;
-            var ptt2 = Math.max(0, Math.min(price, 2000000) - 200000) * 0.02;
-            var ptt3 = Math.max(0, price - 2000000) * 0.03;
-            var ptt = ptt1 + ptt2 + ptt3;
-            return { ptt: Math.round(ptt), legal: 2000, inspection: 550, appraisal: 400, titleIns: 300, total: Math.round(ptt + 3250) };
+            var result = calculatePTTWithFTHB(price, false, false);
+            var ptt = result.ptt;
+            return { ptt: ptt, legal: 2000, inspection: 550, appraisal: 400, titleIns: 300, total: Math.round(ptt + 3250) };
+        }
+
+        // ===== CASH TO CLOSE CALCULATOR =====
+        function calcCashToClose() {
+            var price = parseFloat(document.getElementById('ctcPrice').value) || 0;
+            var downPct = parseFloat(document.getElementById('ctcDownPct').value) || 0;
+            var fthb = document.getElementById('ctcFTHB').value;
+            var legal = parseFloat(document.getElementById('ctcLegal').value) || 0;
+            var inspection = parseFloat(document.getElementById('ctcInspection').value) || 0;
+            var appraisal = parseFloat(document.getElementById('ctcAppraisal').value) || 0;
+            var titleIns = parseFloat(document.getElementById('ctcTitleIns').value) || 0;
+            var taxAdj = parseFloat(document.getElementById('ctcTaxAdj').value) || 0;
+            var homeIns = parseFloat(document.getElementById('ctcHomeIns').value) || 0;
+            var moving = parseFloat(document.getElementById('ctcMoving').value) || 0;
+            var reserve = parseFloat(document.getElementById('ctcReserve').value) || 0;
+
+            var downPayment = Math.round(price * downPct / 100);
+            var mortAmount = price - downPayment;
+
+            // CMHC insurance (if less than 20% down)
+            var cmhc = 0;
+            if (downPct < 20 && price <= 1500000) {
+                var cmhcRate = downPct >= 15 ? 0.028 : downPct >= 10 ? 0.031 : 0.04;
+                cmhc = Math.round(mortAmount * cmhcRate);
+            }
+
+            // PTT
+            var isFTHB = fthb !== 'no';
+            var isNewBuild = fthb === 'new';
+            var pttResult = calculatePTTWithFTHB(price, isFTHB, isNewBuild);
+            var ptt = pttResult.ptt;
+            var fthbSavings = pttResult.exemption || 0;
+
+            // Total
+            var total = downPayment + cmhc + ptt + legal + inspection + appraisal + titleIns + taxAdj + homeIns + moving + reserve;
+
+            // Update displays
+            document.getElementById('ctcTotal').textContent = '$' + Math.round(total).toLocaleString();
+            document.getElementById('ctcGrandTotal').textContent = '$' + Math.round(total).toLocaleString();
+            document.getElementById('ctcDownAmt').textContent = '$' + downPayment.toLocaleString();
+            document.getElementById('ctcCMHC').textContent = cmhc > 0 ? '$' + cmhc.toLocaleString() : '$0';
+            document.getElementById('ctcPTT').textContent = '$' + Math.round(ptt).toLocaleString();
+            document.getElementById('ctcFTHBSavings').textContent = fthbSavings > 0 ? '-$' + Math.round(fthbSavings).toLocaleString() : '$0';
+            document.getElementById('ctcLegalAmt').textContent = '$' + legal.toLocaleString();
+            document.getElementById('ctcInspAmt').textContent = '$' + inspection.toLocaleString();
+            document.getElementById('ctcApprAmt').textContent = '$' + appraisal.toLocaleString();
+            document.getElementById('ctcTitleAmt').textContent = '$' + titleIns.toLocaleString();
+            document.getElementById('ctcTaxAdjAmt').textContent = '$' + taxAdj.toLocaleString();
+            document.getElementById('ctcHomeInsAmt').textContent = '$' + homeIns.toLocaleString();
+            document.getElementById('ctcMovingAmt').textContent = '$' + moving.toLocaleString();
+            document.getElementById('ctcReserveAmt').textContent = '$' + reserve.toLocaleString();
+
+            // Notes
+            var notes = [];
+            if (cmhc > 0) notes.push('CMHC insurance of $' + cmhc.toLocaleString() + ' is added to your mortgage balance, but required at closing.');
+            if (fthbSavings > 0) notes.push('FTHB exemption saves you $' + Math.round(fthbSavings).toLocaleString() + ' on Property Transfer Tax.');
+            if (downPct < 5) notes.push('Minimum 5% down payment required in Canada for homes under $500K.');
+            if (price > 1000000 && downPct < 20) notes.push('Properties over $1M require minimum 20% down payment.');
+            if (reserve < 5000) notes.push('Consider increasing your emergency reserve. 3-6 months of expenses is recommended.');
+            var withoutReserve = total - reserve;
+            notes.push('Without emergency reserve: $' + Math.round(withoutReserve).toLocaleString() + ' needed at closing.');
+            document.getElementById('ctcNotes').innerHTML = '<strong>Notes:</strong><ul style="margin:6px 0 0;padding-left:20px;">' + notes.map(function(n) { return '<li style="margin-bottom:4px;">' + n + '</li>'; }).join('') + '</ul>';
         }
 
         // ===== SHORTLIST NOTES =====
@@ -5248,6 +5963,12 @@ Competitive: ${formatPrice(offers.competitive)}`;
                 recentHtml += '</div>';
             });
             document.getElementById('dashRecentListings').innerHTML = recentHtml;
+
+            // Private targets stats
+            var ptStats = getPrivateTargetStats();
+            document.getElementById('dashPrivateTargets').textContent = ptStats.total;
+            document.getElementById('dashLettersSent').textContent = ptStats.lettersSent;
+            document.getElementById('dashOffersOut').textContent = ptStats.offersOut;
 
             // Profile summary
             var profile = JSON.parse(localStorage.getItem('buyerProfile') || '{}');
@@ -5420,6 +6141,8 @@ Competitive: ${formatPrice(offers.competitive)}`;
             var mgmtPct = parseFloat(document.getElementById('roiMgmt').value) || 0;
             var strata = parseFloat(document.getElementById('roiStrata').value) || 0;
             var vacancyPct = parseFloat(document.getElementById('roiVacancy').value) || 0;
+            var appreciationPct = parseFloat(document.getElementById('roiAppreciation').value) || 0;
+            var rentIncreasePct = parseFloat(document.getElementById('roiRentIncrease').value) || 0;
 
             var downPayment = price * downPct / 100;
             var mortgageAmount = price - downPayment;
@@ -5444,6 +6167,13 @@ Competitive: ${formatPrice(offers.competitive)}`;
             var cashOnCash = totalInvestment > 0 ? (annualCashFlow / totalInvestment) * 100 : 0;
             var grm = grossIncome > 0 ? (price / (grossIncome * 12)).toFixed(1) : '--';
 
+            // New metrics: DSCR, Price-to-Rent, 1% Rule, Break-Even
+            var annualDebtService = mortPayment * 12;
+            var dscr = annualDebtService > 0 ? (noi / annualDebtService) : 0;
+            var priceToRent = rent > 0 ? (price / (rent * 12)) : 0;
+            var onePercentRatio = price > 0 ? (rent / price * 100) : 0;
+            var breakEvenMonths = monthlyCashFlow > 0 ? Math.ceil(totalInvestment / monthlyCashFlow) : 0;
+
             document.getElementById('roiCashFlow').textContent = (monthlyCashFlow >= 0 ? '' : '-') + '$' + Math.abs(Math.round(monthlyCashFlow)).toLocaleString();
             document.getElementById('roiCashFlow').parentElement.style.background = monthlyCashFlow >= 0 ? 'linear-gradient(135deg, #28a745 0%, #20c997 100%)' : 'linear-gradient(135deg, #dc3545 0%, #e83e8c 100%)';
             document.getElementById('roiCapRate').textContent = capRate.toFixed(2) + '%';
@@ -5457,6 +6187,33 @@ Competitive: ${formatPrice(offers.competitive)}`;
             document.getElementById('roiAnnualCF').textContent = (annualCashFlow >= 0 ? '' : '-') + '$' + Math.abs(Math.round(annualCashFlow)).toLocaleString();
             document.getElementById('roiGRM').textContent = grm;
 
+            // New metric displays
+            var dscrEl = document.getElementById('roiDSCR');
+            if (annualDebtService > 0) {
+                dscrEl.textContent = dscr.toFixed(2) + 'x';
+                dscrEl.style.color = dscr >= 1.25 ? 'var(--success)' : dscr >= 1.0 ? '#856404' : 'var(--danger)';
+            } else { dscrEl.textContent = 'N/A (no debt)'; dscrEl.style.color = ''; }
+
+            var ptrEl = document.getElementById('roiPriceToRent');
+            if (rent > 0) {
+                ptrEl.textContent = priceToRent.toFixed(1) + 'x';
+                ptrEl.style.color = priceToRent <= 15 ? 'var(--success)' : priceToRent <= 20 ? '#856404' : 'var(--danger)';
+            } else { ptrEl.textContent = '--'; ptrEl.style.color = ''; }
+
+            var oneEl = document.getElementById('roi1PctRule');
+            if (price > 0 && rent > 0) {
+                oneEl.textContent = onePercentRatio.toFixed(2) + '%';
+                oneEl.style.color = onePercentRatio >= 1.0 ? 'var(--success)' : onePercentRatio >= 0.7 ? '#856404' : 'var(--danger)';
+            } else { oneEl.textContent = '--'; oneEl.style.color = ''; }
+
+            var beEl = document.getElementById('roiBreakEven');
+            if (monthlyCashFlow > 0) {
+                var beYrs = Math.floor(breakEvenMonths / 12);
+                var beMos = breakEvenMonths % 12;
+                beEl.textContent = (beYrs > 0 ? beYrs + 'y ' : '') + beMos + 'mo';
+                beEl.style.color = breakEvenMonths <= 60 ? 'var(--success)' : breakEvenMonths <= 120 ? '#856404' : 'var(--danger)';
+            } else { beEl.textContent = monthlyCashFlow < 0 ? 'Never (negative CF)' : '--'; beEl.style.color = monthlyCashFlow < 0 ? 'var(--danger)' : ''; }
+
             // Verdict
             var verdict = '';
             if (capRate >= 6) verdict = '<div style="color:#155724;font-weight:700;">Excellent Investment</div><p>Cap rate of ' + capRate.toFixed(1) + '% is well above average for BC.</p>';
@@ -5466,29 +6223,92 @@ Competitive: ${formatPrice(offers.competitive)}`;
 
             if (monthlyCashFlow < 0) verdict += '<p style="background:#f8d7da;padding:8px 12px;border-radius:4px;margin-top:8px;"><strong>Warning:</strong> Negative cash flow of $' + Math.abs(Math.round(monthlyCashFlow)).toLocaleString() + '/month.</p>';
             else if (monthlyCashFlow > 0) verdict += '<p style="background:#d4edda;padding:8px 12px;border-radius:4px;margin-top:8px;"><strong>Positive cash flow</strong> of $' + Math.round(monthlyCashFlow).toLocaleString() + '/month.</p>';
+
+            // Additional verdict insights
+            if (dscr > 0 && dscr < 1.0) verdict += '<p style="background:#f8d7da;padding:8px 12px;border-radius:4px;margin-top:8px;"><strong>DSCR below 1.0:</strong> Income does not cover debt service. Lenders typically require DSCR &ge; 1.25.</p>';
+            else if (dscr >= 1.25) verdict += '<p style="background:#d4edda;padding:8px 12px;border-radius:4px;margin-top:8px;"><strong>DSCR ' + dscr.toFixed(2) + 'x:</strong> Meets most lender requirements (&ge; 1.25x).</p>';
+
+            if (onePercentRatio >= 1.0) verdict += '<p style="background:#d4edda;padding:8px 12px;border-radius:4px;margin-top:8px;"><strong>Passes 1% Rule:</strong> Monthly rent is ' + onePercentRatio.toFixed(2) + '% of purchase price.</p>';
+            else if (price > 0 && rent > 0) verdict += '<p style="background:#fff3cd;padding:8px 12px;border-radius:4px;margin-top:8px;"><strong>Below 1% Rule:</strong> Monthly rent is only ' + onePercentRatio.toFixed(2) + '% of purchase price (target &ge; 1%).</p>';
+
             document.getElementById('roiVerdict').innerHTML = verdict;
 
-            // 5-year projection
+            // 5-year projection with appreciation and rent increases
             var projHtml = '';
             var cumCF = 0;
             var remainingMort = mortgageAmount;
+            var projRent = rent;
+            var projOther = otherIncome;
+            var projValue = price;
             for (var yr = 1; yr <= 5; yr++) {
-                cumCF += annualCashFlow;
-                var principalPaid = 0;
+                projValue = price * Math.pow(1 + appreciationPct / 100, yr);
+                projRent = rent * Math.pow(1 + rentIncreasePct / 100, yr);
+                projOther = otherIncome * Math.pow(1 + rentIncreasePct / 100, yr);
+                var projGross = projRent + projOther;
+                var projEff = projGross * (1 - vacancyPct / 100);
+                var projMgmt = projRent * mgmtPct / 100;
+                var projOpEx = tax + insurance + maintenance + projMgmt + strata;
+                var projAnnualCF = (projEff - projOpEx - mortPayment) * 12;
+                cumCF += projAnnualCF;
                 var tempBal = remainingMort;
                 for (var m = 0; m < 12; m++) {
                     var intPmt = tempBal * monthlyRate;
                     var prinPmt = mortPayment - intPmt;
-                    if (prinPmt > 0) { principalPaid += prinPmt; tempBal -= prinPmt; }
+                    if (prinPmt > 0) { tempBal -= prinPmt; }
                 }
                 remainingMort = tempBal;
-                var totalReturn = cumCF + (mortgageAmount - remainingMort);
+                var equityBuilt = projValue - Math.max(remainingMort, 0);
+                var totalReturn = cumCF + (projValue - price) + (mortgageAmount - remainingMort);
                 projHtml += '<tr><td style="padding:6px 8px;border-bottom:1px solid #eee;">Year ' + yr + '</td>';
-                projHtml += '<td style="padding:6px 8px;text-align:right;border-bottom:1px solid #eee;color:' + (annualCashFlow >= 0 ? 'var(--success)' : 'var(--danger)') + ';font-weight:600;">' + (annualCashFlow >= 0 ? '' : '-') + '$' + Math.abs(Math.round(annualCashFlow)).toLocaleString() + '</td>';
-                projHtml += '<td style="padding:6px 8px;text-align:right;border-bottom:1px solid #eee;font-weight:600;">$' + Math.round(mortgageAmount - remainingMort).toLocaleString() + '</td>';
+                projHtml += '<td style="padding:6px 8px;text-align:right;border-bottom:1px solid #eee;color:' + (projAnnualCF >= 0 ? 'var(--success)' : 'var(--danger)') + ';font-weight:600;">' + (projAnnualCF >= 0 ? '' : '-') + '$' + Math.abs(Math.round(projAnnualCF)).toLocaleString() + '</td>';
+                projHtml += '<td style="padding:6px 8px;text-align:right;border-bottom:1px solid #eee;font-weight:600;">$' + Math.round(projValue).toLocaleString() + '</td>';
+                projHtml += '<td style="padding:6px 8px;text-align:right;border-bottom:1px solid #eee;font-weight:600;">$' + Math.round(equityBuilt).toLocaleString() + '</td>';
                 projHtml += '<td style="padding:6px 8px;text-align:right;border-bottom:1px solid #eee;font-weight:600;">$' + Math.round(totalReturn).toLocaleString() + '</td></tr>';
             }
             document.getElementById('roiProjectionBody').innerHTML = projHtml;
+
+            // Scenario comparison: Conservative / Base / Optimistic
+            var scenarios = [
+                { name: 'Conservative', appreciation: Math.max(appreciationPct - 2, 0), rentInc: Math.max(rentIncreasePct - 1, 0), vacancy: Math.min(vacancyPct + 3, 15), color: '#dc3545', bg: '#f8d7da' },
+                { name: 'Base Case', appreciation: appreciationPct, rentInc: rentIncreasePct, vacancy: vacancyPct, color: '#004085', bg: '#e7f3ff' },
+                { name: 'Optimistic', appreciation: appreciationPct + 2, rentInc: rentIncreasePct + 1, vacancy: Math.max(vacancyPct - 2, 0), color: '#155724', bg: '#d4edda' }
+            ];
+            var scenHtml = '';
+            scenarios.forEach(function(sc) {
+                var scValue5 = price * Math.pow(1 + sc.appreciation / 100, 5);
+                var scRent5 = rent * Math.pow(1 + sc.rentInc / 100, 5);
+                var scGross5 = (scRent5 + otherIncome) * (1 - sc.vacancy / 100);
+                var scMgmt5 = scRent5 * mgmtPct / 100;
+                var scOpEx5 = tax + insurance + maintenance + scMgmt5 + strata;
+                var scMonthlyCF5 = scGross5 - scOpEx5 - mortPayment;
+                var scCumCF = 0;
+                var scBal = mortgageAmount;
+                for (var y = 1; y <= 5; y++) {
+                    var yRent = rent * Math.pow(1 + sc.rentInc / 100, y);
+                    var yGross = (yRent + otherIncome) * (1 - sc.vacancy / 100);
+                    var yMgmt = yRent * mgmtPct / 100;
+                    var yOpEx = tax + insurance + maintenance + yMgmt + strata;
+                    scCumCF += (yGross - yOpEx - mortPayment) * 12;
+                    for (var mm = 0; mm < 12; mm++) {
+                        var ii = scBal * monthlyRate;
+                        var pp = mortPayment - ii;
+                        if (pp > 0) scBal -= pp;
+                    }
+                }
+                var scAppreciation = scValue5 - price;
+                var scEquityPaid = mortgageAmount - scBal;
+                var scTotalReturn = scCumCF + scAppreciation + scEquityPaid;
+                var scROI = totalInvestment > 0 ? (scTotalReturn / totalInvestment * 100) : 0;
+                scenHtml += '<div style="background:' + sc.bg + ';padding:14px;border-radius:8px;border:1px solid ' + sc.color + '30;">';
+                scenHtml += '<div style="font-weight:700;color:' + sc.color + ';margin-bottom:8px;font-size:13px;">' + sc.name + '</div>';
+                scenHtml += '<div style="font-size:11px;color:#666;margin-bottom:6px;">Appr: ' + sc.appreciation.toFixed(1) + '% | Rent+: ' + sc.rentInc.toFixed(1) + '% | Vac: ' + sc.vacancy + '%</div>';
+                scenHtml += '<div style="margin-bottom:4px;font-size:12px;">5yr Value: <strong>$' + Math.round(scValue5).toLocaleString() + '</strong></div>';
+                scenHtml += '<div style="margin-bottom:4px;font-size:12px;">5yr Cash Flow: <strong style="color:' + (scCumCF >= 0 ? 'var(--success)' : 'var(--danger)') + ';">' + (scCumCF >= 0 ? '' : '-') + '$' + Math.abs(Math.round(scCumCF)).toLocaleString() + '</strong></div>';
+                scenHtml += '<div style="margin-bottom:4px;font-size:12px;">Yr5 Monthly CF: <strong style="color:' + (scMonthlyCF5 >= 0 ? 'var(--success)' : 'var(--danger)') + ';">' + (scMonthlyCF5 >= 0 ? '' : '-') + '$' + Math.abs(Math.round(scMonthlyCF5)).toLocaleString() + '</strong></div>';
+                scenHtml += '<div style="font-size:12px;">Total 5yr ROI: <strong style="color:' + sc.color + ';">' + scROI.toFixed(1) + '%</strong></div>';
+                scenHtml += '</div>';
+            });
+            document.getElementById('roiScenarios').innerHTML = scenHtml;
         }
 
         // ===== LENDER DIRECTORY =====
@@ -7036,6 +7856,527 @@ Competitive: ${formatPrice(offers.competitive)}`;
         };
 
         // ===================================================================
+        // PRIVATE OFFERS — TARGET PROPERTY MANAGER
+        // ===================================================================
+        function loadPrivateTargets() {
+            return JSON.parse(localStorage.getItem('privateTargets') || '[]');
+        }
+        function savePrivateTargets(targets) {
+            localStorage.setItem('privateTargets', JSON.stringify(targets));
+        }
+
+        var _privateTargetStatuses = ['New', 'Letter Sent', 'Response Received', 'Negotiating', 'Offer Submitted', 'Accepted', 'Declined', 'No Response'];
+        var _statusColors = { 'New': '#6c757d', 'Letter Sent': '#0d6efd', 'Response Received': '#198754', 'Negotiating': '#fd7e14', 'Offer Submitted': '#6610f2', 'Accepted': '#198754', 'Declined': '#dc3545', 'No Response': '#adb5bd' };
+
+        function renderPrivateTargets() {
+            var targets = loadPrivateTargets();
+            var container = document.getElementById('privateTargetsList');
+            var emptyEl = document.getElementById('emptyPrivateTargets');
+            if (!container) return;
+            if (targets.length === 0) {
+                container.innerHTML = '';
+                if (emptyEl) emptyEl.style.display = 'block';
+                return;
+            }
+            if (emptyEl) emptyEl.style.display = 'none';
+            var html = '<div style="display:grid;gap:12px;">';
+            targets.forEach(function(t, i) {
+                var pttResult = calculatePTTWithFTHB(t.estimatedValue || 0, false, false);
+                var monthly = Math.round((t.estimatedValue || 0) * 0.8 * (0.055/12 * Math.pow(1+0.055/12,300)) / (Math.pow(1+0.055/12,300)-1));
+                var daysSince = t.addedDate ? Math.floor((new Date() - new Date(t.addedDate)) / (1000*60*60*24)) : 0;
+                var statusColor = _statusColors[t.status] || '#6c757d';
+                html += '<div style="background:white;border:1px solid #e0e0e0;border-radius:8px;padding:16px;border-left:4px solid ' + statusColor + ';">';
+                html += '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;flex-wrap:wrap;gap:8px;">';
+                html += '<div><div style="font-weight:700;color:var(--primary);font-size:14px;">' + (t.address || 'Unknown') + '</div>';
+                html += '<div style="font-size:12px;color:#888;">' + (t.city || '') + (t.postalCode ? ' ' + t.postalCode : '') + ' &middot; ' + (t.propertyType || 'Unknown') + (t.yearBuilt ? ' &middot; Built ' + t.yearBuilt : '') + '</div></div>';
+                html += '<span style="background:' + statusColor + ';color:white;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600;">' + t.status + '</span>';
+                html += '</div>';
+                html += '<div style="display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:#555;margin-bottom:10px;">';
+                html += '<span><strong>Est. Value:</strong> ' + formatPrice(t.estimatedValue || 0) + '</span>';
+                html += '<span><strong>Est. PTT:</strong> ' + formatPrice(pttResult.ptt) + '</span>';
+                html += '<span><strong>Est. Monthly:</strong> ' + formatPrice(monthly) + '/mo @ 20% down</span>';
+                if (daysSince > 0) html += '<span><strong>Added:</strong> ' + daysSince + ' days ago</span>';
+                html += '</div>';
+                if (t.notes) html += '<div style="font-size:12px;color:#666;margin-bottom:10px;font-style:italic;">' + t.notes + '</div>';
+                html += '<div style="display:flex;gap:8px;flex-wrap:wrap;">';
+                html += '<button onclick="editPrivateTarget(' + i + ')" style="padding:4px 12px;font-size:11px;border:1px solid #ccc;border-radius:4px;background:white;cursor:pointer;">Edit</button>';
+                html += '<button onclick="showLetterGenerator(' + i + ')" style="padding:4px 12px;font-size:11px;border:1px solid var(--secondary);color:var(--secondary);border-radius:4px;background:white;cursor:pointer;">Draft Letter</button>';
+                html += '<button onclick="showPrivateOfferForm(' + i + ')" style="padding:4px 12px;font-size:11px;border:1px solid var(--primary);color:var(--primary);border-radius:4px;background:white;cursor:pointer;">Draft Offer</button>';
+                html += '<select onchange="updateTargetStatus(' + i + ', this.value)" style="padding:4px 8px;font-size:11px;border:1px solid #ccc;border-radius:4px;">';
+                _privateTargetStatuses.forEach(function(s) {
+                    html += '<option value="' + s + '"' + (t.status === s ? ' selected' : '') + '>' + s + '</option>';
+                });
+                html += '</select>';
+                html += '<button onclick="deletePrivateTarget(' + i + ')" style="padding:4px 12px;font-size:11px;border:1px solid #dc3545;color:#dc3545;border-radius:4px;background:white;cursor:pointer;">Delete</button>';
+                html += '</div></div>';
+            });
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        function addPrivateTarget() {
+            showPrivateTargetForm(-1);
+        }
+        function editPrivateTarget(index) {
+            showPrivateTargetForm(index);
+        }
+
+        function showPrivateTargetForm(index) {
+            var targets = loadPrivateTargets();
+            var t = index >= 0 ? targets[index] : {};
+            var isEdit = index >= 0;
+            var html = '<div style="max-height:80vh;overflow:auto;">';
+            html += '<h3 style="color:var(--primary);margin-bottom:16px;">' + (isEdit ? 'Edit' : 'Add') + ' Target Property</h3>';
+            html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">';
+            html += '<div class="offer-input-group"><label>Property Address *</label><input type="text" id="ptAddr" value="' + (t.address||'') + '"></div>';
+            html += '<div class="offer-input-group"><label>City/Area *</label><input type="text" id="ptCity" value="' + (t.city||'') + '"></div>';
+            html += '<div class="offer-input-group"><label>Postal Code</label><input type="text" id="ptPostal" value="' + (t.postalCode||'') + '"></div>';
+            html += '<div class="offer-input-group"><label>Property Type *</label><select id="ptType">';
+            ['House','Townhouse','Apt/Condo','Duplex','Land/Lot','Mfd Home'].forEach(function(pt) {
+                html += '<option' + (t.propertyType===pt?' selected':'') + '>' + pt + '</option>';
+            });
+            html += '</select></div>';
+            html += '<div class="offer-input-group"><label>Estimated Value *</label><input type="number" id="ptValue" value="' + (t.estimatedValue||'') + '"></div>';
+            html += '<div class="offer-input-group"><label>BC Assessment Value</label><input type="number" id="ptAssessment" value="' + (t.assessmentValue||'') + '"></div>';
+            html += '<div class="offer-input-group"><label>Lot Size</label><input type="text" id="ptLot" value="' + (t.lotSize||'') + '"></div>';
+            html += '<div class="offer-input-group"><label>Year Built</label><input type="number" id="ptYear" value="' + (t.yearBuilt||'') + '"></div>';
+            html += '<div class="offer-input-group"><label>Bedrooms</label><input type="number" id="ptBeds" value="' + (t.beds||'') + '"></div>';
+            html += '<div class="offer-input-group"><label>Bathrooms</label><input type="number" id="ptBaths" value="' + (t.baths||'') + '"></div>';
+            html += '<div class="offer-input-group"><label>Square Footage</label><input type="number" id="ptSqft" value="' + (t.sqft||'') + '"></div>';
+            html += '<div class="offer-input-group"><label>Owner Name(s)</label><input type="text" id="ptOwner" value="' + (t.ownerName||'') + '"></div>';
+            html += '<div class="offer-input-group"><label>Owner Contact</label><input type="text" id="ptOwnerContact" value="' + (t.ownerContact||'') + '"></div>';
+            html += '<div class="offer-input-group"><label>PID (Parcel ID)</label><input type="text" id="ptPID" value="' + (t.pid||'') + '"></div>';
+            html += '<div class="offer-input-group"><label>Zoning</label><input type="text" id="ptZoning" value="' + (t.zoning||'') + '"></div>';
+            html += '<div class="offer-input-group"><label>Status *</label><select id="ptStatus">';
+            _privateTargetStatuses.forEach(function(s) {
+                html += '<option' + (t.status===s?' selected':'') + '>' + s + '</option>';
+            });
+            html += '</select></div>';
+            html += '</div>';
+            html += '<div class="offer-input-group" style="margin-top:12px;"><label>Why This Property</label><textarea id="ptNotes" rows="3" style="width:100%;padding:8px;border:1px solid #ccc;border-radius:4px;font-size:13px;">' + (t.notes||'') + '</textarea></div>';
+            html += '<div style="display:flex;gap:12px;margin-top:16px;">';
+            html += '<button class="btn-primary" onclick="savePrivateTargetForm(' + index + ')" style="padding:10px 24px;">Save</button>';
+            html += '<button onclick="document.getElementById(\'genericModal\').classList.remove(\'active\')" style="padding:10px 24px;border:1px solid #ccc;border-radius:6px;background:white;cursor:pointer;">Cancel</button>';
+            html += '</div></div>';
+            showGenericModal(html);
+        }
+
+        function savePrivateTargetForm(index) {
+            var addr = document.getElementById('ptAddr').value.trim();
+            var city = document.getElementById('ptCity').value.trim();
+            var value = parseFloat(document.getElementById('ptValue').value);
+            if (!addr || !city || !value) { alert('Please fill in Address, City, and Estimated Value.'); return; }
+            var targets = loadPrivateTargets();
+            var t = index >= 0 ? targets[index] : { addedDate: new Date().toISOString() };
+            t.address = addr;
+            t.city = city;
+            t.postalCode = document.getElementById('ptPostal').value.trim();
+            t.propertyType = document.getElementById('ptType').value;
+            t.estimatedValue = value;
+            t.assessmentValue = parseFloat(document.getElementById('ptAssessment').value) || null;
+            t.lotSize = document.getElementById('ptLot').value.trim();
+            t.yearBuilt = parseInt(document.getElementById('ptYear').value) || null;
+            t.beds = parseInt(document.getElementById('ptBeds').value) || null;
+            t.baths = parseInt(document.getElementById('ptBaths').value) || null;
+            t.sqft = parseInt(document.getElementById('ptSqft').value) || null;
+            t.ownerName = document.getElementById('ptOwner').value.trim();
+            t.ownerContact = document.getElementById('ptOwnerContact').value.trim();
+            t.pid = document.getElementById('ptPID').value.trim();
+            t.zoning = document.getElementById('ptZoning').value.trim();
+            t.status = document.getElementById('ptStatus').value;
+            t.notes = document.getElementById('ptNotes').value.trim();
+            if (index >= 0) targets[index] = t; else targets.push(t);
+            savePrivateTargets(targets);
+            document.getElementById('genericModal').classList.remove('active');
+            renderPrivateTargets();
+        }
+
+        function deletePrivateTarget(index) {
+            if (!confirm('Delete this target property?')) return;
+            var targets = loadPrivateTargets();
+            targets.splice(index, 1);
+            savePrivateTargets(targets);
+            renderPrivateTargets();
+        }
+
+        function updateTargetStatus(index, status) {
+            var targets = loadPrivateTargets();
+            targets[index].status = status;
+            targets[index].statusDate = new Date().toISOString();
+            savePrivateTargets(targets);
+            renderPrivateTargets();
+        }
+
+        function getPrivateTargetStats() {
+            var targets = loadPrivateTargets();
+            var lettersSent = targets.filter(function(t) { return ['Letter Sent','Response Received','Negotiating','Offer Submitted','Accepted','Declined','No Response'].indexOf(t.status) >= 0; }).length;
+            var offersOut = targets.filter(function(t) { return ['Offer Submitted','Accepted'].indexOf(t.status) >= 0; }).length;
+            return { total: targets.length, lettersSent: lettersSent, offersOut: offersOut };
+        }
+
+        // ===================================================================
+        // PRIVATE OFFERS — LETTER OF INTENT GENERATOR
+        // ===================================================================
+        function showLetterGenerator(index) {
+            var targets = loadPrivateTargets();
+            var t = targets[index];
+            var profile = JSON.parse(localStorage.getItem('buyerProfile') || '{}');
+            var html = '<div style="max-height:80vh;overflow:auto;">';
+            html += '<h3 style="color:var(--primary);margin-bottom:4px;">Letter of Intent — ' + t.address + '</h3>';
+            html += '<p style="font-size:12px;color:#888;margin-bottom:16px;">Generate a professional expression of interest to gauge the owner\'s willingness to sell.</p>';
+            html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">';
+            html += '<div class="offer-input-group"><label>Your Name</label><input type="text" id="loiName" value="' + (profile.name || '') + '"></div>';
+            html += '<div class="offer-input-group"><label>Your Email</label><input type="text" id="loiEmail" value="' + (profile.email || '') + '"></div>';
+            html += '<div class="offer-input-group"><label>Your Phone</label><input type="text" id="loiPhone" value="' + (profile.phone || '') + '"></div>';
+            html += '<div class="offer-input-group"><label>Offer Price Range</label>';
+            html += '<div style="display:flex;gap:6px;align-items:center;"><input type="number" id="loiPriceLow" placeholder="Low" value="' + Math.round((t.estimatedValue||0)*0.85) + '" style="width:45%;">';
+            html += '<span>to</span><input type="number" id="loiPriceHigh" placeholder="High" value="' + Math.round((t.estimatedValue||0)*0.95) + '" style="width:45%;"></div></div>';
+            html += '</div>';
+            html += '<div class="offer-input-group" style="margin-top:12px;"><label>Reason for Interest</label>';
+            html += '<div style="display:flex;flex-wrap:wrap;gap:8px;">';
+            ['I love the neighborhood','Looking for a family home','Investment opportunity','Ideal for renovation/development'].forEach(function(r) {
+                html += '<label style="font-size:12px;"><input type="checkbox" class="loi-reason" value="' + r + '"> ' + r + '</label>';
+            });
+            html += '</div></div>';
+            html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;">';
+            html += '<div class="offer-input-group"><label>Preferred Timeline</label><select id="loiTimeline"><option>Flexible</option><option>Within 30 days</option><option>Within 90 days</option><option>Within 6 months</option></select></div>';
+            html += '<div class="offer-input-group"><label>Financing</label><select id="loiFinancing"><option>Pre-approved mortgage</option><option>Cash offer</option><option>Subject to financing</option></select></div>';
+            html += '</div>';
+            html += '<div class="offer-input-group" style="margin-top:12px;"><label>Personal Message (optional)</label><textarea id="loiMessage" rows="3" style="width:100%;padding:8px;border:1px solid #ccc;border-radius:4px;font-size:13px;" placeholder="Brief paragraph about yourself and why you\'re interested..."></textarea></div>';
+            html += '<div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;">';
+            html += '<button class="btn-primary" onclick="generateLetterVariants(' + index + ')" style="padding:10px 20px;">Generate Letters</button>';
+            html += '<button onclick="document.getElementById(\'genericModal\').classList.remove(\'active\')" style="padding:10px 20px;border:1px solid #ccc;border-radius:6px;background:white;cursor:pointer;">Cancel</button>';
+            html += '</div></div>';
+            showGenericModal(html);
+        }
+
+        function generateLetterVariants(index) {
+            var targets = loadPrivateTargets();
+            var t = targets[index];
+            var name = document.getElementById('loiName').value.trim() || 'Buyer';
+            var email = document.getElementById('loiEmail').value.trim();
+            var phone = document.getElementById('loiPhone').value.trim();
+            var priceLow = parseInt(document.getElementById('loiPriceLow').value) || 0;
+            var priceHigh = parseInt(document.getElementById('loiPriceHigh').value) || 0;
+            var reasons = [];
+            document.querySelectorAll('.loi-reason:checked').forEach(function(cb) { reasons.push(cb.value); });
+            var timeline = document.getElementById('loiTimeline').value;
+            var financing = document.getElementById('loiFinancing').value;
+            var message = document.getElementById('loiMessage').value.trim();
+            var dateStr = new Date().toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric' });
+            var priceRange = priceLow && priceHigh ? formatPrice(priceLow) + ' – ' + formatPrice(priceHigh) : 'open to discussion';
+            var contactLine = name + (email ? ' | ' + email : '') + (phone ? ' | ' + phone : '');
+
+            var warmLetter = dateStr + '\n\nDear ' + (t.ownerName || 'Homeowner') + ',\n\n';
+            warmLetter += 'My name is ' + name + ' and I\'m writing because I have a genuine interest in your property at ' + t.address + ', ' + t.city + '.\n\n';
+            if (message) warmLetter += message + '\n\n';
+            else if (reasons.length > 0) warmLetter += 'I\'m interested because: ' + reasons.join(', ').toLowerCase() + '.\n\n';
+            warmLetter += 'I understand your home may not be on the market, and I completely respect that. However, if you\'d ever consider selling, I would be very interested in discussing a purchase in the range of ' + priceRange + '.\n\n';
+            warmLetter += 'I have ' + financing.toLowerCase() + ' and my preferred timeline is ' + timeline.toLowerCase() + '. This is a non-binding expression of interest — simply an invitation to start a conversation if the timing is right for you.\n\n';
+            warmLetter += 'Please feel free to reach out at your convenience.\n\nSincerely,\n' + contactLine;
+
+            var proLetter = dateStr + '\n\nRe: Expression of Interest — ' + t.address + ', ' + t.city + '\n\n';
+            proLetter += 'Dear ' + (t.ownerName || 'Property Owner') + ',\n\n';
+            proLetter += 'I am writing to express my interest in acquiring the property at ' + t.address + '. I am a qualified buyer with ' + financing.toLowerCase() + ' and I am prepared to move forward on a timeline of ' + timeline.toLowerCase() + '.\n\n';
+            proLetter += 'Based on my analysis of comparable properties and current market conditions, I am considering an offer in the range of ' + priceRange + '. This reflects fair market value while accounting for the significant savings in agent commissions that a private sale offers you (typically 4-7% of sale price).\n\n';
+            proLetter += 'This letter is a non-binding expression of interest. I would welcome the opportunity to discuss terms at your convenience.\n\n';
+            proLetter += 'Regards,\n' + contactLine;
+
+            var oppLetter = dateStr + '\n\nDear ' + (t.ownerName || 'Homeowner') + ',\n\n';
+            oppLetter += 'I\'m ' + name + ', and I\'d like to present you with an opportunity regarding your property at ' + t.address + ', ' + t.city + '.\n\n';
+            oppLetter += 'Selling privately means no showings, no staging, no open houses, and no agent commissions — saving you potentially ' + formatPrice(Math.round((t.estimatedValue||0)*0.05)) + ' or more. I\'m a serious buyer with ' + financing.toLowerCase() + ', ready to close on your timeline.\n\n';
+            oppLetter += 'I\'m considering a price in the range of ' + priceRange + ', and I\'m flexible on timing (' + timeline.toLowerCase() + '). My lawyer would handle all paperwork through proper legal channels.\n\n';
+            oppLetter += 'This is simply an expression of interest — no obligation whatsoever. If you\'d like to explore this, please don\'t hesitate to reach out.\n\n';
+            oppLetter += 'Best regards,\n' + contactLine;
+
+            var variants = [
+                { name: 'Warm & Personal', text: warmLetter, desc: 'Best for owner-occupied homes' },
+                { name: 'Professional & Direct', text: proLetter, desc: 'Best for investment properties or corporate owners' },
+                { name: 'Opportunity Focused', text: oppLetter, desc: 'Best for older owners or distressed properties' }
+            ];
+
+            var html = '<div style="max-height:80vh;overflow:auto;">';
+            html += '<h3 style="color:var(--primary);margin-bottom:16px;">Letter Variants for ' + t.address + '</h3>';
+            variants.forEach(function(v, vi) {
+                html += '<div style="margin-bottom:20px;border:1px solid #e0e0e0;border-radius:8px;overflow:hidden;">';
+                html += '<div style="background:var(--light-gray);padding:10px 14px;display:flex;justify-content:space-between;align-items:center;">';
+                html += '<div><strong>' + v.name + '</strong><span style="font-size:11px;color:#888;margin-left:8px;">' + v.desc + '</span></div>';
+                html += '<div style="display:flex;gap:6px;">';
+                html += '<button onclick="copyLetterToClipboard(' + vi + ')" style="padding:4px 10px;font-size:11px;border:1px solid var(--secondary);color:var(--secondary);border-radius:4px;background:white;cursor:pointer;">Copy</button>';
+                if (t.ownerContact && t.ownerContact.includes('@')) {
+                    html += '<button onclick="emailLetter(' + index + ',' + vi + ')" style="padding:4px 10px;font-size:11px;border:1px solid var(--primary);color:var(--primary);border-radius:4px;background:white;cursor:pointer;">Email</button>';
+                }
+                html += '</div></div>';
+                html += '<pre id="letterVariant' + vi + '" style="padding:14px;font-size:12px;line-height:1.6;white-space:pre-wrap;word-wrap:break-word;margin:0;max-height:200px;overflow:auto;">' + v.text + '</pre>';
+                html += '</div>';
+            });
+            html += '<button onclick="markLetterSent(' + index + ')" class="btn-primary" style="padding:10px 24px;margin-top:8px;">Mark as Letter Sent</button>';
+            html += '</div>';
+            showGenericModal(html);
+            window._letterVariants = variants;
+        }
+
+        function copyLetterToClipboard(variantIndex) {
+            var text = window._letterVariants[variantIndex].text;
+            navigator.clipboard.writeText(text).then(function() { alert('Letter copied to clipboard!'); });
+        }
+
+        function emailLetter(targetIndex, variantIndex) {
+            var targets = loadPrivateTargets();
+            var t = targets[targetIndex];
+            var text = window._letterVariants[variantIndex].text;
+            var subject = encodeURIComponent('Expression of Interest — ' + t.address);
+            var body = encodeURIComponent(text);
+            window.open('mailto:' + (t.ownerContact || '') + '?subject=' + subject + '&body=' + body, '_self');
+        }
+
+        function markLetterSent(index) {
+            updateTargetStatus(index, 'Letter Sent');
+            document.getElementById('genericModal').classList.remove('active');
+            renderPrivateTargets();
+        }
+
+        // ===================================================================
+        // PRIVATE OFFERS — PRIVATE SALE OFFER GENERATOR
+        // ===================================================================
+        function showPrivateOfferForm(index) {
+            var targets = loadPrivateTargets();
+            var t = targets[index];
+            var profile = JSON.parse(localStorage.getItem('buyerProfile') || '{}');
+            var today = new Date();
+            var completionDate = new Date(today); completionDate.setDate(completionDate.getDate() + 60);
+            var subjectDate = new Date(today); subjectDate.setDate(subjectDate.getDate() + 14);
+            var irrevocDate = new Date(today); irrevocDate.setDate(irrevocDate.getDate() + 3);
+            var fmtDate = function(d) { return d.toISOString().split('T')[0]; };
+            var suggestLow = Math.round((t.estimatedValue||0) * 0.88);
+            var suggestHigh = Math.round((t.estimatedValue||0) * 0.95);
+            var refNum = 'PS-' + today.getFullYear() + '-' + String(loadPrivateTargets().filter(function(x){return x.status==='Offer Submitted'||x.status==='Accepted';}).length + 1).padStart(3, '0');
+            var isStrata = t.propertyType === 'Apt/Condo' || t.propertyType === 'Townhouse';
+
+            var html = '<div style="max-height:85vh;overflow:auto;">';
+            html += '<h3 style="color:var(--primary);margin-bottom:4px;">Private Sale Offer — ' + t.address + '</h3>';
+            html += '<p style="font-size:12px;color:#888;margin-bottom:12px;">Ref: ' + refNum + ' &middot; Suggested range: ' + formatPrice(suggestLow) + ' – ' + formatPrice(suggestHigh) + '</p>';
+
+            html += '<div style="background:#fff3cd;border:1px solid #ffc107;border-radius:6px;padding:10px 14px;margin-bottom:16px;font-size:12px;color:#856404;">';
+            html += '<strong>Disclaimer:</strong> This offer template is for discussion purposes only. Both parties should have it reviewed by a BC lawyer or notary before signing. This is not a substitute for the standard BCREA Contract of Purchase and Sale.</div>';
+
+            html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">';
+            html += '<div class="offer-input-group"><label>Offer Price *</label><input type="number" id="poPrice" value="' + Math.round((t.estimatedValue||0)*0.90) + '"></div>';
+            html += '<div class="offer-input-group"><label>Deposit Amount</label><input type="number" id="poDeposit" value="' + Math.round((t.estimatedValue||0)*0.90*0.05) + '"></div>';
+            html += '<div class="offer-input-group"><label>Deposit Held By</label><input type="text" id="poTrustee" value="Buyer\'s lawyer/notary in trust"></div>';
+            html += '<div class="offer-input-group"><label>Completion Date</label><input type="date" id="poCompletion" value="' + fmtDate(completionDate) + '"></div>';
+            html += '<div class="offer-input-group"><label>Subject Removal Date</label><input type="date" id="poSubject" value="' + fmtDate(subjectDate) + '"></div>';
+            html += '<div class="offer-input-group"><label>Irrevocable Until</label><input type="date" id="poIrrevoc" value="' + fmtDate(irrevocDate) + '"></div>';
+            html += '<div class="offer-input-group"><label>Your Name</label><input type="text" id="poName" value="' + (profile.name||'') + '"></div>';
+            html += '<div class="offer-input-group"><label>Your Email</label><input type="text" id="poEmail" value="' + (profile.email||'') + '"></div>';
+            html += '</div>';
+
+            html += '<div style="margin-top:12px;"><h4 style="margin-bottom:8px;">Subject Conditions</h4><div class="subject-checks">';
+            html += '<label><input type="checkbox" class="po-subject" value="Subject to satisfactory home inspection by a qualified inspector at Buyer\'s expense, to be completed within the subject removal period." checked> Home Inspection</label>';
+            html += '<label><input type="checkbox" class="po-subject" value="Subject to Buyer obtaining satisfactory financing within the subject removal period." checked> Financing</label>';
+            html += '<label><input type="checkbox" class="po-subject" value="Subject to Buyer\'s lawyer or notary reviewing title, survey, and property disclosure statement within the subject removal period." checked> Lawyer/Notary Review (Title, Survey &amp; Disclosure)</label>';
+            html += '<label><input type="checkbox" class="po-subject" value="Subject to Seller providing a completed Property Disclosure Statement within 5 business days of acceptance." checked> Seller to Provide Property Disclosure</label>';
+            if (isStrata) {
+                html += '<label><input type="checkbox" class="po-subject" value="Subject to Buyer reviewing and approving strata documents (Form B, meeting minutes, depreciation report, bylaws, financial statements, and insurance certificate) within the subject removal period." checked> Strata Documents Review</label>';
+            }
+            html += '<label><input type="checkbox" class="po-subject" value="Subject to Buyer reviewing BC Assessment records and property tax history." checked> BC Assessment &amp; Tax Review</label>';
+            html += '</div></div>';
+
+            html += '<div class="offer-input-group" style="margin-top:12px;"><label>Additional Conditions</label><textarea id="poCustom" rows="2" style="width:100%;padding:8px;border:1px solid #ccc;border-radius:4px;font-size:13px;"></textarea></div>';
+
+            html += '<div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;">';
+            html += '<button class="btn-primary" onclick="generatePrivateOfferPDF(' + index + ')" style="padding:10px 20px;">Generate PDF Offer</button>';
+            if (t.ownerContact && t.ownerContact.includes('@')) {
+                html += '<button onclick="emailPrivateOffer(' + index + ')" style="padding:10px 20px;border:1px solid var(--secondary);color:var(--secondary);border-radius:6px;background:white;cursor:pointer;">Email to Owner</button>';
+            }
+            html += '<button onclick="document.getElementById(\'genericModal\').classList.remove(\'active\')" style="padding:10px 20px;border:1px solid #ccc;border-radius:6px;background:white;cursor:pointer;">Cancel</button>';
+            html += '</div></div>';
+            showGenericModal(html);
+        }
+
+        function generatePrivateOfferPDF(index) {
+            if (!window.jspdf) {
+                loadJsPdf().then(function() { generatePrivateOfferPDF(index); });
+                return;
+            }
+            var targets = loadPrivateTargets();
+            var t = targets[index];
+            var price = parseFloat(document.getElementById('poPrice').value) || 0;
+            var deposit = parseFloat(document.getElementById('poDeposit').value) || 0;
+            var trustee = document.getElementById('poTrustee').value;
+            var completionDate = document.getElementById('poCompletion').value;
+            var subjectDate = document.getElementById('poSubject').value;
+            var irrevocDate = document.getElementById('poIrrevoc').value;
+            var buyerName = document.getElementById('poName').value;
+            var buyerEmail = document.getElementById('poEmail').value;
+            var subjects = [];
+            document.querySelectorAll('.po-subject:checked').forEach(function(cb) { subjects.push(cb.value); });
+            var custom = document.getElementById('poCustom').value.trim();
+            if (custom) custom.split('\n').forEach(function(c) { if (c.trim()) subjects.push(c.trim()); });
+
+            var { jsPDF } = window.jspdf;
+            var doc = new jsPDF({ unit: 'mm', format: 'letter' });
+            var pageW = doc.internal.pageSize.getWidth();
+            var margin = 18;
+            var contentW = pageW - margin * 2;
+            var y = margin;
+            var fmtDt = function(d) { if (!d) return 'TBD'; var parts = d.split('-'); return parts[1]+'/'+parts[2]+'/'+parts[0]; };
+            var fmtCur = function(n) { return '$' + Math.round(n).toLocaleString(); };
+            var today = new Date();
+            var refNum = 'PS-' + today.getFullYear() + '-' + String(loadPrivateTargets().filter(function(x){return x.status==='Offer Submitted'||x.status==='Accepted';}).length + 1).padStart(3, '0');
+
+            // Header
+            doc.setFillColor(27, 58, 92);
+            doc.rect(0, 0, pageW, 20, 'F');
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(14);
+            doc.setFont('helvetica', 'bold');
+            doc.text('OFFER TO PURCHASE — PRIVATE SALE', margin, 13);
+            doc.setFontSize(9);
+            doc.text('Ref: ' + refNum, pageW - margin - 40, 13);
+            y = 28;
+
+            // Disclaimer
+            doc.setFillColor(255, 245, 235);
+            doc.setDrawColor(220, 120, 50);
+            doc.rect(margin, y-2, contentW, 16, 'FD');
+            doc.setFontSize(7);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(180, 80, 20);
+            doc.text('IMPORTANT DISCLAIMER', margin+3, y+3);
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(6.5);
+            doc.setTextColor(120, 60, 10);
+            var disclaimerText = 'This offer template is for discussion purposes only. Both parties are strongly advised to have this reviewed and formalized by a BC lawyer or notary before signing. This is not a substitute for the standard BCREA Contract of Purchase and Sale.';
+            var dLines = doc.splitTextToSize(disclaimerText, contentW-6);
+            doc.text(dLines, margin+3, y+7);
+            y += 20;
+
+            // Property & Parties table
+            doc.setTextColor(0,0,0);
+            doc.autoTable({
+                startY: y, margin: { left: margin, right: margin },
+                head: [['Field', 'Details']],
+                headStyles: { fillColor: [55, 90, 127], fontSize: 9, fontStyle: 'bold', textColor: [255,255,255] },
+                body: [
+                    ['Property Address', t.address + ', ' + t.city + (t.postalCode ? ', ' + t.postalCode : '') + ', BC'],
+                    ['Property Type', t.propertyType || 'N/A'],
+                    ['PID', t.pid || 'To be confirmed via title search'],
+                    ['Buyer', buyerName + (buyerEmail ? ' (' + buyerEmail + ')' : '')],
+                    ['Seller / Owner', t.ownerName || 'Current registered owner(s)'],
+                ],
+                styles: { fontSize: 9, cellPadding: 2.5 },
+                columnStyles: { 0: { fontStyle: 'bold', cellWidth: 42 } },
+            });
+            y = doc.lastAutoTable.finalY + 6;
+
+            // Financial Terms
+            doc.autoTable({
+                startY: y, margin: { left: margin, right: margin },
+                head: [['Term', 'Details']],
+                headStyles: { fillColor: [55, 90, 127], fontSize: 9, fontStyle: 'bold', textColor: [255,255,255] },
+                body: [
+                    ['Offer Price', fmtCur(price)],
+                    ['Deposit', fmtCur(deposit) + ', held in trust by ' + trustee],
+                    ['Deposit Delivery', 'Within 24 hours of subject removal'],
+                    ['Balance', fmtCur(price - deposit) + ' due on Completion Date'],
+                    ['Property Transfer Tax', fmtCur(calculatePTTWithFTHB(price, false, false).ptt) + ' (buyer responsibility)'],
+                ],
+                styles: { fontSize: 9, cellPadding: 2.5 },
+                columnStyles: { 0: { fontStyle: 'bold', cellWidth: 42 } },
+            });
+            y = doc.lastAutoTable.finalY + 6;
+
+            // Key Dates
+            doc.autoTable({
+                startY: y, margin: { left: margin, right: margin },
+                head: [['Date', 'Details']],
+                headStyles: { fillColor: [55, 90, 127], fontSize: 9, fontStyle: 'bold', textColor: [255,255,255] },
+                body: [
+                    ['Subject Removal', fmtDt(subjectDate) + ' at 11:59 PM Pacific Time'],
+                    ['Completion Date', fmtDt(completionDate) + ' (title transfer at Land Title Office)'],
+                    ['Possession Date', fmtDt(completionDate) + ' (vacant possession)'],
+                    ['Adjustment Date', fmtDt(completionDate) + ' (taxes, utilities, strata fees adjusted)'],
+                    ['Irrevocable Until', fmtDt(irrevocDate) + ' at 11:59 PM Pacific Time'],
+                ],
+                styles: { fontSize: 9, cellPadding: 2.5 },
+                columnStyles: { 0: { fontStyle: 'bold', cellWidth: 42 } },
+            });
+            y = doc.lastAutoTable.finalY + 6;
+
+            // Subject Conditions
+            if (subjects.length > 0) {
+                doc.setFillColor(27, 58, 92);
+                doc.rect(margin, y, contentW, 7, 'F');
+                doc.setTextColor(255,255,255);
+                doc.setFontSize(9);
+                doc.setFont('helvetica', 'bold');
+                doc.text('SUBJECT CONDITIONS', margin+3, y+5);
+                y += 10;
+                doc.setTextColor(0,0,0);
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(8.5);
+                subjects.forEach(function(s, i) {
+                    if (y > 250) { doc.addPage(); y = margin; }
+                    var lines = doc.splitTextToSize((i+1) + '. ' + s, contentW - 4);
+                    doc.text(lines, margin+2, y);
+                    y += lines.length * 4 + 2;
+                });
+                y += 4;
+            }
+
+            // HBRP Notice
+            if (y > 230) { doc.addPage(); y = margin; }
+            doc.setFillColor(255, 243, 205);
+            doc.rect(margin, y, contentW, 12, 'F');
+            doc.setFontSize(7.5);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(133, 100, 4);
+            doc.text('HOME BUYER RESCISSION PERIOD NOTICE', margin+3, y+4);
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(7);
+            doc.text('The buyer has a statutory right to rescind this contract within 3 business days of acceptance, subject to a 0.25% rescission fee per the Property Law Act.', margin+3, y+9);
+            y += 16;
+
+            // Recommendation
+            doc.setFontSize(8);
+            doc.setTextColor(80,80,80);
+            doc.text('Both parties are strongly encouraged to retain independent legal counsel (BC lawyer or notary) before executing this agreement.', margin, y);
+            y += 8;
+
+            // Signature lines
+            doc.setDrawColor(0);
+            doc.setTextColor(0,0,0);
+            doc.setFontSize(9);
+            doc.text('Buyer Signature: ____________________________  Date: ______________', margin, y);
+            y += 8;
+            doc.text('Seller Signature: ____________________________  Date: ______________', margin, y);
+            y += 10;
+
+            // Footer
+            doc.setFontSize(7);
+            doc.setTextColor(150,150,150);
+            doc.text('Generated by BC Real Estate Dashboard — Not legal advice', margin, doc.internal.pageSize.getHeight() - 8);
+
+            var filename = 'Private_Offer_' + t.address.replace(/[^a-zA-Z0-9]/g, '_') + '.pdf';
+            doc.save(filename);
+
+            // Update status
+            updateTargetStatus(index, 'Offer Submitted');
+            document.getElementById('genericModal').classList.remove('active');
+            renderPrivateTargets();
+        }
+
+        function emailPrivateOffer(index) {
+            var targets = loadPrivateTargets();
+            var t = targets[index];
+            var price = document.getElementById('poPrice').value;
+            var subject = encodeURIComponent('Offer to Purchase — ' + t.address);
+            var body = encodeURIComponent('Dear ' + (t.ownerName || 'Homeowner') + ',\n\nPlease find attached my offer to purchase your property at ' + t.address + ' for ' + formatPrice(parseInt(price)) + '.\n\nPlease review the attached PDF and let me know if you would like to discuss.\n\nBest regards,\n' + (document.getElementById('poName').value || 'Buyer'));
+            window.open('mailto:' + (t.ownerContact || '') + '?subject=' + subject + '&body=' + body, '_self');
+        }
+
+        // ===================================================================
         // STATS BAR DATA FRESHNESS INDICATOR
         // ===================================================================
         (function() {
@@ -7082,7 +8423,7 @@ Competitive: ${formatPrice(offers.competitive)}`;
             roi: 'ROI Calculator', lenders: 'Lender Directory', buyerprofile: 'My Profile',
             contactlog: 'Contact Log', viewings: 'Viewings', documents: 'Documents',
             pricehistory: 'Price History', neighborhooddata: 'Area Intel',
-            datafreshness: 'Data Health', norealtorguide: 'No-Realtor Guide', help: 'Help'
+            datafreshness: 'Data Health', norealtorguide: 'No-Realtor Guide', privateoffers: 'Private Offers', help: 'Help'
         };
 
         // ===== PHASE 7.3: FTHB PTT Exemption =====
