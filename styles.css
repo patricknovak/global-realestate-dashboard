@@ -1356,6 +1356,12 @@ button {
     .property-detail-grid {
         grid-template-columns: 1fr !important;
     }
+    #dashBuyerQuickStats {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+    #privateCampaignStats {
+        grid-template-columns: 1fr 1fr !important;
+    }
 }
 
 /* ===== MOBILE RESPONSIVE: NEW TABS ===== */
@@ -1401,9 +1407,45 @@ button {
     #dashboard > div:first-child > div > div:nth-child(2) {
         font-size: 26px !important;
     }
+    /* Dashboard buyer quick stats: 3 cols on mobile */
+    #dashBuyerQuickStats {
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 8px !important;
+    }
+    #dashBuyerQuickStats > div {
+        padding: 10px 6px !important;
+    }
+    #dashBuyerQuickStats > div > div:first-child {
+        font-size: 18px !important;
+    }
     /* Dashboard market snapshot: stack inner grids */
     #dashMarketSnapshot > div {
         grid-template-columns: 1fr 1fr !important;
+    }
+    /* Affordability calculator: stack to 1 col */
+    #affordabilitySection > div:last-child {
+        grid-template-columns: 1fr !important;
+    }
+    /* CMHC section: stack to 1 col */
+    #cmhcSection > div:last-child {
+        grid-template-columns: 1fr !important;
+    }
+    /* Cash to close: stack to 1 col */
+    #cashToCloseSection > div:last-child {
+        grid-template-columns: 1fr !important;
+    }
+    /* Campaign stats: 2 cols on mobile */
+    #privateCampaignStats {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+    /* Map toolbar legend: wrap below */
+    #mapToolbar > div {
+        flex-direction: column !important;
+        gap: 6px !important;
+    }
+    #heatmapLegend {
+        margin-left: 0 !important;
+        flex-wrap: wrap;
     }
     /* Dashboard 2fr/1fr → 1 col */
     #dashboard > div:nth-child(2) {

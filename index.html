@@ -21,6 +21,9 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <!-- Skip Link -->
+    <a href="#mainContent" class="skip-link" style="position:absolute;top:-40px;left:0;background:var(--primary);color:white;padding:8px 16px;z-index:10000;font-weight:600;transition:top 0.2s;" onfocus="this.style.top='0'" onblur="this.style.top='-40px'">Skip to main content</a>
+
     <!-- Loading Overlay -->
     <div id="loadingOverlay" class="loading-overlay">
         <div class="loading-spinner"></div>
@@ -37,13 +40,13 @@
     <!-- Staleness Warning (populated by JS) -->
     <div id="stalenessWarning" style="display:none;"></div>
     <!-- Header -->
-    <div class="header">
+    <header class="header" role="banner">
         <div>
             <h1>Real Estate Investment Dashboard</h1>
             <p>Find deals, analyze neighborhoods, compare mortgage rates, and generate offers — connect directly with sellers and lenders, no realtor required <span id="streetViewIndicator" style="margin-left:12px;"></span></p>
         </div>
-        <button id="darkModeToggle" class="dark-mode-toggle" onclick="toggleDarkMode()" title="Toggle dark mode">Dark Mode</button>
-    </div>
+        <button id="darkModeToggle" class="dark-mode-toggle" onclick="toggleDarkMode()" title="Toggle dark mode" aria-label="Toggle dark mode">Dark Mode</button>
+    </header>
     
     <!-- Stats Bar -->
     <div class="stats-bar">
@@ -79,8 +82,8 @@
         <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeMobileSidebar()"></div>
 
         <!-- Sidebar with Filters -->
-        <div class="sidebar" id="filterSidebar">
-            <button class="sidebar-close-btn" onclick="closeMobileSidebar()">&times;</button>
+        <aside class="sidebar" id="filterSidebar" role="complementary" aria-label="Filters">
+            <button class="sidebar-close-btn" onclick="closeMobileSidebar()" aria-label="Close filters">&times;</button>
             <h3>Search</h3>
             <div class="filter-group">
                 <input type="text" id="searchBox" placeholder="Search address, agent, neighborhood..." oninput="applyFilters()" style="width:100%;padding:8px 10px;border:1px solid var(--border-gray);border-radius:4px;font-size:13px;">
@@ -184,6 +187,18 @@
                 </div>
             </div>
 
+            <h3>Tags</h3>
+            <div class="filter-group">
+                <div class="checkbox-group" id="tagFilterGroup">
+                    <div class="checkbox-item"><input type="checkbox" id="tag_favorite" class="tag-filter" onchange="applyFilters()"><label for="tag_favorite" style="font-size:11px;">⭐ Favorite</label></div>
+                    <div class="checkbox-item"><input type="checkbox" id="tag_needsViewing" class="tag-filter" onchange="applyFilters()"><label for="tag_needsViewing" style="font-size:11px;">👁 Needs Viewing</label></div>
+                    <div class="checkbox-item"><input type="checkbox" id="tag_underNegotiation" class="tag-filter" onchange="applyFilters()"><label for="tag_underNegotiation" style="font-size:11px;">🤝 Under Negotiation</label></div>
+                    <div class="checkbox-item"><input type="checkbox" id="tag_overpriced" class="tag-filter" onchange="applyFilters()"><label for="tag_overpriced" style="font-size:11px;">💰 Overpriced</label></div>
+                    <div class="checkbox-item"><input type="checkbox" id="tag_hidden_gem" class="tag-filter" onchange="applyFilters()"><label for="tag_hidden_gem" style="font-size:11px;">💎 Hidden Gem</label></div>
+                    <div class="checkbox-item"><input type="checkbox" id="tag_hasNotes" class="tag-filter" onchange="applyFilters()"><label for="tag_hasNotes" style="font-size:11px;">📝 Has Notes</label></div>
+                </div>
+            </div>
+
             <h3>Deal Score</h3>
             <div class="filter-group">
                 <div class="input-pair">
@@ -234,10 +249,10 @@
             <div class="button-group">
                 <button class="btn-success" onclick="exportFilteredCSV()">Export CSV</button>
             </div>
-        </div>
-        
+        </aside>
+
         <!-- Main Content -->
-        <div class="main-content">
+        <main class="main-content" id="mainContent" role="main">
             <div class="mobile-tab-nav" style="display:none;">
                 <select id="mobileTabSelect" onchange="switchTabDirect(this.value);this.blur();" style="width:100%;padding:10px 12px;font-size:14px;font-weight:600;border:2px solid var(--secondary);border-radius:6px;color:var(--primary);background:white;cursor:pointer;">
                     <optgroup label="Browse">
@@ -275,7 +290,7 @@
                     </optgroup>
                 </select>
             </div>
-            <div class="tabs">
+            <nav class="tabs" role="navigation" aria-label="Main navigation">
                 <button class="tab-button active" onclick="switchTab('dashboard')">Dashboard</button>
                 <button class="tab-button" onclick="switchTab('listings')">All Listings</button>
                 <button class="tab-button" onclick="switchTab('map')">Map View</button>
@@ -303,7 +318,7 @@
                 <button class="tab-button" onclick="switchTab('norealtorguide')">No-Realtor Guide</button>
                 <button class="tab-button" onclick="switchTab('privateoffers')">Private Offers</button>
                 <button class="tab-button" onclick="switchTab('help')">Help</button>
-            </div>
+            </nav>
             
             <!-- Tab: Dashboard Home -->
             <div id="dashboard" class="tab-content active">
@@ -344,6 +359,9 @@
                         <button onclick="switchTabDirect('privateoffers')" style="margin-top:10px;padding:6px 14px;border:1px solid rgba(255,255,255,0.4);background:transparent;color:white;border-radius:4px;cursor:pointer;font-size:11px;font-weight:600;">View Private Offers &rarr;</button>
                     </div>
                 </div>
+
+                <!-- Buyer Quick Stats -->
+                <div id="dashBuyerQuickStats" style="display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:24px;"></div>
 
                 <!-- Stale Listing Opportunities -->
                 <div style="margin-bottom: 24px;">
@@ -448,7 +466,36 @@
             </div>
             
             <!-- Tab 2: Map View -->
-            <div id="map" class="tab-content"></div>
+            <div id="map" class="tab-content">
+                <div id="mapToolbar" style="display:none; padding:8px 12px; background:var(--white); border-bottom:1px solid var(--border); position:relative; z-index:500;">
+                    <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+                        <span style="font-weight:600; font-size:13px; color:var(--primary);">Map View</span>
+                        <div style="display:flex; gap:4px; background:var(--light-gray); border-radius:6px; padding:2px;">
+                            <button id="mapModePins" onclick="setMapMode('pins')" style="padding:5px 12px; border:none; border-radius:4px; font-size:12px; font-weight:600; cursor:pointer; background:var(--primary); color:white;">Pins</button>
+                            <button id="mapModeHeatmap" onclick="setMapMode('heatmap')" style="padding:5px 12px; border:none; border-radius:4px; font-size:12px; font-weight:600; cursor:pointer; background:transparent; color:var(--text);">Yield Heatmap</button>
+                        </div>
+                        <div id="heatmapLegend" style="display:none; font-size:11px; color:var(--text-muted); margin-left:auto;">
+                            <span style="font-weight:600;">Avg Cap Rate:</span>
+                            <span style="display:inline-flex; align-items:center; gap:3px; margin-left:6px;">
+                                <span style="width:12px; height:12px; border-radius:50%; background:#dc3545; display:inline-block;"></span>&lt;2%
+                            </span>
+                            <span style="display:inline-flex; align-items:center; gap:3px; margin-left:6px;">
+                                <span style="width:12px; height:12px; border-radius:50%; background:#fd7e14; display:inline-block;"></span>2-3%
+                            </span>
+                            <span style="display:inline-flex; align-items:center; gap:3px; margin-left:6px;">
+                                <span style="width:12px; height:12px; border-radius:50%; background:#ffc107; display:inline-block;"></span>3-4%
+                            </span>
+                            <span style="display:inline-flex; align-items:center; gap:3px; margin-left:6px;">
+                                <span style="width:12px; height:12px; border-radius:50%; background:#28a745; display:inline-block;"></span>4-5%
+                            </span>
+                            <span style="display:inline-flex; align-items:center; gap:3px; margin-left:6px;">
+                                <span style="width:12px; height:12px; border-radius:50%; background:#155724; display:inline-block;"></span>&gt;5%
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div id="mapCanvas" style="height:600px;"></div>
+            </div>
             
             <!-- Tab 3: Neighborhood Analysis -->
             <div id="neighborhood" class="tab-content">
@@ -619,13 +666,71 @@
                 <h2 style="margin-bottom: 8px; color: var(--primary);">Financing Hub</h2>
                 <p style="color: #666; margin-bottom: 20px;">Everything you need to understand your mortgage options, costs, and affordability. No realtor referral needed.</p>
                 <div style="display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap;">
+                    <button onclick="document.getElementById('affordabilitySection').scrollIntoView({behavior:'smooth'})" style="padding:8px 14px;border:1px solid var(--primary);background:var(--primary);color:white;border-radius:20px;cursor:pointer;font-size:12px;font-weight:600;">Affordability Calculator</button>
                     <button onclick="document.getElementById('mortCalcSection').scrollIntoView({behavior:'smooth'})" style="padding:8px 14px;border:1px solid var(--secondary);background:white;color:var(--secondary);border-radius:20px;cursor:pointer;font-size:12px;font-weight:600;">Mortgage Calculator</button>
                     <button onclick="document.getElementById('pttSection').scrollIntoView({behavior:'smooth'})" style="padding:8px 14px;border:1px solid var(--secondary);background:white;color:var(--secondary);border-radius:20px;cursor:pointer;font-size:12px;font-weight:600;">Property Transfer Tax</button>
                     <button onclick="document.getElementById('closingSection').scrollIntoView({behavior:'smooth'})" style="padding:8px 14px;border:1px solid var(--secondary);background:white;color:var(--secondary);border-radius:20px;cursor:pointer;font-size:12px;font-weight:600;">Closing Costs</button>
                     <button onclick="switchTabDirect('lenders')" style="padding:8px 14px;border:1px solid var(--success);background:white;color:var(--success);border-radius:20px;cursor:pointer;font-size:12px;font-weight:600;">Rate Comparison &amp; Pre-Qualification &#8594;</button>
                     <button onclick="switchTabDirect('roi')" style="padding:8px 14px;border:1px solid var(--warning);background:white;color:var(--warning);border-radius:20px;cursor:pointer;font-size:12px;font-weight:600;">ROI Calculator &#8594;</button>
                     <button onclick="document.getElementById('cashToCloseSection').scrollIntoView({behavior:'smooth'})" style="padding:8px 14px;border:1px solid #6f42c1;background:white;color:#6f42c1;border-radius:20px;cursor:pointer;font-size:12px;font-weight:600;">Cash to Close</button>
+                    <button onclick="document.getElementById('cmhcSection').scrollIntoView({behavior:'smooth'})" style="padding:8px 14px;border:1px solid #e83e8c;background:white;color:#e83e8c;border-radius:20px;cursor:pointer;font-size:12px;font-weight:600;">CMHC Insurance</button>
                 </div>
+                <div id="affordabilitySection" style="margin-bottom:24px;padding-bottom:24px;border-bottom:2px solid #eee;">
+                    <h3 style="color:var(--secondary);margin-bottom:8px;">How Much House Can I Afford?</h3>
+                    <p style="font-size:12px;color:#666;margin-bottom:16px;">Canadian lenders use GDS/TDS ratios and a stress test rate (contract rate + 2%, min 5.25%) to determine your maximum purchase price.</p>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+                        <div>
+                            <div class="form-group"><label>Annual Gross Income ($)</label><input type="number" id="affIncome" value="100000" oninput="calcAffordability()"></div>
+                            <div class="form-group"><label>Monthly Debts (car, student loans, etc.) ($)</label><input type="number" id="affDebts" value="500" oninput="calcAffordability()"></div>
+                            <div class="form-group"><label>Down Payment Available ($)</label><input type="number" id="affDown" value="200000" oninput="calcAffordability()"></div>
+                            <div class="form-group"><label>Interest Rate (%)</label><input type="number" id="affRate" value="5.5" step="0.1" oninput="calcAffordability()"></div>
+                            <div class="form-group"><label>Amortization (years)</label>
+                                <select id="affAmort" onchange="calcAffordability()">
+                                    <option value="25" selected>25 years</option><option value="30">30 years</option><option value="20">20 years</option>
+                                </select>
+                            </div>
+                            <div class="form-group"><label>Property Tax Rate (annual % of price)</label><input type="number" id="affTaxRate" value="0.35" step="0.05" oninput="calcAffordability()"></div>
+                            <div class="form-group"><label>Strata/Condo Fees ($/month)</label><input type="number" id="affStrata" value="0" oninput="calcAffordability()"></div>
+                            <div class="form-group"><label>Heating Costs ($/month)</label><input type="number" id="affHeat" value="150" oninput="calcAffordability()"></div>
+                            <div class="form-group">
+                                <label>First-Time Home Buyer?</label>
+                                <select id="affFTHB" onchange="calcAffordability()"><option value="no">No</option><option value="yes">Yes</option></select>
+                            </div>
+                            <button class="btn-primary" onclick="calcAffordability()" style="width:auto;margin-top:8px;">Calculate Affordability</button>
+                        </div>
+                        <div>
+                            <div style="background:linear-gradient(135deg,var(--primary) 0%,var(--secondary) 100%);color:white;padding:20px;border-radius:10px;text-align:center;margin-bottom:16px;">
+                                <div style="font-size:12px;opacity:0.8;">Maximum Purchase Price</div>
+                                <div id="affMaxPrice" style="font-size:32px;font-weight:700;">$0</div>
+                                <div id="affStressNote" style="font-size:11px;opacity:0.7;margin-top:4px;"></div>
+                            </div>
+                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+                                <div style="background:#d4edda;padding:14px;border-radius:8px;text-align:center;">
+                                    <div style="font-size:11px;color:#155724;text-transform:uppercase;font-weight:600;">GDS Ratio</div>
+                                    <div id="affGDS" style="font-size:22px;font-weight:700;color:#155724;">0%</div>
+                                    <div style="font-size:10px;color:#155724;">Target &le; 39%</div>
+                                </div>
+                                <div style="background:#e7f3ff;padding:14px;border-radius:8px;text-align:center;">
+                                    <div style="font-size:11px;color:#004085;text-transform:uppercase;font-weight:600;">TDS Ratio</div>
+                                    <div id="affTDS" style="font-size:22px;font-weight:700;color:#004085;">0%</div>
+                                    <div style="font-size:10px;color:#004085;">Target &le; 44%</div>
+                                </div>
+                            </div>
+                            <table style="width:100%;border-collapse:collapse;font-size:13px;">
+                                <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;">Max Mortgage Amount</td><td id="affMaxMort" style="padding:6px 8px;text-align:right;border-bottom:1px solid #eee;font-weight:600;">$0</td></tr>
+                                <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;">Monthly Mortgage Payment</td><td id="affMortPmt" style="padding:6px 8px;text-align:right;border-bottom:1px solid #eee;font-weight:600;">$0</td></tr>
+                                <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;">Monthly Property Tax</td><td id="affTaxPmt" style="padding:6px 8px;text-align:right;border-bottom:1px solid #eee;font-weight:600;">$0</td></tr>
+                                <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;">Heating + Strata</td><td id="affHeatStrata" style="padding:6px 8px;text-align:right;border-bottom:1px solid #eee;font-weight:600;">$0</td></tr>
+                                <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;">Other Monthly Debts</td><td id="affDebtsPmt" style="padding:6px 8px;text-align:right;border-bottom:1px solid #eee;font-weight:600;">$0</td></tr>
+                                <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;">CMHC Insurance</td><td id="affCMHC" style="padding:6px 8px;text-align:right;border-bottom:1px solid #eee;font-weight:600;">$0</td></tr>
+                                <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;">Min. Down Payment Required</td><td id="affMinDown" style="padding:6px 8px;text-align:right;border-bottom:1px solid #eee;font-weight:600;">$0</td></tr>
+                            </table>
+                            <div id="affNotes" style="margin-top:12px;padding:12px;background:var(--light-gray);border-radius:8px;font-size:12px;color:#666;"></div>
+                            <button id="affShowBtn" onclick="applyAffordabilityFilter()" style="margin-top:12px;padding:10px 20px;background:var(--success);color:white;border:none;border-radius:6px;cursor:pointer;font-weight:600;font-size:13px;width:100%;display:none;">Show Me Properties I Can Afford &rarr;</button>
+                        </div>
+                    </div>
+                </div>
+
                 <div id="mortCalcSection"></div>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
                     <div>
@@ -783,6 +888,41 @@
                                 <tr style="background:linear-gradient(135deg,#6f42c1 0%,#9b59b6 100%);color:white;font-weight:700;font-size:14px;"><td style="padding:12px 8px;">TOTAL CASH TO CLOSE</td><td id="ctcGrandTotal" style="padding:12px 8px;text-align:right;">$0</td></tr>
                             </table>
                             <div id="ctcNotes" style="margin-top:12px;padding:12px;background:var(--light-gray);border-radius:8px;font-size:12px;color:#666;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="cmhcSection" style="margin-top:24px;padding-top:24px;border-top:2px solid #eee;">
+                    <h3 style="color: var(--secondary); margin-bottom: 8px;">CMHC Mortgage Insurance</h3>
+                    <p style="font-size:12px;color:#666;margin-bottom:16px;">In Canada, mortgage insurance is required when you put less than 20% down. CMHC (Canada Mortgage and Housing Corporation) insures your lender against default. The premium is added to your mortgage.</p>
+
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+                        <div>
+                            <div style="background:#fff3cd;border:1px solid #ffc107;border-radius:8px;padding:12px 16px;font-size:12px;color:#856404;margin-bottom:16px;">
+                                <strong>Key Rules:</strong><br>
+                                &bull; Properties over <strong>$1,500,000</strong> are NOT eligible for CMHC insurance — you MUST have 20%+ down<br>
+                                &bull; Max amortization with insured mortgage: <strong>25 years</strong> (30 years if uninsured)<br>
+                                &bull; Minimum down payment: <strong>5%</strong> on first $500K, <strong>10%</strong> on portion $500K-$1.5M
+                            </div>
+
+                            <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:16px;">
+                                <thead><tr style="background:var(--primary);color:white;"><th style="padding:10px 8px;text-align:left;">Down Payment</th><th style="padding:10px 8px;text-align:center;">Premium Rate</th><th style="padding:10px 8px;text-align:right;">Example ($800K)</th></tr></thead>
+                                <tbody>
+                                    <tr style="background:#f8d7da;"><td style="padding:8px;">5.00% – 9.99%</td><td style="padding:8px;text-align:center;font-weight:700;">4.00%</td><td style="padding:8px;text-align:right;">$30,400</td></tr>
+                                    <tr style="background:#fff3cd;"><td style="padding:8px;">10.00% – 14.99%</td><td style="padding:8px;text-align:center;font-weight:700;">3.10%</td><td style="padding:8px;text-align:right;">$22,320</td></tr>
+                                    <tr style="background:#d4edda;"><td style="padding:8px;">15.00% – 19.99%</td><td style="padding:8px;text-align:center;font-weight:700;">2.80%</td><td style="padding:8px;text-align:right;">$19,040</td></tr>
+                                    <tr style="background:#e7f3ff;"><td style="padding:8px;">20.00%+</td><td style="padding:8px;text-align:center;font-weight:700;">None</td><td style="padding:8px;text-align:right;">$0</td></tr>
+                                </tbody>
+                            </table>
+
+                            <h4 style="color:var(--primary);font-size:14px;margin-bottom:8px;">Minimum Down Payment Calculator</h4>
+                            <div class="form-group"><label>Purchase Price ($)</label><input type="number" id="cmhcPrice" value="750000" oninput="calcCMHCBreakdown()"></div>
+                            <button class="btn-primary" onclick="calcCMHCBreakdown()" style="width:auto;margin-top:4px;">Calculate</button>
+                        </div>
+                        <div>
+                            <div id="cmhcResults" style="background:var(--light-gray);border-radius:8px;padding:16px;">
+                                <div style="text-align:center;color:#999;padding:20px;">Enter a price and click Calculate</div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1590,6 +1730,12 @@
                     <strong>IMPORTANT:</strong> In BC, the Home Buyer Rescission Period (3 business days, 0.25% fee) applies to private residential sales just as it does to MLS transactions. You still need a BC lawyer or notary to handle conveyancing. The standard Contract of Purchase and Sale (BCREA form) is recommended even for private transactions.
                 </div>
 
+                <!-- Campaign Stats Bar -->
+                <div id="privateCampaignStats" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;margin-bottom:20px;"></div>
+
+                <!-- Follow-up Reminders -->
+                <div id="privateFollowupBanner" style="display:none;background:#fff3cd;border:1px solid #ffc107;border-radius:8px;padding:12px 16px;margin-bottom:20px;font-size:12px;"></div>
+
                 <!-- Target Property Manager -->
                 <div style="margin-bottom:24px;">
                     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
@@ -1859,12 +2005,13 @@
                 <p id="feedbackConfigNote" style="margin-top: 20px; font-size: 12px; color: #999;">Feedback is submitted as GitHub Issues. Configure your GitHub token and repository in the <strong>GitHub Feedback Integration</strong> settings section above to activate.</p>
             </div>
         </div>
+    </main>
     </div>
 
     <!-- Offer Builder Modal -->
-    <div id="offerModal" class="modal" onclick="if(event.target===this)closeOfferModal()">
+    <div id="offerModal" class="modal" role="dialog" aria-modal="true" aria-label="Offer builder" onclick="if(event.target===this)closeOfferModal()">
         <div class="modal-content" style="max-width: 820px; max-height: 92vh;">
-            <button class="modal-close" onclick="closeOfferModal()">&times;</button>
+            <button class="modal-close" onclick="closeOfferModal()" aria-label="Close modal">&times;</button>
             <div id="offerModalBody"></div>
         </div>
     </div>
@@ -1898,17 +2045,17 @@
         </div>
     </div>
 
-    <div id="comparisonModal" class="modal" onclick="if(event.target===this)this.classList.remove('active')">
+    <div id="comparisonModal" class="modal" role="dialog" aria-modal="true" aria-label="Property comparison" onclick="if(event.target===this)this.classList.remove('active')">
         <div class="modal-content" style="max-width: 95vw; max-height: 92vh; overflow: auto;">
-            <button class="modal-close" onclick="document.getElementById('comparisonModal').classList.remove('active')">&times;</button>
+            <button class="modal-close" onclick="document.getElementById('comparisonModal').classList.remove('active')" aria-label="Close modal">&times;</button>
             <div id="comparisonBody"></div>
         </div>
     </div>
 
     <!-- Detail Modal -->
-    <div id="detailModal" class="modal" onclick="if(event.target===this)closeDetailModal()">
+    <div id="detailModal" class="modal" role="dialog" aria-modal="true" aria-label="Property details" onclick="if(event.target===this)closeDetailModal()">
         <div class="modal-content">
-            <button class="modal-close" onclick="closeDetailModal()">&times;</button>
+            <button class="modal-close" onclick="closeDetailModal()" aria-label="Close modal">&times;</button>
             <div id="modalBody"></div>
         </div>
     </div>
@@ -2059,13 +2206,34 @@
         }
 
         function estimateMonthlyRent(listing) {
-            // Estimate rent based on property type and typical BC rent-to-price ratios
             var price = listing.price;
             var type = (listing.type || '').toLowerCase();
+            var sqft = listing.sqft || 0;
+
+            // Primary model: sqft-based rent (more accurate than price for expensive properties)
+            if (sqft > 0) {
+                var rentPerSqft; // monthly $/sqft
+                if (type.indexOf('condo') >= 0 || type.indexOf('apt') >= 0) {
+                    rentPerSqft = 3.00;
+                    return Math.max(1800, Math.min(Math.round(sqft * rentPerSqft), 5500));
+                } else if (type.indexOf('town') >= 0 || type.indexOf('row') >= 0) {
+                    rentPerSqft = 2.40;
+                    return Math.max(2400, Math.min(Math.round(sqft * rentPerSqft), 6000));
+                } else {
+                    rentPerSqft = 1.80;
+                    return Math.max(2800, Math.min(Math.round(sqft * rentPerSqft), 8000));
+                }
+            }
+
+            // Fallback: diminishing price ratio when sqft is missing
             var ratio;
-            if (type.indexOf('condo') >= 0 || type.indexOf('apartment') >= 0) ratio = 0.0040;
-            else if (type.indexOf('town') >= 0 || type.indexOf('row') >= 0) ratio = 0.0035;
-            else ratio = 0.0030; // house/detached
+            if (type.indexOf('condo') >= 0 || type.indexOf('apt') >= 0) {
+                ratio = price <= 600000 ? 0.0040 : price <= 1000000 ? 0.0033 : 0.0025;
+            } else if (type.indexOf('town') >= 0 || type.indexOf('row') >= 0) {
+                ratio = price <= 800000 ? 0.0035 : price <= 1200000 ? 0.0028 : 0.0022;
+            } else {
+                ratio = price <= 1000000 ? 0.0030 : price <= 2000000 ? 0.0022 : 0.0015;
+            }
             return Math.round(price * ratio);
         }
 
@@ -2304,6 +2472,9 @@
             const searchTerm = (document.getElementById('searchBox').value || '').toLowerCase().trim();
             const invMinCap = investorModeActive ? (parseFloat(document.getElementById('investorMinCap').value) || 0) : 0;
             const invMinCF = investorModeActive ? (parseFloat(document.getElementById('investorMinCF').value) || -Infinity) : -Infinity;
+            const selectedTags = [...document.querySelectorAll('.tag-filter:checked')].map(function(el) { return el.id.replace('tag_', ''); });
+            const filterHasNotes = selectedTags.indexOf('hasNotes') >= 0;
+            const filterTags = selectedTags.filter(function(t) { return t !== 'hasNotes'; });
 
             filteredListings = rawListings.filter((listing, idx) => {
                 listing.score = calculateScore(listing);
@@ -2321,6 +2492,11 @@
                 if (listing.score < scoreMin || listing.score > scoreMax) return false;
                 if (filterWaterView && !listing.waterView) return false;
                 if (filterHasLot && !listing.lot) return false;
+                if (filterHasNotes && !listingNotes[idx]) return false;
+                if (filterTags.length > 0) {
+                    var lt = listingTags[idx] || [];
+                    if (!filterTags.some(function(t) { return lt.indexOf(t) >= 0; })) return false;
+                }
 
                 // Investor mode filters
                 if (investorModeActive && (invMinCap > 0 || invMinCF > -Infinity)) {
@@ -2343,48 +2519,51 @@
             renderCurrentTab();
         }
         
+        // 13B: Sort with address tiebreaker for stable ordering
+        function stableSort(a, b, primary) {
+            return primary || a.addr.localeCompare(b.addr);
+        }
+
         function sortListings(sortBy) {
             switch(sortBy) {
                 case 'score-desc':
-                    filteredListings.sort((a, b) => b.score - a.score);
+                    filteredListings.sort((a, b) => stableSort(a, b, b.score - a.score));
                     break;
                 case 'dom-desc':
-                    filteredListings.sort((a, b) => b.dom - a.dom);
+                    filteredListings.sort((a, b) => stableSort(a, b, b.dom - a.dom));
                     break;
                 case 'price-asc':
-                    filteredListings.sort((a, b) => a.price - b.price);
+                    filteredListings.sort((a, b) => stableSort(a, b, a.price - b.price));
                     break;
                 case 'price-desc':
-                    filteredListings.sort((a, b) => b.price - a.price);
+                    filteredListings.sort((a, b) => stableSort(a, b, b.price - a.price));
                     break;
                 case 'ppsf-asc':
                     filteredListings.sort((a, b) => {
                         const ppsfA = a.sqft > 0 ? a.price / a.sqft : Infinity;
                         const ppsfB = b.sqft > 0 ? b.price / b.sqft : Infinity;
-                        return ppsfA - ppsfB;
+                        return stableSort(a, b, ppsfA - ppsfB);
                     });
                     break;
                 case 'gap-desc':
                     filteredListings.sort((a, b) => {
                         const benchmarkA = neighborhoodBenchmarks[a.neighborhood]?.[a.type] || 1500000;
                         const benchmarkB = neighborhoodBenchmarks[b.neighborhood]?.[b.type] || 1500000;
-                        const gapA = benchmarkA - a.price;
-                        const gapB = benchmarkB - b.price;
-                        return gapB - gapA;
+                        return stableSort(a, b, (benchmarkB - b.price) - (benchmarkA - a.price));
                     });
                     break;
                 case 'caprate-desc':
                     filteredListings.sort((a, b) => {
                         const mA = a._investorMetrics || estimateInvestorMetrics(a);
                         const mB = b._investorMetrics || estimateInvestorMetrics(b);
-                        return mB.capRate - mA.capRate;
+                        return stableSort(a, b, mB.capRate - mA.capRate);
                     });
                     break;
                 case 'cashflow-desc':
                     filteredListings.sort((a, b) => {
                         const mA = a._investorMetrics || estimateInvestorMetrics(a);
                         const mB = b._investorMetrics || estimateInvestorMetrics(b);
-                        return mB.cashFlow - mA.cashFlow;
+                        return stableSort(a, b, mB.cashFlow - mA.cashFlow);
                     });
                     break;
             }
@@ -2404,6 +2583,7 @@
             document.getElementById('scoreMax').value = '';
             document.getElementById('filterWaterView').checked = false;
             document.getElementById('filterHasLot').checked = false;
+            document.querySelectorAll('.tag-filter').forEach(function(el) { el.checked = false; });
             document.getElementById('investorModeToggle').checked = false;
             document.getElementById('investorMinCap').value = '';
             document.getElementById('investorMinCF').value = '';
@@ -2419,12 +2599,22 @@
             const avgDOM = totalProps > 0 ? filteredListings.reduce((sum, l) => sum + l.dom, 0) / totalProps : 0;
             const avgScore = totalProps > 0 ? filteredListings.reduce((sum, l) => sum + l.score, 0) / totalProps : 0;
             const hotDeals = filteredListings.filter(l => l.score >= 70).length;
-            
+
             document.getElementById('totalProperties').textContent = totalProps;
             document.getElementById('avgPrice').textContent = formatPrice(avgPrice);
             document.getElementById('avgDOM').textContent = Math.round(avgDOM);
             document.getElementById('avgScore').textContent = Math.round(avgScore);
             document.getElementById('hotDeals').textContent = hotDeals;
+
+            // 13C: Show data freshness in stats bar
+            var tsEl = document.getElementById('dataTimestamp');
+            if (tsEl && window._dataAsOf) {
+                var d = new Date(window._dataAsOf);
+                var daysAgo = Math.floor((new Date() - d) / (1000*60*60*24));
+                tsEl.textContent = d.toLocaleDateString('en-CA');
+                if (daysAgo > 7) tsEl.style.color = 'var(--danger)';
+                else tsEl.style.color = '';
+            }
         }
         
         function switchTab(tabName) {
@@ -2556,16 +2746,16 @@
                 }
                 html += `
                     <tr onclick="showDetailModal(${listing.listingIndex})">
-                        <td><span class="star-toggle ${starClass}" onclick="event.stopPropagation(); toggleShortlist(${listing.listingIndex})">★</span></td>
-                        <td><span class="water-view-icon">${listing.waterView ? '🌊' : ''}</span>${listing.addr}${getListingBadge(listing)}</td>
+                        <td><span class="star-toggle ${starClass}" onclick="event.stopPropagation(); toggleShortlist(${listing.listingIndex})" role="button" aria-label="${isShortlisted ? 'Remove from shortlist' : 'Add to shortlist'}" tabindex="0">★</span></td>
+                        <td><span class="water-view-icon">${listing.waterView ? '🌊' : ''}</span>${listing.addr}${getListingBadge(listing)}${getListingTagBadges(listing.listingIndex)}</td>
                         <td>${listing.neighborhood}</td>
                         <td>${listing.type}</td>
                         <td>${formatPrice(listing.price)}</td>
-                        <td>${listing.beds}/${listing.baths}</td>
-                        <td>${listing.sqft.toLocaleString()}</td>
-                        <td>${ppsf.toLocaleString()}</td>
+                        <td>${fmtVal(listing.beds)}/${fmtVal(listing.baths)}</td>
+                        <td>${fmtSqft(listing.sqft)}</td>
+                        <td>${ppsf > 0 ? ppsf.toLocaleString() : '—'}</td>
                         <td>${listing.dom}</td>
-                        <td>${listing.yearBuilt}</td>
+                        <td>${fmtVal(listing.yearBuilt)}</td>
                         <td><span class="score-badge ${scoreClass}">${Math.round(listing.score)}</span></td>
                         ${investorCols}
                         <td>${formatPrice(offers.aggressive)}</td>
@@ -2880,13 +3070,15 @@
                 html += '<div class="property-card-body">';
                 html += '<div class="property-card-price">' + formatPrice(listing.price) + '</div>';
                 html += '<div class="property-card-addr">' + listing.addr + getListingBadge(listing) + '</div>';
+                var tagBadges = getListingTagBadges(listing.listingIndex);
+                if (tagBadges) html += '<div style="padding:0 12px 4px;line-height:1.6;">' + tagBadges + '</div>';
                 html += '<div class="property-card-nbr">' + listing.neighborhood + ' &middot; ' + listing.region + '</div>';
                 html += '<div class="property-card-details">';
-                html += '<span><strong>' + listing.beds + '</strong> Beds</span>';
-                html += '<span><strong>' + listing.baths + '</strong> Baths</span>';
+                html += '<span><strong>' + fmtVal(listing.beds) + '</strong> Beds</span>';
+                html += '<span><strong>' + fmtVal(listing.baths) + '</strong> Baths</span>';
                 if (listing.sqft > 0) html += '<span><strong>' + listing.sqft.toLocaleString() + '</strong> sqft</span>';
                 if (ppsf > 0) html += '<span><strong>$' + ppsf.toLocaleString() + '</strong>/sqft</span>';
-                if (listing.yearBuilt) html += '<span>Built <strong>' + listing.yearBuilt + '</strong></span>';
+                if (listing.yearBuilt > 0) html += '<span>Built <strong>' + listing.yearBuilt + '</strong></span>';
                 html += '</div>';
                 html += '</div>';
                 if (investorModeActive) {
@@ -2913,34 +3105,119 @@
             document.getElementById('cardGridContainer').innerHTML = html;
         }
 
+        var _mapMode = 'pins';
+        var _heatmapLayer = null;
+
+        function setMapMode(mode) {
+            _mapMode = mode;
+            document.getElementById('mapModePins').style.background = mode === 'pins' ? 'var(--primary)' : 'transparent';
+            document.getElementById('mapModePins').style.color = mode === 'pins' ? 'white' : 'var(--text)';
+            document.getElementById('mapModeHeatmap').style.background = mode === 'heatmap' ? 'var(--primary)' : 'transparent';
+            document.getElementById('mapModeHeatmap').style.color = mode === 'heatmap' ? 'white' : 'var(--text)';
+            document.getElementById('heatmapLegend').style.display = mode === 'heatmap' ? 'flex' : 'none';
+            if (!leafletMap) return;
+            if (mode === 'pins') {
+                if (_heatmapLayer) { leafletMap.removeLayer(_heatmapLayer); _heatmapLayer = null; }
+                if (markerClusterGroup) leafletMap.addLayer(markerClusterGroup);
+            } else {
+                if (markerClusterGroup) leafletMap.removeLayer(markerClusterGroup);
+                renderYieldHeatmap();
+            }
+        }
+
+        function getCapRateColor(capRate) {
+            if (capRate >= 5) return '#155724';
+            if (capRate >= 4) return '#28a745';
+            if (capRate >= 3) return '#ffc107';
+            if (capRate >= 2) return '#fd7e14';
+            return '#dc3545';
+        }
+
+        function renderYieldHeatmap() {
+            if (_heatmapLayer) { leafletMap.removeLayer(_heatmapLayer); _heatmapLayer = null; }
+            _heatmapLayer = L.layerGroup();
+
+            // Aggregate by neighborhood
+            var nbhMap = {};
+            filteredListings.forEach(function(listing) {
+                if (!listing.latitude || !listing.longitude) return;
+                var n = listing.neighborhood;
+                if (!nbhMap[n]) nbhMap[n] = { lats: [], lngs: [], capRates: [], cashFlows: [], prices: [], count: 0 };
+                var m = listing._investorMetrics || estimateInvestorMetrics(listing);
+                nbhMap[n].lats.push(listing.latitude);
+                nbhMap[n].lngs.push(listing.longitude);
+                nbhMap[n].capRates.push(m.capRate);
+                nbhMap[n].cashFlows.push(m.cashFlow);
+                nbhMap[n].prices.push(listing.price);
+                nbhMap[n].count++;
+            });
+
+            Object.keys(nbhMap).forEach(function(nbh) {
+                var d = nbhMap[nbh];
+                var avgLat = d.lats.reduce(function(a,b){return a+b;},0) / d.count;
+                var avgLng = d.lngs.reduce(function(a,b){return a+b;},0) / d.count;
+                var avgCapRate = d.capRates.reduce(function(a,b){return a+b;},0) / d.count;
+                var avgCashFlow = d.cashFlows.reduce(function(a,b){return a+b;},0) / d.count;
+                var avgPrice = d.prices.reduce(function(a,b){return a+b;},0) / d.count;
+                var color = getCapRateColor(avgCapRate);
+                var radius = Math.max(800, Math.min(d.count * 250, 3000));
+
+                var circle = L.circle([avgLat, avgLng], {
+                    radius: radius,
+                    color: color,
+                    fillColor: color,
+                    fillOpacity: 0.45,
+                    weight: 2
+                });
+
+                circle.bindPopup(
+                    '<div style="min-width:180px;">' +
+                    '<div style="font-weight:700; font-size:14px; margin-bottom:6px; color:var(--primary);">' + nbh + '</div>' +
+                    '<div style="font-size:12px; line-height:1.8;">' +
+                    '<div><strong>Listings:</strong> ' + d.count + '</div>' +
+                    '<div><strong>Avg Cap Rate:</strong> <span style="color:' + color + '; font-weight:700;">' + avgCapRate.toFixed(2) + '%</span></div>' +
+                    '<div><strong>Avg Cash Flow:</strong> ' + (avgCashFlow >= 0 ? '+' : '') + '$' + Math.round(avgCashFlow).toLocaleString() + '/mo</div>' +
+                    '<div><strong>Avg Price:</strong> ' + formatPrice(avgPrice) + '</div>' +
+                    '</div>' +
+                    '<div style="margin-top:8px;">' +
+                    '<button onclick="filterByNeighborhood(\'' + nbh + '\')" style="width:100%;padding:6px;background:var(--primary);color:white;border:none;border-radius:4px;cursor:pointer;font-size:11px;font-weight:600;">View Listings</button>' +
+                    '</div></div>'
+                );
+
+                circle.bindTooltip(nbh + ': ' + avgCapRate.toFixed(1) + '% cap', { permanent: false, direction: 'top' });
+                _heatmapLayer.addLayer(circle);
+            });
+
+            _heatmapLayer.addTo(leafletMap);
+        }
+
         function initializeMapTab() {
             if (typeof L === 'undefined') {
-                var mapEl = document.getElementById('map');
+                var mapEl = document.getElementById('mapCanvas');
                 if (mapEl) mapEl.innerHTML = '<div style="padding:40px;text-align:center;color:#888;">Loading map...</div>';
                 loadLeaflet().then(function() { initializeMapTab(); });
                 return;
             }
+            document.getElementById('mapToolbar').style.display = 'block';
             if (leafletMap) {
                 leafletMap.remove();
                 leafletMap = null;
+                _heatmapLayer = null;
             }
-            
-            const mapContainer = document.getElementById('map');
-            mapContainer.innerHTML = '<div id="mapCanvas" style="height: 100%;"></div>';
-            
-            leafletMap = L.map('mapCanvas').setView([49.2, -123.5], 9);  // Center between South Surrey and Vancouver Island
+
+            leafletMap = L.map('mapCanvas').setView([49.2, -123.5], 9);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '© OpenStreetMap contributors',
                 maxZoom: 19
             }).addTo(leafletMap);
-            
+
             if (markerClusterGroup) {
                 leafletMap.removeLayer(markerClusterGroup);
             }
             markerClusterGroup = L.markerClusterGroup();
-            
+
             const bounds = L.latLngBounds();
-            
+
             filteredListings.forEach((listing) => {
                 if (listing.latitude && listing.longitude) {
                     const color = getMarkerColor(listing.score, listing.listingIndex);
@@ -2949,9 +3226,9 @@
                         iconSize: [24, 24],
                         iconAnchor: [12, 12]
                     });
-                    
+
                     const marker = L.marker([listing.latitude, listing.longitude], { icon });
-                    
+
                     const offers = calculateOffers(listing);
                     const popupHtml = `
                         <div class="map-popup">
@@ -2979,14 +3256,18 @@
                             </div>
                         </div>
                     `;
-                    
+
                     marker.bindPopup(popupHtml);
                     markerClusterGroup.addLayer(marker);
                     bounds.extend([listing.latitude, listing.longitude]);
                 }
             });
-            
-            leafletMap.addLayer(markerClusterGroup);
+
+            if (_mapMode === 'pins') {
+                leafletMap.addLayer(markerClusterGroup);
+            } else {
+                renderYieldHeatmap();
+            }
             if (bounds.isValid()) {
                 leafletMap.fitBounds(bounds, { padding: [50, 50] });
             }
@@ -3718,14 +3999,25 @@
 
                 ${(function(){
                     var trend = marketTrends[listing.neighborhood] || {};
-                    if (!trend.yoyChange && trend.yoyChange !== 0) return '';
+                    var nbhData = (typeof neighborhoodEnrichment !== 'undefined' ? neighborhoodEnrichment[listing.neighborhood] : null) || {};
+                    var hasEnrich = nbhData.walkScore || nbhData.transitScore || nbhData.crimeIndex !== undefined || nbhData.avgHouseholdIncome;
+                    var hasTrend = trend.yoyChange !== undefined || trend.medianDOM;
+                    if (!hasEnrich && !hasTrend) return '';
                     var h = '<div style="background:#f0f0f0;padding:14px 16px;border-radius:4px;margin:16px 0;">';
-                    h += '<div style="font-weight:700;color:var(--primary);margin-bottom:10px;">Neighborhood Summary: ' + listing.neighborhood + '</div>';
-                    h += '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;font-size:12px;">';
-                    h += '<div><span style="color:#888;">YoY Change</span><br><strong style="color:' + (trend.yoyChange >= 0 ? 'var(--success)' : 'var(--danger)') + ';">' + (trend.yoyChange > 0 ? '+' : '') + trend.yoyChange + '%</strong></div>';
-                    h += '<div><span style="color:#888;">Median DOM</span><br><strong>' + (trend.medianDOM || 'N/A') + ' days</strong></div>';
-                    h += '<div><span style="color:#888;">Inventory</span><br><strong>' + (trend.inventory || 'N/A') + '</strong></div>';
-                    h += '<div><span style="color:#888;">Sale/List</span><br><strong>' + (trend.avgSaleToList ? (trend.avgSaleToList * 100).toFixed(1) + '%' : 'N/A') + '</strong></div>';
+                    h += '<div style="font-weight:700;color:var(--primary);margin-bottom:10px;">Neighborhood Snapshot: ' + listing.neighborhood + '</div>';
+                    h += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:8px;font-size:12px;">';
+                    if (nbhData.walkScore) h += '<div style="text-align:center;"><div style="font-size:18px;font-weight:700;color:var(--primary);">' + nbhData.walkScore + '</div><div style="font-size:10px;color:#888;">Walk Score</div></div>';
+                    if (nbhData.transitScore) h += '<div style="text-align:center;"><div style="font-size:18px;font-weight:700;color:var(--secondary);">' + nbhData.transitScore + '</div><div style="font-size:10px;color:#888;">Transit Score</div></div>';
+                    if (nbhData.crimeIndex !== undefined) h += '<div style="text-align:center;"><div style="font-size:18px;font-weight:700;color:' + (nbhData.crimeIndex < 20 ? 'var(--success)' : nbhData.crimeIndex < 40 ? '#856404' : 'var(--danger)') + ';">' + nbhData.crimeIndex + '</div><div style="font-size:10px;color:#888;">Crime Index</div></div>';
+                    if (nbhData.avgHouseholdIncome) h += '<div style="text-align:center;"><div style="font-size:18px;font-weight:700;color:var(--primary);">$' + Math.round(nbhData.avgHouseholdIncome/1000) + 'K</div><div style="font-size:10px;color:#888;">Avg Income</div></div>';
+                    if (trend.yoyChange !== undefined) {
+                        var yoyColor = trend.yoyChange > 0 ? 'var(--danger)' : 'var(--success)';
+                        var yoyArrow = trend.yoyChange > 0 ? '&uarr;' : '&darr;';
+                        h += '<div style="text-align:center;"><div style="font-size:18px;font-weight:700;color:' + yoyColor + ';">' + yoyArrow + Math.abs(trend.yoyChange).toFixed(1) + '%</div><div style="font-size:10px;color:#888;">YoY Price</div></div>';
+                    }
+                    if (trend.medianDOM) h += '<div style="text-align:center;"><div style="font-size:18px;font-weight:700;color:#666;">' + trend.medianDOM + '</div><div style="font-size:10px;color:#888;">Median DOM</div></div>';
+                    if (trend.inventory) h += '<div style="text-align:center;"><div style="font-size:18px;font-weight:700;color:#666;">' + trend.inventory + '</div><div style="font-size:10px;color:#888;">Inventory</div></div>';
+                    if (trend.avgSaleToList) h += '<div style="text-align:center;"><div style="font-size:18px;font-weight:700;color:#666;">' + (trend.avgSaleToList * 100).toFixed(1) + '%</div><div style="font-size:10px;color:#888;">Sale/List</div></div>';
                     h += '</div></div>';
                     return h;
                 })()}
@@ -3820,11 +4112,19 @@
                     return html;
                 })()}
 
+                <div style="background:var(--light-gray);border-radius:8px;padding:14px 16px;margin:0 0 16px 0;">
+                    <div style="font-weight:700;color:var(--primary);margin-bottom:8px;font-size:13px;">Notes &amp; Tags</div>
+                    <div id="tagButtons_${listingIndex}" style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:10px;">
+                        ${renderTagButtons(listingIndex)}
+                    </div>
+                    <textarea id="listingNote_${listingIndex}" placeholder="Add a private note about this property..." style="width:100%;min-height:60px;padding:8px;border:1px solid var(--border);border-radius:4px;font-size:12px;resize:vertical;box-sizing:border-box;" oninput="saveListingNote(${listingIndex})">${(listingNotes[listingIndex] || '').replace(/</g, '&lt;')}</textarea>
+                </div>
+
                 <button class="btn-success" onclick="toggleShortlist(${listingIndex}); closeDetailModal(); initializeShortlistTab();" style="width: 100%;">
                     ${isShortlisted ? 'Remove from Shortlist' : 'Add to Shortlist'}
                 </button>
             `;
-            
+
             document.getElementById('modalBody').innerHTML = modalHtml;
             document.getElementById('detailModal').classList.add('active');
         }
@@ -3848,6 +4148,10 @@ Competitive: ${formatPrice(offers.competitive)}`;
             });
         }
         
+        // 13A: Format missing data as "—" instead of 0
+        function fmtVal(v) { return (v && v > 0) ? v : '—'; }
+        function fmtSqft(v) { return (v && v > 0) ? v.toLocaleString() : '—'; }
+
         function formatPrice(price) {
             return new Intl.NumberFormat('en-US', {
                 style: 'currency',
@@ -3901,9 +4205,32 @@ Competitive: ${formatPrice(offers.competitive)}`;
         }
         
         function getListingBadge(listing) {
-            if (listing.dom <= 7) return '<span class="listing-badge badge-new">New</span>';
-            if (listing.dom >= 90) return '<span class="listing-badge badge-hot">90+ Days</span>';
-            return '';
+            var badges = '';
+            if (listing.dom <= 7) badges += '<span class="listing-badge badge-new">New</span>';
+            if (listing.dom >= 90) badges += '<span class="listing-badge badge-hot">90+ Days</span>';
+            badges += getMarketConditionBadge(listing);
+            return badges;
+        }
+
+        function getMarketConditionBadge(listing) {
+            var trend = marketTrends[listing.neighborhood];
+            if (!trend) return '';
+            // Score signals: negative YoY, high inventory, low sale-to-list, high median DOM → buyer's market
+            var signals = 0;
+            if (trend.yoyChange < -3) signals -= 2;
+            else if (trend.yoyChange < 0) signals -= 1;
+            else if (trend.yoyChange > 5) signals += 2;
+            else if (trend.yoyChange > 2) signals += 1;
+            if (trend.inventory === 'high') signals -= 1;
+            else if (trend.inventory === 'low') signals += 1;
+            if (trend.avgSaleToList < 0.96) signals -= 1;
+            else if (trend.avgSaleToList > 1.0) signals += 1;
+            if (trend.medianDOM > 50) signals -= 1;
+            else if (trend.medianDOM < 20) signals += 1;
+
+            if (signals <= -2) return '<span style="font-size:9px;padding:1px 6px;border-radius:8px;background:#d4edda;color:#155724;font-weight:600;white-space:nowrap;margin-left:3px;">Buyer\'s</span>';
+            if (signals >= 2) return '<span style="font-size:9px;padding:1px 6px;border-radius:8px;background:#f8d7da;color:#721c24;font-weight:600;white-space:nowrap;margin-left:3px;">Seller\'s</span>';
+            return '<span style="font-size:9px;padding:1px 6px;border-radius:8px;background:#fff3cd;color:#856404;font-weight:600;white-space:nowrap;margin-left:3px;">Balanced</span>';
         }
 
         function exportFilteredCSV() {
@@ -5487,14 +5814,54 @@ Competitive: ${formatPrice(offers.competitive)}`;
                 document.getElementById('rescissionResult').innerHTML = '<p style="color:#888;">Enter the acceptance date to see your rescission deadline and fee.</p>';
                 return;
             }
-            // BC statutory holidays (2025-2027 common dates)
+            // HBRP holidays per BC Interpretation Act s.29 — NOT the same as Employment Standards holidays.
+            // Includes Easter Monday and Boxing Day (Dec 26).
+            // Does NOT include National Indigenous Peoples Day (Jun 21) or any non-Interpretation Act holidays.
+            // Thanksgiving kept as it arguably falls under s.29(d) (day set by Parliament for thanksgiving).
+            // Source: BCREA HBRP Calculator, BCFSA HBRP Guideline, Interpretation Act [RSBC 1996] c.238 s.29
             var bcHolidays = [
                 // 2025
-                '2025-01-01','2025-02-17','2025-04-18','2025-05-19','2025-06-30','2025-07-01','2025-08-04','2025-09-01','2025-09-30','2025-10-13','2025-11-11','2025-12-25',
+                '2025-01-01',  // New Year's Day
+                '2025-02-17',  // Family Day (3rd Monday Feb)
+                '2025-04-18',  // Good Friday
+                '2025-04-21',  // Easter Monday
+                '2025-05-19',  // Victoria Day
+                '2025-07-01',  // Canada Day
+                '2025-08-04',  // BC Day (1st Monday Aug)
+                '2025-09-01',  // Labour Day (1st Monday Sep)
+                '2025-09-30',  // National Day for Truth and Reconciliation
+                '2025-10-13',  // Thanksgiving (2nd Monday Oct) — s.29(d) federal proclamation
+                '2025-11-11',  // Remembrance Day
+                '2025-12-25',  // Christmas Day
+                '2025-12-26',  // Boxing Day
                 // 2026
-                '2026-01-01','2026-02-16','2026-04-03','2026-05-18','2026-06-21','2026-07-01','2026-08-03','2026-09-07','2026-09-30','2026-10-12','2026-11-11','2026-12-25',
+                '2026-01-01',  // New Year's Day
+                '2026-02-16',  // Family Day
+                '2026-04-03',  // Good Friday
+                '2026-04-06',  // Easter Monday
+                '2026-05-18',  // Victoria Day
+                '2026-07-01',  // Canada Day
+                '2026-08-03',  // BC Day
+                '2026-09-07',  // Labour Day
+                '2026-09-30',  // Truth and Reconciliation
+                '2026-10-12',  // Thanksgiving
+                '2026-11-11',  // Remembrance Day
+                '2026-12-25',  // Christmas Day
+                '2026-12-26',  // Boxing Day
                 // 2027
-                '2027-01-01','2027-02-15','2027-03-26','2027-05-24','2027-06-21','2027-07-01','2027-08-02','2027-09-06','2027-09-30','2027-10-11','2027-11-11','2027-12-25'
+                '2027-01-01',  // New Year's Day
+                '2027-02-15',  // Family Day
+                '2027-03-26',  // Good Friday
+                '2027-03-29',  // Easter Monday
+                '2027-05-24',  // Victoria Day
+                '2027-07-01',  // Canada Day
+                '2027-08-02',  // BC Day
+                '2027-09-06',  // Labour Day
+                '2027-09-30',  // Truth and Reconciliation
+                '2027-10-11',  // Thanksgiving
+                '2027-11-11',  // Remembrance Day
+                '2027-12-25',  // Christmas Day
+                '2027-12-26'   // Boxing Day
             ];
             function isBusinessDay(d) {
                 var day = d.getDay();
@@ -5543,7 +5910,7 @@ Competitive: ${formatPrice(offers.competitive)}`;
             }
             html += '<tr><td style="padding:4px 0;border-top:1px solid #ddd;padding-top:8px;">Rescission Fee (0.25%):</td><td style="text-align:right;font-weight:700;color:var(--danger);border-top:1px solid #ddd;padding-top:8px;">$' + rescissionFee.toLocaleString() + '</td></tr>';
             html += '</table>';
-            html += '<div style="margin-top:10px;padding:8px;background:#fff3cd;border-radius:4px;font-size:11px;color:#856404;"><strong>Important:</strong> You must deliver written notice of rescission before midnight on the deadline date. The 0.25% fee is payable to the seller. Consult a lawyer for proper rescission procedure.</div>';
+            html += '<div style="margin-top:10px;padding:8px;background:#fff3cd;border-radius:4px;font-size:11px;color:#856404;line-height:1.5;"><strong>Important:</strong> You must deliver written notice of rescission before midnight on the deadline date. The 0.25% fee is payable to the seller. Consult a lawyer for proper rescission procedure.<br><br><strong>Note:</strong> "Business days" for HBRP exclude Saturdays, Sundays, and holidays as defined in the BC <em>Interpretation Act</em> (s.29), which differs from Employment Standards holidays. This includes Easter Monday and Boxing Day.</div>';
             document.getElementById('rescissionResult').innerHTML = html;
         }
 
@@ -5554,6 +5921,130 @@ Competitive: ${formatPrice(offers.competitive)}`;
                 return;
             }
             generateOfferSummary();
+        }
+
+        // ===== AFFORDABILITY CALCULATOR =====
+        var _lastAffordMaxPrice = 0;
+        function calcAffordability() {
+            var income = parseFloat(document.getElementById('affIncome').value) || 0;
+            var debts = parseFloat(document.getElementById('affDebts').value) || 0;
+            var downAvail = parseFloat(document.getElementById('affDown').value) || 0;
+            var contractRate = parseFloat(document.getElementById('affRate').value) || 5.5;
+            var years = parseInt(document.getElementById('affAmort').value) || 25;
+            var taxRate = parseFloat(document.getElementById('affTaxRate').value) || 0.35;
+            var strata = parseFloat(document.getElementById('affStrata').value) || 0;
+            var heat = parseFloat(document.getElementById('affHeat').value) || 0;
+            var monthlyIncome = income / 12;
+
+            // Stress test: higher of contract + 2% or 5.25%
+            var stressRate = Math.max(contractRate + 2, 5.25);
+            var monthlyStressRate = stressRate / 100 / 12;
+            var nPayments = years * 12;
+
+            // Binary search for max purchase price where GDS <= 39% AND TDS <= 44%
+            var lo = 0, hi = 5000000;
+            for (var iter = 0; iter < 50; iter++) {
+                var mid = (lo + hi) / 2;
+                var mortAmt = mid - downAvail;
+                if (mortAmt < 0) mortAmt = 0;
+                // Add CMHC if < 20% down
+                var downPct = mid > 0 ? (downAvail / mid * 100) : 100;
+                var cmhcPremium = 0;
+                if (downPct < 20 && mid <= 1500000) {
+                    var cmhcRate = downPct >= 15 ? 0.028 : downPct >= 10 ? 0.031 : downPct >= 5 ? 0.04 : 0;
+                    cmhcPremium = mortAmt * cmhcRate;
+                    mortAmt += cmhcPremium;
+                }
+                var mortPmt = monthlyStressRate > 0 && mortAmt > 0 ? mortAmt * (monthlyStressRate * Math.pow(1 + monthlyStressRate, nPayments)) / (Math.pow(1 + monthlyStressRate, nPayments) - 1) : 0;
+                var taxPmt = mid * (taxRate / 100) / 12;
+                var gds = monthlyIncome > 0 ? (mortPmt + taxPmt + heat + strata * 0.5) / monthlyIncome : 1;
+                var tds = monthlyIncome > 0 ? (mortPmt + taxPmt + heat + strata * 0.5 + debts) / monthlyIncome : 1;
+                if (gds <= 0.39 && tds <= 0.44) { lo = mid; } else { hi = mid; }
+            }
+            var maxPrice = Math.floor(lo / 1000) * 1000; // Round down to nearest $1K
+
+            // Check minimum down payment requirement
+            var minDown;
+            if (maxPrice <= 500000) minDown = maxPrice * 0.05;
+            else if (maxPrice <= 1500000) minDown = 25000 + (maxPrice - 500000) * 0.10;
+            else minDown = maxPrice * 0.20;
+            minDown = Math.ceil(minDown);
+
+            // If available down < minimum required, cap the price
+            if (downAvail < minDown) {
+                // Re-search with minimum down constraint
+                lo = 0; hi = maxPrice;
+                for (var iter2 = 0; iter2 < 50; iter2++) {
+                    var mid2 = (lo + hi) / 2;
+                    var reqDown;
+                    if (mid2 <= 500000) reqDown = mid2 * 0.05;
+                    else if (mid2 <= 1500000) reqDown = 25000 + (mid2 - 500000) * 0.10;
+                    else reqDown = mid2 * 0.20;
+                    if (downAvail >= reqDown) { lo = mid2; } else { hi = mid2; }
+                }
+                maxPrice = Math.floor(lo / 1000) * 1000;
+            }
+
+            // Recalculate final values at maxPrice
+            var finalMort = maxPrice - downAvail;
+            if (finalMort < 0) finalMort = 0;
+            var finalDownPct = maxPrice > 0 ? (downAvail / maxPrice * 100) : 100;
+            var finalCMHC = 0;
+            if (finalDownPct < 20 && maxPrice <= 1500000) {
+                var cr = finalDownPct >= 15 ? 0.028 : finalDownPct >= 10 ? 0.031 : finalDownPct >= 5 ? 0.04 : 0;
+                finalCMHC = Math.round(finalMort * cr);
+                finalMort += finalCMHC;
+            }
+            var monthlyActualRate = contractRate / 100 / 12;
+            var actualMortPmt = monthlyActualRate > 0 && finalMort > 0 ? finalMort * (monthlyActualRate * Math.pow(1 + monthlyActualRate, nPayments)) / (Math.pow(1 + monthlyActualRate, nPayments) - 1) : 0;
+            var finalTax = maxPrice * (taxRate / 100) / 12;
+            var gdsActual = monthlyIncome > 0 ? (actualMortPmt + finalTax + heat + strata * 0.5) / monthlyIncome * 100 : 0;
+            var tdsActual = monthlyIncome > 0 ? (actualMortPmt + finalTax + heat + strata * 0.5 + debts) / monthlyIncome * 100 : 0;
+
+            // Min down for final price
+            if (maxPrice <= 500000) minDown = maxPrice * 0.05;
+            else if (maxPrice <= 1500000) minDown = 25000 + (maxPrice - 500000) * 0.10;
+            else minDown = maxPrice * 0.20;
+
+            _lastAffordMaxPrice = maxPrice;
+
+            // Update UI
+            document.getElementById('affMaxPrice').textContent = '$' + maxPrice.toLocaleString();
+            document.getElementById('affStressNote').textContent = 'Stress-tested at ' + stressRate.toFixed(2) + '% (contract ' + contractRate + '% + 2%)';
+            document.getElementById('affMaxMort').textContent = '$' + Math.round(finalMort).toLocaleString();
+            document.getElementById('affMortPmt').textContent = '$' + Math.round(actualMortPmt).toLocaleString();
+            document.getElementById('affTaxPmt').textContent = '$' + Math.round(finalTax).toLocaleString();
+            document.getElementById('affHeatStrata').textContent = '$' + (heat + strata).toLocaleString();
+            document.getElementById('affDebtsPmt').textContent = '$' + debts.toLocaleString();
+            document.getElementById('affCMHC').textContent = finalCMHC > 0 ? '$' + finalCMHC.toLocaleString() + ' (added to mortgage)' : '$0';
+            document.getElementById('affMinDown').textContent = '$' + Math.ceil(minDown).toLocaleString() + ' (' + (maxPrice > 0 ? (minDown / maxPrice * 100).toFixed(1) : 0) + '%)';
+
+            var gdsEl = document.getElementById('affGDS');
+            gdsEl.textContent = gdsActual.toFixed(1) + '%';
+            gdsEl.style.color = gdsActual <= 32 ? '#155724' : gdsActual <= 39 ? '#856404' : '#721c24';
+            gdsEl.parentElement.style.background = gdsActual <= 32 ? '#d4edda' : gdsActual <= 39 ? '#fff3cd' : '#f8d7da';
+
+            var tdsEl = document.getElementById('affTDS');
+            tdsEl.textContent = tdsActual.toFixed(1) + '%';
+            tdsEl.style.color = tdsActual <= 39 ? '#004085' : tdsActual <= 44 ? '#856404' : '#721c24';
+            tdsEl.parentElement.style.background = tdsActual <= 39 ? '#e7f3ff' : tdsActual <= 44 ? '#fff3cd' : '#f8d7da';
+
+            var notes = [];
+            notes.push('Qualification uses stress test rate of ' + stressRate.toFixed(2) + '%. Your actual payments use the contract rate of ' + contractRate + '%.');
+            if (finalCMHC > 0) notes.push('CMHC insurance of $' + finalCMHC.toLocaleString() + ' is added to your mortgage balance.');
+            if (downAvail < minDown) notes.push('<strong style="color:var(--danger);">Your down payment ($' + downAvail.toLocaleString() + ') is below the minimum required ($' + Math.ceil(minDown).toLocaleString() + ').</strong>');
+            if (maxPrice > 1500000) notes.push('Properties over $1.5M require minimum 20% down payment and are not eligible for CMHC insurance.');
+            document.getElementById('affNotes').innerHTML = '<ul style="margin:0;padding-left:18px;">' + notes.map(function(n) { return '<li style="margin-bottom:4px;">' + n + '</li>'; }).join('') + '</ul>';
+
+            document.getElementById('affShowBtn').style.display = maxPrice > 0 ? 'block' : 'none';
+        }
+
+        function applyAffordabilityFilter() {
+            if (_lastAffordMaxPrice <= 0) return;
+            document.getElementById('priceMin').value = '';
+            document.getElementById('priceMax').value = _lastAffordMaxPrice;
+            applyFilters();
+            switchTabDirect('listings');
         }
 
         // ===== MORTGAGE CALCULATOR =====
@@ -5873,12 +6364,136 @@ Competitive: ${formatPrice(offers.competitive)}`;
             document.getElementById('ctcNotes').innerHTML = '<strong>Notes:</strong><ul style="margin:6px 0 0;padding-left:20px;">' + notes.map(function(n) { return '<li style="margin-bottom:4px;">' + n + '</li>'; }).join('') + '</ul>';
         }
 
+        // ===== CMHC INSURANCE BREAKDOWN =====
+        function calcCMHCBreakdown() {
+            var price = parseFloat(document.getElementById('cmhcPrice').value) || 0;
+            var el = document.getElementById('cmhcResults');
+            if (price <= 0) { el.innerHTML = '<div style="text-align:center;color:#999;padding:20px;">Enter a valid price</div>'; return; }
+
+            // Min down payment rules
+            var minDown;
+            if (price <= 500000) { minDown = price * 0.05; }
+            else if (price <= 1500000) { minDown = 25000 + (price - 500000) * 0.10; }
+            else { minDown = price * 0.20; }
+            var minDownPct = (minDown / price * 100);
+
+            var html = '';
+            if (price > 1500000) {
+                html += '<div style="background:#f8d7da;border:1px solid #dc3545;border-radius:8px;padding:16px;text-align:center;margin-bottom:16px;">';
+                html += '<div style="font-size:16px;font-weight:700;color:#721c24;">NOT Eligible for CMHC Insurance</div>';
+                html += '<div style="font-size:13px;color:#856404;margin-top:6px;">Properties over $1,500,000 require a minimum 20% down payment.</div>';
+                html += '</div>';
+                html += '<table style="width:100%;border-collapse:collapse;font-size:13px;">';
+                html += '<tr style="background:var(--primary);color:white;font-weight:700;"><td style="padding:10px 8px;">Minimum Down Payment (20%)</td><td style="padding:10px 8px;text-align:right;">$' + Math.round(minDown).toLocaleString() + '</td></tr>';
+                html += '</table>';
+            } else {
+                // Calculate premiums at each tier
+                var tiers = [
+                    { label: '5% Down', pct: 5, rate: 4.00 },
+                    { label: '10% Down', pct: 10, rate: 3.10 },
+                    { label: '15% Down', pct: 15, rate: 2.80 },
+                    { label: '20% Down', pct: 20, rate: 0 }
+                ];
+
+                html += '<div style="text-align:center;margin-bottom:16px;">';
+                html += '<div style="font-size:12px;color:#888;">Min. Down Payment Required</div>';
+                html += '<div style="font-size:28px;font-weight:700;color:var(--primary);">$' + Math.round(minDown).toLocaleString() + '</div>';
+                html += '<div style="font-size:12px;color:#666;">(' + minDownPct.toFixed(1) + '% of $' + price.toLocaleString() + ')</div>';
+                html += '</div>';
+
+                html += '<table style="width:100%;border-collapse:collapse;font-size:12px;">';
+                html += '<thead><tr style="background:var(--primary);color:white;"><th style="padding:8px;text-align:left;">Scenario</th><th style="padding:8px;text-align:right;">Down $</th><th style="padding:8px;text-align:center;">Rate</th><th style="padding:8px;text-align:right;">Premium</th><th style="padding:8px;text-align:right;">Total Mortgage</th></tr></thead>';
+                html += '<tbody>';
+                tiers.forEach(function(tier) {
+                    var down = price * tier.pct / 100;
+                    if (down < minDown && tier.pct < 20) return; // Skip if below min
+                    var mortgage = price - down;
+                    var premium = mortgage * tier.rate / 100;
+                    var totalMort = mortgage + premium;
+                    var bg = tier.rate === 0 ? '#e7f3ff' : tier.rate <= 2.80 ? '#d4edda' : tier.rate <= 3.10 ? '#fff3cd' : '#f8d7da';
+                    html += '<tr style="background:' + bg + ';">';
+                    html += '<td style="padding:8px;font-weight:600;">' + tier.label + '</td>';
+                    html += '<td style="padding:8px;text-align:right;">$' + Math.round(down).toLocaleString() + '</td>';
+                    html += '<td style="padding:8px;text-align:center;font-weight:700;">' + (tier.rate > 0 ? tier.rate.toFixed(2) + '%' : 'None') + '</td>';
+                    html += '<td style="padding:8px;text-align:right;">' + (premium > 0 ? '$' + Math.round(premium).toLocaleString() : '$0') + '</td>';
+                    html += '<td style="padding:8px;text-align:right;font-weight:600;">$' + Math.round(totalMort).toLocaleString() + '</td>';
+                    html += '</tr>';
+                });
+                html += '</tbody></table>';
+
+                // Monthly payment comparison at 5.5%
+                var mRate = 0.055 / 12;
+                var nPmt = 300;
+                html += '<div style="margin-top:16px;"><div style="font-weight:700;color:var(--primary);margin-bottom:8px;font-size:13px;">Monthly Payment Comparison (5.5%, 25yr)</div>';
+                html += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;">';
+                tiers.forEach(function(tier) {
+                    var down = price * tier.pct / 100;
+                    if (down < minDown && tier.pct < 20) return;
+                    var mortgage = price - down;
+                    var premium = mortgage * tier.rate / 100;
+                    var totalMort = mortgage + premium;
+                    var pmt = mRate > 0 ? totalMort * (mRate * Math.pow(1+mRate,nPmt)) / (Math.pow(1+mRate,nPmt)-1) : 0;
+                    html += '<div style="background:white;border:1px solid #e0e0e0;border-radius:8px;padding:10px;text-align:center;">';
+                    html += '<div style="font-size:11px;color:#888;">' + tier.label + '</div>';
+                    html += '<div style="font-size:18px;font-weight:700;color:var(--primary);">$' + Math.round(pmt).toLocaleString() + '</div>';
+                    html += '<div style="font-size:10px;color:#999;">/month</div></div>';
+                });
+                html += '</div></div>';
+            }
+
+            el.innerHTML = html;
+        }
+
         // ===== SHORTLIST NOTES =====
         var shortlistNotes = JSON.parse(localStorage.getItem('shortlistNotes') || '{}');
         function saveShortlistNote(idx) {
             var note = document.getElementById('note_' + idx).value;
             shortlistNotes[idx] = note;
             localStorage.setItem('shortlistNotes', JSON.stringify(shortlistNotes));
+        }
+
+        // ===== LISTING NOTES & TAGS =====
+        var PRESET_TAGS = ['favorite', 'needsViewing', 'underNegotiation', 'overpriced', 'hidden_gem'];
+        var TAG_LABELS = { favorite: '⭐ Favorite', needsViewing: '👁 Needs Viewing', underNegotiation: '🤝 Under Negotiation', overpriced: '💰 Overpriced', hidden_gem: '💎 Hidden Gem' };
+        var listingNotes = JSON.parse(localStorage.getItem('listingNotes') || '{}');
+        var listingTags = JSON.parse(localStorage.getItem('listingTags') || '{}');
+
+        function saveListingNote(idx) {
+            var el = document.getElementById('listingNote_' + idx);
+            if (!el) return;
+            var note = el.value.trim();
+            if (note) { listingNotes[idx] = note; } else { delete listingNotes[idx]; }
+            localStorage.setItem('listingNotes', JSON.stringify(listingNotes));
+        }
+
+        function toggleListingTag(idx, tag) {
+            if (!listingTags[idx]) listingTags[idx] = [];
+            var i = listingTags[idx].indexOf(tag);
+            if (i >= 0) { listingTags[idx].splice(i, 1); } else { listingTags[idx].push(tag); }
+            if (listingTags[idx].length === 0) delete listingTags[idx];
+            localStorage.setItem('listingTags', JSON.stringify(listingTags));
+            // Re-render tag buttons
+            var container = document.getElementById('tagButtons_' + idx);
+            if (container) container.innerHTML = renderTagButtons(idx);
+        }
+
+        function renderTagButtons(idx) {
+            var tags = listingTags[idx] || [];
+            return PRESET_TAGS.map(function(t) {
+                var active = tags.indexOf(t) >= 0;
+                return '<button onclick="event.stopPropagation(); toggleListingTag(' + idx + ', \'' + t + '\')" style="padding:3px 8px;font-size:10px;border:1px solid ' + (active ? 'var(--primary)' : 'var(--border)') + ';background:' + (active ? 'var(--primary)' : 'var(--white)') + ';color:' + (active ? 'white' : 'var(--text)') + ';border-radius:12px;cursor:pointer;white-space:nowrap;">' + TAG_LABELS[t] + '</button>';
+            }).join('');
+        }
+
+        function getListingTagBadges(idx) {
+            var tags = listingTags[idx] || [];
+            if (tags.length === 0 && !listingNotes[idx]) return '';
+            var html = '';
+            tags.forEach(function(t) {
+                html += '<span style="font-size:9px;padding:1px 5px;border-radius:8px;background:var(--primary);color:white;white-space:nowrap;">' + TAG_LABELS[t] + '</span>';
+            });
+            if (listingNotes[idx]) html += '<span style="font-size:9px;padding:1px 5px;border-radius:8px;background:#6f42c1;color:white;" title="' + listingNotes[idx].replace(/"/g, '&quot;') + '">📝</span>';
+            return '<span style="display:inline-flex;gap:3px;flex-wrap:wrap;margin-left:4px;">' + html + '</span>';
         }
 
         // ===== CONTACT LISTING AGENT =====
@@ -5970,6 +6585,9 @@ Competitive: ${formatPrice(offers.competitive)}`;
             document.getElementById('dashLettersSent').textContent = ptStats.lettersSent;
             document.getElementById('dashOffersOut').textContent = ptStats.offersOut;
 
+            // Buyer Quick Stats
+            renderBuyerQuickStats();
+
             // Profile summary
             var profile = JSON.parse(localStorage.getItem('buyerProfile') || '{}');
             if (profile.name) {
@@ -5981,6 +6599,42 @@ Competitive: ${formatPrice(offers.competitive)}`;
                 phtml += '</div>';
                 document.getElementById('dashProfileSummary').innerHTML = phtml;
             }
+        }
+
+        function renderBuyerQuickStats() {
+            var el = document.getElementById('dashBuyerQuickStats');
+            if (!el || rawListings.length === 0) return;
+
+            var under500 = 0, under1m = 0, priceDrops = 0, newThisWeek = 0, sqftCount = 0, sqftSum = 0;
+            var profile = JSON.parse(localStorage.getItem('buyerProfile') || '{}');
+            var budgetMax = parseFloat(profile.budgetMax) || 0;
+            var budgetMatch = 0;
+
+            rawListings.forEach(function(l) {
+                if (l.price < 500000) under500++;
+                if (l.price < 1000000) under1m++;
+                if (l.dom <= 7) newThisWeek++;
+                if (l.dom > 30 && l.score >= 50) priceDrops++; // Proxy: high DOM + decent score = potential price reduction
+                if (l.sqft > 0) { sqftSum += l.price / l.sqft; sqftCount++; }
+                if (budgetMax > 0 && l.price <= budgetMax) budgetMatch++;
+            });
+
+            var avgPpsf = sqftCount > 0 ? Math.round(sqftSum / sqftCount) : 0;
+
+            function statCard(value, label, color, onclick) {
+                return '<div onclick="' + onclick + '" style="background:white;border:1px solid #e0e0e0;border-radius:8px;padding:14px 10px;text-align:center;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.borderColor=\'' + color + '\'" onmouseout="this.style.borderColor=\'#e0e0e0\'">' +
+                    '<div style="font-size:24px;font-weight:700;color:' + color + ';">' + value + '</div>' +
+                    '<div style="font-size:10px;color:#888;margin-top:2px;text-transform:uppercase;font-weight:600;">' + label + '</div></div>';
+            }
+
+            el.innerHTML =
+                statCard(under500, 'Under $500K', '#28a745', "switchTabDirect('listings');document.getElementById('priceMax').value=500000;applyFilters();") +
+                statCard(under1m, 'Under $1M', '#2E75B6', "switchTabDirect('listings');document.getElementById('priceMax').value=1000000;applyFilters();") +
+                statCard(priceDrops, 'Price Drops', '#dc3545', "switchTabDirect('deals');") +
+                statCard(newThisWeek, 'New This Week', '#fd7e14', "switchTabDirect('listings');document.getElementById('sortBy').value='dom-asc';applyFilters();") +
+                statCard('$' + avgPpsf, 'Avg $/SqFt', '#6f42c1', "switchTabDirect('listings');document.getElementById('sortBy').value='ppsf-asc';applyFilters();") +
+                (budgetMax > 0 ? statCard(budgetMatch, 'Budget Match', '#e83e8c', "switchTabDirect('listings');document.getElementById('priceMax').value=" + budgetMax + ";applyFilters();") :
+                    statCard(rawListings.length, 'Total Listings', '#e83e8c', "switchTabDirect('listings');"));
         }
 
         // ===== BUYER PROFILE =====
@@ -6510,6 +7164,8 @@ Competitive: ${formatPrice(offers.competitive)}`;
                 buyerProfile: JSON.parse(localStorage.getItem('buyerProfile') || '{}'),
                 shortlist: JSON.parse(localStorage.getItem('shortlist') || '[]'),
                 shortlistNotes: JSON.parse(localStorage.getItem('shortlistNotes') || '{}'),
+                listingNotes: JSON.parse(localStorage.getItem('listingNotes') || '{}'),
+                listingTags: JSON.parse(localStorage.getItem('listingTags') || '{}'),
                 offerHistory: JSON.parse(localStorage.getItem('offerHistory') || '[]'),
                 filterPresets: JSON.parse(localStorage.getItem('filterPresets') || '[]'),
                 contactLog: JSON.parse(localStorage.getItem('contactLog') || '[]'),
@@ -6542,6 +7198,8 @@ Competitive: ${formatPrice(offers.competitive)}`;
                     if (data.buyerProfile) localStorage.setItem('buyerProfile', JSON.stringify(data.buyerProfile));
                     if (data.shortlist) localStorage.setItem('shortlist', JSON.stringify(data.shortlist));
                     if (data.shortlistNotes) localStorage.setItem('shortlistNotes', JSON.stringify(data.shortlistNotes));
+                    if (data.listingNotes) { localStorage.setItem('listingNotes', JSON.stringify(data.listingNotes)); listingNotes = data.listingNotes; }
+                    if (data.listingTags) { localStorage.setItem('listingTags', JSON.stringify(data.listingTags)); listingTags = data.listingTags; }
                     if (data.offerHistory) localStorage.setItem('offerHistory', JSON.stringify(data.offerHistory));
                     if (data.filterPresets) localStorage.setItem('filterPresets', JSON.stringify(data.filterPresets));
                     if (data.contactLog) localStorage.setItem('contactLog', JSON.stringify(data.contactLog));
@@ -7898,6 +8556,25 @@ Competitive: ${formatPrice(offers.competitive)}`;
                 if (daysSince > 0) html += '<span><strong>Added:</strong> ' + daysSince + ' days ago</span>';
                 html += '</div>';
                 if (t.notes) html += '<div style="font-size:12px;color:#666;margin-bottom:10px;font-style:italic;">' + t.notes + '</div>';
+                // 8C: Status timeline
+                if (t.statusHistory && t.statusHistory.length > 0) {
+                    html += '<div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap;margin-bottom:10px;font-size:10px;">';
+                    t.statusHistory.forEach(function(h) {
+                        var hColor = _statusColors[h.status] || '#6c757d';
+                        var hDate = h.date ? new Date(h.date).toLocaleDateString() : '';
+                        html += '<span style="padding:2px 6px;border-radius:8px;background:' + hColor + '22;color:' + hColor + ';border:1px solid ' + hColor + '44;" title="' + hDate + '">' + h.status + '</span><span style="color:#ccc;">&rarr;</span>';
+                    });
+                    html += '<span style="padding:2px 6px;border-radius:8px;background:' + statusColor + ';color:white;font-weight:600;">' + t.status + '</span>';
+                    html += '</div>';
+                }
+                // 8D: Duplicate detection
+                var dupeMatch = checkPrivateTargetDuplicate(t.address);
+                if (dupeMatch) {
+                    html += '<div style="background:#e7f3ff;border:1px solid #b8daff;border-radius:4px;padding:6px 10px;font-size:11px;color:#004085;margin-bottom:10px;">';
+                    html += '<strong>Match found in listings:</strong> ' + dupeMatch.addr + ' — ' + formatPrice(dupeMatch.price) + ' (' + dupeMatch.dom + ' DOM)';
+                    html += ' <button onclick="showDetailModal(' + dupeMatch.listingIndex + ')" style="padding:2px 8px;font-size:10px;border:1px solid var(--primary);color:var(--primary);border-radius:4px;background:white;cursor:pointer;margin-left:6px;">View</button>';
+                    html += '</div>';
+                }
                 html += '<div style="display:flex;gap:8px;flex-wrap:wrap;">';
                 html += '<button onclick="editPrivateTarget(' + i + ')" style="padding:4px 12px;font-size:11px;border:1px solid #ccc;border-radius:4px;background:white;cursor:pointer;">Edit</button>';
                 html += '<button onclick="showLetterGenerator(' + i + ')" style="padding:4px 12px;font-size:11px;border:1px solid var(--secondary);color:var(--secondary);border-radius:4px;background:white;cursor:pointer;">Draft Letter</button>';
@@ -7912,6 +8589,8 @@ Competitive: ${formatPrice(offers.competitive)}`;
             });
             html += '</div>';
             container.innerHTML = html;
+            renderCampaignStats();
+            renderFollowupReminders();
         }
 
         function addPrivateTarget() {
@@ -8001,10 +8680,15 @@ Competitive: ${formatPrice(offers.competitive)}`;
 
         function updateTargetStatus(index, status) {
             var targets = loadPrivateTargets();
+            // 8C: Track status history
+            if (!targets[index].statusHistory) targets[index].statusHistory = [];
+            targets[index].statusHistory.push({ status: targets[index].status, date: targets[index].statusDate || targets[index].addedDate || new Date().toISOString() });
             targets[index].status = status;
             targets[index].statusDate = new Date().toISOString();
             savePrivateTargets(targets);
             renderPrivateTargets();
+            renderCampaignStats();
+            renderFollowupReminders();
         }
 
         function getPrivateTargetStats() {
@@ -8012,6 +8696,64 @@ Competitive: ${formatPrice(offers.competitive)}`;
             var lettersSent = targets.filter(function(t) { return ['Letter Sent','Response Received','Negotiating','Offer Submitted','Accepted','Declined','No Response'].indexOf(t.status) >= 0; }).length;
             var offersOut = targets.filter(function(t) { return ['Offer Submitted','Accepted'].indexOf(t.status) >= 0; }).length;
             return { total: targets.length, lettersSent: lettersSent, offersOut: offersOut };
+        }
+
+        // 8B: Campaign Statistics Bar
+        function renderCampaignStats() {
+            var targets = loadPrivateTargets();
+            var el = document.getElementById('privateCampaignStats');
+            if (!el || targets.length === 0) { if (el) el.style.display = 'none'; return; }
+            el.style.display = 'grid';
+            var counts = {};
+            _privateTargetStatuses.forEach(function(s) { counts[s] = 0; });
+            targets.forEach(function(t) { counts[t.status] = (counts[t.status] || 0) + 1; });
+            var totalValue = targets.reduce(function(s,t) { return s + (t.estimatedValue||0); }, 0);
+            var responseRate = targets.length > 0 ? (targets.filter(function(t) { return ['Response Received','Negotiating','Offer Submitted','Accepted','Declined'].indexOf(t.status) >= 0; }).length / targets.length * 100) : 0;
+
+            el.innerHTML =
+                '<div style="background:white;border:1px solid #e0e0e0;border-radius:8px;padding:12px;text-align:center;"><div style="font-size:22px;font-weight:700;color:var(--primary);">' + targets.length + '</div><div style="font-size:11px;color:#888;">Total Targets</div></div>' +
+                '<div style="background:white;border:1px solid #e0e0e0;border-radius:8px;padding:12px;text-align:center;"><div style="font-size:22px;font-weight:700;color:#0d6efd;">' + (counts['Letter Sent']||0) + '</div><div style="font-size:11px;color:#888;">Letters Sent</div></div>' +
+                '<div style="background:white;border:1px solid #e0e0e0;border-radius:8px;padding:12px;text-align:center;"><div style="font-size:22px;font-weight:700;color:#fd7e14;">' + (counts['Negotiating']||0) + '</div><div style="font-size:11px;color:#888;">Negotiating</div></div>' +
+                '<div style="background:white;border:1px solid #e0e0e0;border-radius:8px;padding:12px;text-align:center;"><div style="font-size:22px;font-weight:700;color:#198754;">' + responseRate.toFixed(0) + '%</div><div style="font-size:11px;color:#888;">Response Rate</div></div>' +
+                '<div style="background:white;border:1px solid #e0e0e0;border-radius:8px;padding:12px;text-align:center;"><div style="font-size:22px;font-weight:700;color:var(--accent);">' + formatPrice(totalValue) + '</div><div style="font-size:11px;color:#888;">Pipeline Value</div></div>';
+        }
+
+        // 8A: Follow-up Reminders
+        function renderFollowupReminders() {
+            var targets = loadPrivateTargets();
+            var banner = document.getElementById('privateFollowupBanner');
+            if (!banner) return;
+            var now = new Date();
+            var needFollowup = [];
+            targets.forEach(function(t, i) {
+                if (t.status === 'Letter Sent' || t.status === 'No Response') {
+                    var lastDate = new Date(t.statusDate || t.addedDate || now);
+                    var daysSince = Math.floor((now - lastDate) / (1000*60*60*24));
+                    if (daysSince >= 7) needFollowup.push({ target: t, index: i, days: daysSince });
+                }
+            });
+            if (needFollowup.length === 0) { banner.style.display = 'none'; return; }
+            banner.style.display = 'block';
+            banner.innerHTML = '<strong style="font-size:13px;">Follow-up Reminders (' + needFollowup.length + ')</strong>' +
+                needFollowup.map(function(f) {
+                    return '<div style="margin-top:6px;display:flex;justify-content:space-between;align-items:center;">' +
+                        '<span>' + f.target.address + ' — <strong>' + f.days + ' days</strong> since last update (' + f.target.status + ')</span>' +
+                        '<button onclick="editPrivateTarget(' + f.index + ')" style="padding:3px 10px;font-size:10px;border:1px solid #856404;color:#856404;border-radius:4px;background:transparent;cursor:pointer;">Follow Up</button></div>';
+                }).join('');
+        }
+
+        // 8D: Duplicate Detection
+        function checkPrivateTargetDuplicate(address) {
+            if (!address) return null;
+            var normalized = address.toLowerCase().replace(/[^a-z0-9]/g, '');
+            for (var i = 0; i < rawListings.length; i++) {
+                if (rawListings[i].addr.toLowerCase().replace(/[^a-z0-9]/g, '') === normalized) {
+                    var match = rawListings[i];
+                    match.listingIndex = i;
+                    return match;
+                }
+            }
+            return null;
         }
 
         // ===================================================================
@@ -8542,10 +9284,24 @@ Competitive: ${formatPrice(offers.competitive)}`;
             });
         }
 
+        // Accessibility: Keyboard Escape to close modals
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                var detailModal = document.getElementById('detailModal');
+                if (detailModal && detailModal.classList.contains('active')) { closeDetailModal(); return; }
+                var genericModal = document.getElementById('genericModal');
+                if (genericModal && genericModal.classList.contains('active')) { genericModal.classList.remove('active'); return; }
+                var offerModal = document.getElementById('offerModal');
+                if (offerModal && offerModal.classList.contains('active')) { closeOfferModal(); return; }
+                var compModal = document.getElementById('comparisonModal');
+                if (compModal && compModal.classList.contains('active')) { compModal.classList.remove('active'); return; }
+            }
+        });
+
     </script>
 
     <!-- Mobile filter toggle button -->
-    <button class="filter-toggle" id="filterToggle" onclick="openMobileSidebar()">&#9776; Filters</button>
+    <button class="filter-toggle" id="filterToggle" onclick="openMobileSidebar()" aria-label="Open filter panel">&#9776; Filters</button>
 
     <!-- Mobile Bottom Nav -->
     <div class="mobile-bottom-nav" id="mobileBottomNav">
