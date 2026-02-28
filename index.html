@@ -357,6 +357,9 @@
                     </div>
                 </div>
 
+                <!-- Buyer Quick Stats -->
+                <div id="dashBuyerQuickStats" style="display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:24px;"></div>
+
                 <!-- Stale Listing Opportunities -->
                 <div style="margin-bottom: 24px;">
                     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
@@ -6561,6 +6564,9 @@ Competitive: ${formatPrice(offers.competitive)}`;
             document.getElementById('dashLettersSent').textContent = ptStats.lettersSent;
             document.getElementById('dashOffersOut').textContent = ptStats.offersOut;
 
+            // Buyer Quick Stats
+            renderBuyerQuickStats();
+
             // Profile summary
             var profile = JSON.parse(localStorage.getItem('buyerProfile') || '{}');
             if (profile.name) {
@@ -6572,6 +6578,42 @@ Competitive: ${formatPrice(offers.competitive)}`;
                 phtml += '</div>';
                 document.getElementById('dashProfileSummary').innerHTML = phtml;
             }
+        }
+
+        function renderBuyerQuickStats() {
+            var el = document.getElementById('dashBuyerQuickStats');
+            if (!el || rawListings.length === 0) return;
+
+            var under500 = 0, under1m = 0, priceDrops = 0, newThisWeek = 0, sqftCount = 0, sqftSum = 0;
+            var profile = JSON.parse(localStorage.getItem('buyerProfile') || '{}');
+            var budgetMax = parseFloat(profile.budgetMax) || 0;
+            var budgetMatch = 0;
+
+            rawListings.forEach(function(l) {
+                if (l.price < 500000) under500++;
+                if (l.price < 1000000) under1m++;
+                if (l.dom <= 7) newThisWeek++;
+                if (l.dom > 30 && l.score >= 50) priceDrops++; // Proxy: high DOM + decent score = potential price reduction
+                if (l.sqft > 0) { sqftSum += l.price / l.sqft; sqftCount++; }
+                if (budgetMax > 0 && l.price <= budgetMax) budgetMatch++;
+            });
+
+            var avgPpsf = sqftCount > 0 ? Math.round(sqftSum / sqftCount) : 0;
+
+            function statCard(value, label, color, onclick) {
+                return '<div onclick="' + onclick + '" style="background:white;border:1px solid #e0e0e0;border-radius:8px;padding:14px 10px;text-align:center;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.borderColor=\'' + color + '\'" onmouseout="this.style.borderColor=\'#e0e0e0\'">' +
+                    '<div style="font-size:24px;font-weight:700;color:' + color + ';">' + value + '</div>' +
+                    '<div style="font-size:10px;color:#888;margin-top:2px;text-transform:uppercase;font-weight:600;">' + label + '</div></div>';
+            }
+
+            el.innerHTML =
+                statCard(under500, 'Under $500K', '#28a745', "switchTabDirect('listings');document.getElementById('priceMax').value=500000;applyFilters();") +
+                statCard(under1m, 'Under $1M', '#2E75B6', "switchTabDirect('listings');document.getElementById('priceMax').value=1000000;applyFilters();") +
+                statCard(priceDrops, 'Price Drops', '#dc3545', "switchTabDirect('deals');") +
+                statCard(newThisWeek, 'New This Week', '#fd7e14', "switchTabDirect('listings');document.getElementById('sortBy').value='dom-asc';applyFilters();") +
+                statCard('$' + avgPpsf, 'Avg $/SqFt', '#6f42c1', "switchTabDirect('listings');document.getElementById('sortBy').value='ppsf-asc';applyFilters();") +
+                (budgetMax > 0 ? statCard(budgetMatch, 'Budget Match', '#e83e8c', "switchTabDirect('listings');document.getElementById('priceMax').value=" + budgetMax + ";applyFilters();") :
+                    statCard(rawListings.length, 'Total Listings', '#e83e8c', "switchTabDirect('listings');"));
         }
 
         // ===== BUYER PROFILE =====
