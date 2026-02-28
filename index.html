@@ -3739,14 +3739,25 @@
 
                 ${(function(){
                     var trend = marketTrends[listing.neighborhood] || {};
-                    if (!trend.yoyChange && trend.yoyChange !== 0) return '';
+                    var nbhData = (typeof neighborhoodEnrichment !== 'undefined' ? neighborhoodEnrichment[listing.neighborhood] : null) || {};
+                    var hasEnrich = nbhData.walkScore || nbhData.transitScore || nbhData.crimeIndex !== undefined || nbhData.avgHouseholdIncome;
+                    var hasTrend = trend.yoyChange !== undefined || trend.medianDOM;
+                    if (!hasEnrich && !hasTrend) return '';
                     var h = '<div style="background:#f0f0f0;padding:14px 16px;border-radius:4px;margin:16px 0;">';
-                    h += '<div style="font-weight:700;color:var(--primary);margin-bottom:10px;">Neighborhood Summary: ' + listing.neighborhood + '</div>';
-                    h += '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;font-size:12px;">';
-                    h += '<div><span style="color:#888;">YoY Change</span><br><strong style="color:' + (trend.yoyChange >= 0 ? 'var(--success)' : 'var(--danger)') + ';">' + (trend.yoyChange > 0 ? '+' : '') + trend.yoyChange + '%</strong></div>';
-                    h += '<div><span style="color:#888;">Median DOM</span><br><strong>' + (trend.medianDOM || 'N/A') + ' days</strong></div>';
-                    h += '<div><span style="color:#888;">Inventory</span><br><strong>' + (trend.inventory || 'N/A') + '</strong></div>';
-                    h += '<div><span style="color:#888;">Sale/List</span><br><strong>' + (trend.avgSaleToList ? (trend.avgSaleToList * 100).toFixed(1) + '%' : 'N/A') + '</strong></div>';
+                    h += '<div style="font-weight:700;color:var(--primary);margin-bottom:10px;">Neighborhood Snapshot: ' + listing.neighborhood + '</div>';
+                    h += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:8px;font-size:12px;">';
+                    if (nbhData.walkScore) h += '<div style="text-align:center;"><div style="font-size:18px;font-weight:700;color:var(--primary);">' + nbhData.walkScore + '</div><div style="font-size:10px;color:#888;">Walk Score</div></div>';
+                    if (nbhData.transitScore) h += '<div style="text-align:center;"><div style="font-size:18px;font-weight:700;color:var(--secondary);">' + nbhData.transitScore + '</div><div style="font-size:10px;color:#888;">Transit Score</div></div>';
+                    if (nbhData.crimeIndex !== undefined) h += '<div style="text-align:center;"><div style="font-size:18px;font-weight:700;color:' + (nbhData.crimeIndex < 20 ? 'var(--success)' : nbhData.crimeIndex < 40 ? '#856404' : 'var(--danger)') + ';">' + nbhData.crimeIndex + '</div><div style="font-size:10px;color:#888;">Crime Index</div></div>';
+                    if (nbhData.avgHouseholdIncome) h += '<div style="text-align:center;"><div style="font-size:18px;font-weight:700;color:var(--primary);">$' + Math.round(nbhData.avgHouseholdIncome/1000) + 'K</div><div style="font-size:10px;color:#888;">Avg Income</div></div>';
+                    if (trend.yoyChange !== undefined) {
+                        var yoyColor = trend.yoyChange > 0 ? 'var(--danger)' : 'var(--success)';
+                        var yoyArrow = trend.yoyChange > 0 ? '&uarr;' : '&darr;';
+                        h += '<div style="text-align:center;"><div style="font-size:18px;font-weight:700;color:' + yoyColor + ';">' + yoyArrow + Math.abs(trend.yoyChange).toFixed(1) + '%</div><div style="font-size:10px;color:#888;">YoY Price</div></div>';
+                    }
+                    if (trend.medianDOM) h += '<div style="text-align:center;"><div style="font-size:18px;font-weight:700;color:#666;">' + trend.medianDOM + '</div><div style="font-size:10px;color:#888;">Median DOM</div></div>';
+                    if (trend.inventory) h += '<div style="text-align:center;"><div style="font-size:18px;font-weight:700;color:#666;">' + trend.inventory + '</div><div style="font-size:10px;color:#888;">Inventory</div></div>';
+                    if (trend.avgSaleToList) h += '<div style="text-align:center;"><div style="font-size:18px;font-weight:700;color:#666;">' + (trend.avgSaleToList * 100).toFixed(1) + '%</div><div style="font-size:10px;color:#888;">Sale/List</div></div>';
                     h += '</div></div>';
                     return h;
                 })()}
