@@ -1823,6 +1823,17 @@
 
 
     <!-- Comparison Modal -->
+    <!-- Floating Comparison Bar -->
+    <div id="comparisonBar" style="display:none;position:fixed;bottom:0;left:0;right:0;background:var(--primary);color:white;padding:10px 20px;z-index:9999;box-shadow:0 -4px 12px rgba(0,0,0,0.2);display:none;">
+        <div style="display:flex;align-items:center;justify-content:space-between;max-width:1200px;margin:0 auto;">
+            <div id="comparisonBarItems" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;flex:1;"></div>
+            <div style="display:flex;gap:8px;align-items:center;flex-shrink:0;">
+                <button onclick="openComparisonTool()" style="padding:8px 16px;background:white;color:var(--primary);border:none;border-radius:4px;cursor:pointer;font-weight:600;font-size:12px;">Compare Now</button>
+                <button onclick="comparisonSet.clear();updateComparisonBar();renderCurrentTab();" style="padding:8px 12px;background:transparent;color:white;border:1px solid rgba(255,255,255,0.4);border-radius:4px;cursor:pointer;font-size:12px;">Clear</button>
+            </div>
+        </div>
+    </div>
+
     <div id="comparisonModal" class="modal" onclick="if(event.target===this)this.classList.remove('active')">
         <div class="modal-content" style="max-width: 95vw; max-height: 92vh; overflow: auto;">
             <button class="modal-close" onclick="document.getElementById('comparisonModal').classList.remove('active')">&times;</button>
@@ -2792,6 +2803,8 @@
                 html += '<span class="property-card-type-badge">' + listing.type + '</span>';
                 if (listing.waterView) html += '<span class="property-card-water">🌊</span>';
                 html += '<span class="property-card-star ' + starClass + '" onclick="event.stopPropagation(); toggleShortlist(' + listing.listingIndex + '); renderCardGrid();">★</span>';
+                var isComparing = comparisonSet.has(listing.listingIndex);
+                html += '<span style="position:absolute;top:8px;right:40px;background:' + (isComparing ? 'var(--secondary)' : 'rgba(0,0,0,0.5)') + ';color:white;width:26px;height:26px;display:flex;align-items:center;justify-content:center;border-radius:50%;cursor:pointer;font-size:14px;" onclick="event.stopPropagation(); toggleComparison(' + listing.listingIndex + ', event); renderCardGrid(); updateComparisonBar();" title="' + (isComparing ? 'Remove from comparison' : 'Add to comparison') + '">⚖</span>';
                 html += '</div>';
                 html += '<div class="property-card-body">';
                 html += '<div class="property-card-price">' + formatPrice(listing.price) + '</div>';
@@ -5436,6 +5449,24 @@ Competitive: ${formatPrice(offers.competitive)}`;
             document.getElementById('comparisonModal').classList.add('active');
         }
 
+        function updateComparisonBar() {
+            var bar = document.getElementById('comparisonBar');
+            if (comparisonSet.size === 0) {
+                bar.style.display = 'none';
+                return;
+            }
+            bar.style.display = 'block';
+            var html = '<span style="font-size:11px;opacity:0.8;margin-right:8px;">' + comparisonSet.size + '/4 selected:</span>';
+            [...comparisonSet].forEach(function(idx) {
+                var l = rawListings[idx];
+                html += '<span style="background:rgba(255,255,255,0.2);padding:4px 8px;border-radius:12px;font-size:11px;display:inline-flex;align-items:center;gap:4px;">';
+                html += l.addr.substring(0, 25) + (l.addr.length > 25 ? '...' : '');
+                html += ' <span onclick="comparisonSet.delete(' + idx + ');updateComparisonBar();renderCurrentTab();" style="cursor:pointer;opacity:0.7;font-size:14px;" title="Remove">&times;</span>';
+                html += '</span>';
+            });
+            document.getElementById('comparisonBarItems').innerHTML = html;
+        }
+
         // ===== TABLE COLUMN SORTING =====
         var lastSortCol = '';
         var sortAsc = true;
@@ -5453,6 +5484,8 @@ Competitive: ${formatPrice(offers.competitive)}`;
                     case 'dom-desc': return dir * (b.dom - a.dom);
                     case 'year': return dir * ((b.yearBuilt||0) - (a.yearBuilt||0));
                     case 'score-desc': return dir * (b.score - a.score);
+                    case 'caprate-desc': var mA2 = a._investorMetrics || estimateInvestorMetrics(a); var mB2 = b._investorMetrics || estimateInvestorMetrics(b); return dir * (mB2.capRate - mA2.capRate);
+                    case 'cashflow-desc': var mA3 = a._investorMetrics || estimateInvestorMetrics(a); var mB3 = b._investorMetrics || estimateInvestorMetrics(b); return dir * (mB3.cashFlow - mA3.cashFlow);
                     default: return 0;
                 }
             });
