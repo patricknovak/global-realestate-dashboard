@@ -237,6 +237,7 @@
                 <button class="tab-button" onclick="switchTab('datafreshness')">Data Health</button>
                 <span class="tab-group-divider"></span>
                 <button class="tab-button" onclick="switchTab('norealtorguide')">No-Realtor Guide</button>
+                <button class="tab-button" onclick="switchTab('privateoffers')">Private Offers</button>
                 <button class="tab-button" onclick="switchTab('help')">Help</button>
             </div>
             
@@ -253,7 +254,7 @@
                         <button onclick="dismissWelcome()" style="opacity: 0.7;">Dismiss</button>
                     </div>
                 </div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 24px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 16px; margin-bottom: 24px;">
                     <div style="background: linear-gradient(135deg, #1B3A5C 0%, #2E75B6 100%); color: white; padding: 20px; border-radius: 10px;">
                         <div style="font-size: 12px; opacity: 0.8; text-transform: uppercase; font-weight: 600;">Shortlisted Properties</div>
                         <div id="dashShortlistCount" style="font-size: 32px; font-weight: 700; margin: 8px 0;">0</div>
@@ -271,6 +272,12 @@
                         <div id="dashHotDeals" style="font-size: 32px; font-weight: 700; margin: 8px 0;">0</div>
                         <div style="font-size: 12px; opacity: 0.8;">Properties scoring 70+ (best value)</div>
                         <button onclick="switchTabDirect('deals')" style="margin-top:10px;padding:6px 14px;border:1px solid rgba(255,255,255,0.4);background:transparent;color:white;border-radius:4px;cursor:pointer;font-size:11px;font-weight:600;">View Deals</button>
+                    </div>
+                    <div style="background: linear-gradient(135deg, #6f42c1 0%, #9b59b6 100%); color: white; padding: 20px; border-radius: 10px;">
+                        <div style="font-size: 12px; opacity: 0.8; text-transform: uppercase; font-weight: 600;">Private Targets</div>
+                        <div id="dashPrivateTargets" style="font-size: 32px; font-weight: 700; margin: 8px 0;">0</div>
+                        <div style="font-size: 11px; opacity: 0.8;"><span id="dashLettersSent">0</span> letters sent &bull; <span id="dashOffersOut">0</span> offers out</div>
+                        <button onclick="switchTabDirect('privateoffers')" style="margin-top:10px;padding:6px 14px;border:1px solid rgba(255,255,255,0.4);background:transparent;color:white;border-radius:4px;cursor:pointer;font-size:11px;font-weight:600;">View Private Offers &rarr;</button>
                     </div>
                 </div>
 
@@ -331,6 +338,7 @@
                             <button onclick="switchTabDirect('roi')" style="padding: 14px; background: white; border: 2px solid var(--accent); border-radius: 8px; cursor: pointer; text-align: left; font-size: 13px; transition: all 0.2s;"><strong style="color:var(--primary);">Investment ROI Calculator</strong><br><span style="color:#888;font-size:11px;">Cap rate, cash flow, rental analysis</span></button>
                             <button onclick="switchTabDirect('lenders')" style="padding: 14px; background: white; border: 2px solid #6f42c1; border-radius: 8px; cursor: pointer; text-align: left; font-size: 13px; transition: all 0.2s;"><strong style="color:var(--primary);">Find a Lender</strong><br><span style="color:#888;font-size:11px;">Compare mortgage brokers and banks</span></button>
                             <button onclick="switchTabDirect('norealtorguide')" style="padding: 14px; background: white; border: 2px solid var(--danger); border-radius: 8px; cursor: pointer; text-align: left; font-size: 13px; transition: all 0.2s;"><strong style="color:var(--primary);">No-Realtor Guide</strong><br><span style="color:#888;font-size:11px;">Buy property on your own in BC</span></button>
+                            <button onclick="switchTabDirect('privateoffers')" style="padding: 14px; background: white; border: 2px solid #6f42c1; border-radius: 8px; cursor: pointer; text-align: left; font-size: 13px; transition: all 0.2s;"><strong style="color:var(--primary);">Private Offers</strong><br><span style="color:#888;font-size:11px;">Target off-market properties directly</span></button>
                         </div>
 
                         <h3 style="color: var(--primary); margin: 20px 0 12px; font-size: 16px;">Your Profile</h3>
@@ -904,7 +912,7 @@
             <!-- Tab: Buyer Profile -->
             <div id="buyerprofile" class="tab-content">
                 <h2 style="margin-bottom: 8px; color: var(--primary);">My Buyer Profile</h2>
-                <p style="color: #666; margin-bottom: 20px;">Save your details here. They'll auto-fill into offers, inquiries, and pre-qualification tools across the dashboard.</p>
+                <p style="color: #666; margin-bottom: 20px;">Save your details here. They'll auto-fill into offers, inquiries, pre-qualification tools, and private sale letters and offers across the dashboard.</p>
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; max-width: 900px;">
                     <div>
@@ -1380,6 +1388,103 @@
                             <tr><td style="padding:8px; border-bottom:1px solid #eee;">Appraisal (if required by lender)</td><td style="padding:8px; text-align:right; border-bottom:1px solid #eee;">$300 - $500</td></tr>
                             <tr style="font-weight:700; background: #e7f3ff;"><td style="padding:10px;">Net savings (approximate)</td><td style="padding:10px; text-align:right; color: #28a745;">~$22,000 - $24,000</td></tr>
                         </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab: Private Offers -->
+            <div id="privateoffers" class="tab-content">
+                <h2 style="margin-bottom: 8px; color: var(--primary);">Unsolicited Property Acquisition</h2>
+                <p style="color: #666; margin-bottom: 16px;">Approach property owners directly — even when their home isn't listed for sale. Many homeowners will consider selling if presented with a serious, well-structured offer. This tool helps you research target properties, draft professional letters of intent, and manage your outreach campaigns.</p>
+
+                <div style="background:#fff3cd;border:1px solid #ffc107;border-radius:8px;padding:14px 16px;font-size:13px;color:#856404;margin-bottom:20px;">
+                    <strong>IMPORTANT:</strong> In BC, the Home Buyer Rescission Period (3 business days, 0.25% fee) applies to private residential sales just as it does to MLS transactions. You still need a BC lawyer or notary to handle conveyancing. The standard Contract of Purchase and Sale (BCREA form) is recommended even for private transactions.
+                </div>
+
+                <!-- Target Property Manager -->
+                <div style="margin-bottom:24px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                        <h3 style="color:var(--primary);font-size:16px;margin:0;">Target Properties</h3>
+                        <button class="btn-primary" onclick="addPrivateTarget()" style="padding:8px 16px;font-size:12px;">+ Add Target Property</button>
+                    </div>
+                    <div id="privateTargetsList"></div>
+                    <div id="emptyPrivateTargets" style="text-align:center;padding:30px;color:#999;font-size:13px;background:var(--light-gray);border-radius:8px;">
+                        No target properties yet. Click "Add Target Property" to start building your pipeline.
+                    </div>
+                </div>
+
+                <!-- Private Sale Process Guide -->
+                <div style="margin-bottom:24px;">
+                    <h3 style="color:var(--primary);font-size:16px;margin-bottom:12px;">Private Sale Guide</h3>
+
+                    <div class="accordion-item" style="margin-bottom:8px;">
+                        <button class="accordion-btn" onclick="toggleAccordion(this)">How Unsolicited Offers Work in BC</button>
+                        <div class="accordion-panel" style="display:none;padding:16px;background:var(--light-gray);border-radius:0 0 8px 8px;font-size:13px;line-height:1.8;">
+                            <p><strong>Legal basis:</strong> Anyone can make an offer on any property in BC, listed or not.</p>
+                            <p><strong>Standard process:</strong> Letter of intent → Discussion → Contract of Purchase and Sale → Subject period → Completion</p>
+                            <p><strong>BC-specific:</strong> The Home Buyer Rescission Period applies to private sales (3 business days, 0.25% fee).</p>
+                            <p><strong>Commission savings:</strong> The seller saves 4-7% in agent commissions, which can be used as a negotiating lever. Offer to split the savings — e.g., "You save $40K in commissions, I'm asking for a $20K discount."</p>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item" style="margin-bottom:8px;">
+                        <button class="accordion-btn" onclick="toggleAccordion(this)">Finding Owner Information</button>
+                        <div class="accordion-panel" style="display:none;padding:16px;background:var(--light-gray);border-radius:0 0 8px 8px;font-size:13px;line-height:1.8;">
+                            <p><strong>BC Land Title &amp; Survey Authority (ltsa.ca):</strong> Title search gives owner name, legal description, PID, charges/liens. Cost: ~$15-30 per search via BC OnLine.</p>
+                            <p><strong>BC Assessment (bcassessment.ca):</strong> Free lookup for assessed value, lot size, year built, property class.</p>
+                            <p><strong>City/Municipal records:</strong> Zoning, permits, property tax amounts.</p>
+                            <p><strong>Physical approaches:</strong> Check mailbox name, knock on door, leave a letter.</p>
+                            <p style="color:var(--danger);"><strong>Note:</strong> Do NOT use aggressive or harassing tactics. One polite approach is appropriate. Respect "no" answers.</p>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item" style="margin-bottom:8px;">
+                        <button class="accordion-btn" onclick="toggleAccordion(this)">Pricing an Unlisted Property</button>
+                        <div class="accordion-panel" style="display:none;padding:16px;background:var(--light-gray);border-radius:0 0 8px 8px;font-size:13px;line-height:1.8;">
+                            <p><strong>Start with BC Assessment value</strong> — reflects market value as of July 1 of previous year.</p>
+                            <p><strong>Compare to recent sales</strong> in the neighborhood (available through LTSA or BC Assessment).</p>
+                            <p><strong>Consider:</strong> DOM of comparable listed properties, current market conditions, property condition.</p>
+                            <p><strong>Private sale discount:</strong> Sellers often expect 2-5% less than MLS price since they save on commission.</p>
+                            <p><strong>Rule of thumb:</strong> Offer 85-95% of estimated market value as starting point, depending on motivation.</p>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item" style="margin-bottom:8px;">
+                        <button class="accordion-btn" onclick="toggleAccordion(this)">Legal Requirements for Private Sales in BC</button>
+                        <div class="accordion-panel" style="display:none;padding:16px;background:var(--light-gray);border-radius:0 0 8px 8px;font-size:13px;line-height:1.8;">
+                            <p><strong>Contract of Purchase and Sale:</strong> Use the BCREA standard form (available from your lawyer).</p>
+                            <p><strong>Property Transfer Tax:</strong> Same rates as MLS sales. FTHB exemptions apply.</p>
+                            <p><strong>Home Buyer Rescission Period:</strong> 3 business days, 0.25% fee — applies even without agents.</p>
+                            <p><strong>Title transfer:</strong> Must be done by a BC lawyer or notary.</p>
+                            <p><strong>Property Disclosure Statement:</strong> Not legally required in private sales (unlike MLS), but strongly recommended to request one.</p>
+                            <p><strong>GST:</strong> 5% GST may apply on new or substantially renovated homes — check with your lawyer.</p>
+                            <p><strong>Foreign buyer ban / speculation tax:</strong> Same rules apply as MLS sales.</p>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item" style="margin-bottom:8px;">
+                        <button class="accordion-btn" onclick="toggleAccordion(this)">Template: What to Say When You Knock on a Door</button>
+                        <div class="accordion-panel" style="display:none;padding:16px;background:var(--light-gray);border-radius:0 0 8px 8px;font-size:13px;line-height:1.8;">
+                            <div style="background:white;padding:16px;border-radius:8px;border-left:4px solid var(--secondary);font-style:italic;">
+                                "Hi, my name is [name]. I'm looking to buy a home in this neighborhood and I really like your property at [address]. I'm not an agent — I'm a private buyer. I understand you may not be thinking of selling, but if you'd ever consider it, I'd love to have a conversation. Here's my card/letter with my contact details. No pressure at all — just wanted to let you know there's genuine interest. Thank you for your time."
+                            </div>
+                            <p style="margin-top:12px;">Keep it brief and friendly. Leave your letter of intent even if they seem uninterested — they may follow up later.</p>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item" style="margin-bottom:8px;">
+                        <button class="accordion-btn" onclick="toggleAccordion(this)">Red Flags to Watch For in Private Sales</button>
+                        <div class="accordion-panel" style="display:none;padding:16px;background:var(--light-gray);border-radius:0 0 8px 8px;font-size:13px;line-height:1.8;">
+                            <ul style="padding-left:20px;">
+                                <li>Seller refuses to provide title or property disclosure</li>
+                                <li>Existing liens, judgments, or encumbrances on title</li>
+                                <li>Property is in foreclosure or has conduct of sale orders</li>
+                                <li>Seller wants to close without lawyers</li>
+                                <li>Significant discrepancy between asking price and assessment</li>
+                                <li>Unpermitted additions or renovations</li>
+                                <li>Environmental contamination (especially former gas stations, dry cleaners, industrial sites)</li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -2113,6 +2218,7 @@
             if (tabName === 'pricehistory') renderPriceHistory();
             if (tabName === 'neighborhooddata') renderAreaIntel();
             if (tabName === 'datafreshness') initializeDataFreshness();
+            if (tabName === 'privateoffers') renderPrivateTargets();
             if (tabName === 'norealtorguide' || tabName === 'help') { /* static tabs */ }
         }
         
@@ -5249,6 +5355,12 @@ Competitive: ${formatPrice(offers.competitive)}`;
             });
             document.getElementById('dashRecentListings').innerHTML = recentHtml;
 
+            // Private targets stats
+            var ptStats = getPrivateTargetStats();
+            document.getElementById('dashPrivateTargets').textContent = ptStats.total;
+            document.getElementById('dashLettersSent').textContent = ptStats.lettersSent;
+            document.getElementById('dashOffersOut').textContent = ptStats.offersOut;
+
             // Profile summary
             var profile = JSON.parse(localStorage.getItem('buyerProfile') || '{}');
             if (profile.name) {
@@ -7036,6 +7148,527 @@ Competitive: ${formatPrice(offers.competitive)}`;
         };
 
         // ===================================================================
+        // PRIVATE OFFERS — TARGET PROPERTY MANAGER
+        // ===================================================================
+        function loadPrivateTargets() {
+            return JSON.parse(localStorage.getItem('privateTargets') || '[]');
+        }
+        function savePrivateTargets(targets) {
+            localStorage.setItem('privateTargets', JSON.stringify(targets));
+        }
+
+        var _privateTargetStatuses = ['New', 'Letter Sent', 'Response Received', 'Negotiating', 'Offer Submitted', 'Accepted', 'Declined', 'No Response'];
+        var _statusColors = { 'New': '#6c757d', 'Letter Sent': '#0d6efd', 'Response Received': '#198754', 'Negotiating': '#fd7e14', 'Offer Submitted': '#6610f2', 'Accepted': '#198754', 'Declined': '#dc3545', 'No Response': '#adb5bd' };
+
+        function renderPrivateTargets() {
+            var targets = loadPrivateTargets();
+            var container = document.getElementById('privateTargetsList');
+            var emptyEl = document.getElementById('emptyPrivateTargets');
+            if (!container) return;
+            if (targets.length === 0) {
+                container.innerHTML = '';
+                if (emptyEl) emptyEl.style.display = 'block';
+                return;
+            }
+            if (emptyEl) emptyEl.style.display = 'none';
+            var html = '<div style="display:grid;gap:12px;">';
+            targets.forEach(function(t, i) {
+                var pttResult = calculatePTTWithFTHB(t.estimatedValue || 0, false, false);
+                var monthly = Math.round((t.estimatedValue || 0) * 0.8 * (0.055/12 * Math.pow(1+0.055/12,300)) / (Math.pow(1+0.055/12,300)-1));
+                var daysSince = t.addedDate ? Math.floor((new Date() - new Date(t.addedDate)) / (1000*60*60*24)) : 0;
+                var statusColor = _statusColors[t.status] || '#6c757d';
+                html += '<div style="background:white;border:1px solid #e0e0e0;border-radius:8px;padding:16px;border-left:4px solid ' + statusColor + ';">';
+                html += '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;flex-wrap:wrap;gap:8px;">';
+                html += '<div><div style="font-weight:700;color:var(--primary);font-size:14px;">' + (t.address || 'Unknown') + '</div>';
+                html += '<div style="font-size:12px;color:#888;">' + (t.city || '') + (t.postalCode ? ' ' + t.postalCode : '') + ' &middot; ' + (t.propertyType || 'Unknown') + (t.yearBuilt ? ' &middot; Built ' + t.yearBuilt : '') + '</div></div>';
+                html += '<span style="background:' + statusColor + ';color:white;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600;">' + t.status + '</span>';
+                html += '</div>';
+                html += '<div style="display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:#555;margin-bottom:10px;">';
+                html += '<span><strong>Est. Value:</strong> ' + formatPrice(t.estimatedValue || 0) + '</span>';
+                html += '<span><strong>Est. PTT:</strong> ' + formatPrice(pttResult.ptt) + '</span>';
+                html += '<span><strong>Est. Monthly:</strong> ' + formatPrice(monthly) + '/mo @ 20% down</span>';
+                if (daysSince > 0) html += '<span><strong>Added:</strong> ' + daysSince + ' days ago</span>';
+                html += '</div>';
+                if (t.notes) html += '<div style="font-size:12px;color:#666;margin-bottom:10px;font-style:italic;">' + t.notes + '</div>';
+                html += '<div style="display:flex;gap:8px;flex-wrap:wrap;">';
+                html += '<button onclick="editPrivateTarget(' + i + ')" style="padding:4px 12px;font-size:11px;border:1px solid #ccc;border-radius:4px;background:white;cursor:pointer;">Edit</button>';
+                html += '<button onclick="showLetterGenerator(' + i + ')" style="padding:4px 12px;font-size:11px;border:1px solid var(--secondary);color:var(--secondary);border-radius:4px;background:white;cursor:pointer;">Draft Letter</button>';
+                html += '<button onclick="showPrivateOfferForm(' + i + ')" style="padding:4px 12px;font-size:11px;border:1px solid var(--primary);color:var(--primary);border-radius:4px;background:white;cursor:pointer;">Draft Offer</button>';
+                html += '<select onchange="updateTargetStatus(' + i + ', this.value)" style="padding:4px 8px;font-size:11px;border:1px solid #ccc;border-radius:4px;">';
+                _privateTargetStatuses.forEach(function(s) {
+                    html += '<option value="' + s + '"' + (t.status === s ? ' selected' : '') + '>' + s + '</option>';
+                });
+                html += '</select>';
+                html += '<button onclick="deletePrivateTarget(' + i + ')" style="padding:4px 12px;font-size:11px;border:1px solid #dc3545;color:#dc3545;border-radius:4px;background:white;cursor:pointer;">Delete</button>';
+                html += '</div></div>';
+            });
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        function addPrivateTarget() {
+            showPrivateTargetForm(-1);
+        }
+        function editPrivateTarget(index) {
+            showPrivateTargetForm(index);
+        }
+
+        function showPrivateTargetForm(index) {
+            var targets = loadPrivateTargets();
+            var t = index >= 0 ? targets[index] : {};
+            var isEdit = index >= 0;
+            var html = '<div style="max-height:80vh;overflow:auto;">';
+            html += '<h3 style="color:var(--primary);margin-bottom:16px;">' + (isEdit ? 'Edit' : 'Add') + ' Target Property</h3>';
+            html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">';
+            html += '<div class="offer-input-group"><label>Property Address *</label><input type="text" id="ptAddr" value="' + (t.address||'') + '"></div>';
+            html += '<div class="offer-input-group"><label>City/Area *</label><input type="text" id="ptCity" value="' + (t.city||'') + '"></div>';
+            html += '<div class="offer-input-group"><label>Postal Code</label><input type="text" id="ptPostal" value="' + (t.postalCode||'') + '"></div>';
+            html += '<div class="offer-input-group"><label>Property Type *</label><select id="ptType">';
+            ['House','Townhouse','Apt/Condo','Duplex','Land/Lot','Mfd Home'].forEach(function(pt) {
+                html += '<option' + (t.propertyType===pt?' selected':'') + '>' + pt + '</option>';
+            });
+            html += '</select></div>';
+            html += '<div class="offer-input-group"><label>Estimated Value *</label><input type="number" id="ptValue" value="' + (t.estimatedValue||'') + '"></div>';
+            html += '<div class="offer-input-group"><label>BC Assessment Value</label><input type="number" id="ptAssessment" value="' + (t.assessmentValue||'') + '"></div>';
+            html += '<div class="offer-input-group"><label>Lot Size</label><input type="text" id="ptLot" value="' + (t.lotSize||'') + '"></div>';
+            html += '<div class="offer-input-group"><label>Year Built</label><input type="number" id="ptYear" value="' + (t.yearBuilt||'') + '"></div>';
+            html += '<div class="offer-input-group"><label>Bedrooms</label><input type="number" id="ptBeds" value="' + (t.beds||'') + '"></div>';
+            html += '<div class="offer-input-group"><label>Bathrooms</label><input type="number" id="ptBaths" value="' + (t.baths||'') + '"></div>';
+            html += '<div class="offer-input-group"><label>Square Footage</label><input type="number" id="ptSqft" value="' + (t.sqft||'') + '"></div>';
+            html += '<div class="offer-input-group"><label>Owner Name(s)</label><input type="text" id="ptOwner" value="' + (t.ownerName||'') + '"></div>';
+            html += '<div class="offer-input-group"><label>Owner Contact</label><input type="text" id="ptOwnerContact" value="' + (t.ownerContact||'') + '"></div>';
+            html += '<div class="offer-input-group"><label>PID (Parcel ID)</label><input type="text" id="ptPID" value="' + (t.pid||'') + '"></div>';
+            html += '<div class="offer-input-group"><label>Zoning</label><input type="text" id="ptZoning" value="' + (t.zoning||'') + '"></div>';
+            html += '<div class="offer-input-group"><label>Status *</label><select id="ptStatus">';
+            _privateTargetStatuses.forEach(function(s) {
+                html += '<option' + (t.status===s?' selected':'') + '>' + s + '</option>';
+            });
+            html += '</select></div>';
+            html += '</div>';
+            html += '<div class="offer-input-group" style="margin-top:12px;"><label>Why This Property</label><textarea id="ptNotes" rows="3" style="width:100%;padding:8px;border:1px solid #ccc;border-radius:4px;font-size:13px;">' + (t.notes||'') + '</textarea></div>';
+            html += '<div style="display:flex;gap:12px;margin-top:16px;">';
+            html += '<button class="btn-primary" onclick="savePrivateTargetForm(' + index + ')" style="padding:10px 24px;">Save</button>';
+            html += '<button onclick="document.getElementById(\'genericModal\').classList.remove(\'active\')" style="padding:10px 24px;border:1px solid #ccc;border-radius:6px;background:white;cursor:pointer;">Cancel</button>';
+            html += '</div></div>';
+            showGenericModal(html);
+        }
+
+        function savePrivateTargetForm(index) {
+            var addr = document.getElementById('ptAddr').value.trim();
+            var city = document.getElementById('ptCity').value.trim();
+            var value = parseFloat(document.getElementById('ptValue').value);
+            if (!addr || !city || !value) { alert('Please fill in Address, City, and Estimated Value.'); return; }
+            var targets = loadPrivateTargets();
+            var t = index >= 0 ? targets[index] : { addedDate: new Date().toISOString() };
+            t.address = addr;
+            t.city = city;
+            t.postalCode = document.getElementById('ptPostal').value.trim();
+            t.propertyType = document.getElementById('ptType').value;
+            t.estimatedValue = value;
+            t.assessmentValue = parseFloat(document.getElementById('ptAssessment').value) || null;
+            t.lotSize = document.getElementById('ptLot').value.trim();
+            t.yearBuilt = parseInt(document.getElementById('ptYear').value) || null;
+            t.beds = parseInt(document.getElementById('ptBeds').value) || null;
+            t.baths = parseInt(document.getElementById('ptBaths').value) || null;
+            t.sqft = parseInt(document.getElementById('ptSqft').value) || null;
+            t.ownerName = document.getElementById('ptOwner').value.trim();
+            t.ownerContact = document.getElementById('ptOwnerContact').value.trim();
+            t.pid = document.getElementById('ptPID').value.trim();
+            t.zoning = document.getElementById('ptZoning').value.trim();
+            t.status = document.getElementById('ptStatus').value;
+            t.notes = document.getElementById('ptNotes').value.trim();
+            if (index >= 0) targets[index] = t; else targets.push(t);
+            savePrivateTargets(targets);
+            document.getElementById('genericModal').classList.remove('active');
+            renderPrivateTargets();
+        }
+
+        function deletePrivateTarget(index) {
+            if (!confirm('Delete this target property?')) return;
+            var targets = loadPrivateTargets();
+            targets.splice(index, 1);
+            savePrivateTargets(targets);
+            renderPrivateTargets();
+        }
+
+        function updateTargetStatus(index, status) {
+            var targets = loadPrivateTargets();
+            targets[index].status = status;
+            targets[index].statusDate = new Date().toISOString();
+            savePrivateTargets(targets);
+            renderPrivateTargets();
+        }
+
+        function getPrivateTargetStats() {
+            var targets = loadPrivateTargets();
+            var lettersSent = targets.filter(function(t) { return ['Letter Sent','Response Received','Negotiating','Offer Submitted','Accepted','Declined','No Response'].indexOf(t.status) >= 0; }).length;
+            var offersOut = targets.filter(function(t) { return ['Offer Submitted','Accepted'].indexOf(t.status) >= 0; }).length;
+            return { total: targets.length, lettersSent: lettersSent, offersOut: offersOut };
+        }
+
+        // ===================================================================
+        // PRIVATE OFFERS — LETTER OF INTENT GENERATOR
+        // ===================================================================
+        function showLetterGenerator(index) {
+            var targets = loadPrivateTargets();
+            var t = targets[index];
+            var profile = JSON.parse(localStorage.getItem('buyerProfile') || '{}');
+            var html = '<div style="max-height:80vh;overflow:auto;">';
+            html += '<h3 style="color:var(--primary);margin-bottom:4px;">Letter of Intent — ' + t.address + '</h3>';
+            html += '<p style="font-size:12px;color:#888;margin-bottom:16px;">Generate a professional expression of interest to gauge the owner\'s willingness to sell.</p>';
+            html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">';
+            html += '<div class="offer-input-group"><label>Your Name</label><input type="text" id="loiName" value="' + (profile.name || '') + '"></div>';
+            html += '<div class="offer-input-group"><label>Your Email</label><input type="text" id="loiEmail" value="' + (profile.email || '') + '"></div>';
+            html += '<div class="offer-input-group"><label>Your Phone</label><input type="text" id="loiPhone" value="' + (profile.phone || '') + '"></div>';
+            html += '<div class="offer-input-group"><label>Offer Price Range</label>';
+            html += '<div style="display:flex;gap:6px;align-items:center;"><input type="number" id="loiPriceLow" placeholder="Low" value="' + Math.round((t.estimatedValue||0)*0.85) + '" style="width:45%;">';
+            html += '<span>to</span><input type="number" id="loiPriceHigh" placeholder="High" value="' + Math.round((t.estimatedValue||0)*0.95) + '" style="width:45%;"></div></div>';
+            html += '</div>';
+            html += '<div class="offer-input-group" style="margin-top:12px;"><label>Reason for Interest</label>';
+            html += '<div style="display:flex;flex-wrap:wrap;gap:8px;">';
+            ['I love the neighborhood','Looking for a family home','Investment opportunity','Ideal for renovation/development'].forEach(function(r) {
+                html += '<label style="font-size:12px;"><input type="checkbox" class="loi-reason" value="' + r + '"> ' + r + '</label>';
+            });
+            html += '</div></div>';
+            html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;">';
+            html += '<div class="offer-input-group"><label>Preferred Timeline</label><select id="loiTimeline"><option>Flexible</option><option>Within 30 days</option><option>Within 90 days</option><option>Within 6 months</option></select></div>';
+            html += '<div class="offer-input-group"><label>Financing</label><select id="loiFinancing"><option>Pre-approved mortgage</option><option>Cash offer</option><option>Subject to financing</option></select></div>';
+            html += '</div>';
+            html += '<div class="offer-input-group" style="margin-top:12px;"><label>Personal Message (optional)</label><textarea id="loiMessage" rows="3" style="width:100%;padding:8px;border:1px solid #ccc;border-radius:4px;font-size:13px;" placeholder="Brief paragraph about yourself and why you\'re interested..."></textarea></div>';
+            html += '<div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;">';
+            html += '<button class="btn-primary" onclick="generateLetterVariants(' + index + ')" style="padding:10px 20px;">Generate Letters</button>';
+            html += '<button onclick="document.getElementById(\'genericModal\').classList.remove(\'active\')" style="padding:10px 20px;border:1px solid #ccc;border-radius:6px;background:white;cursor:pointer;">Cancel</button>';
+            html += '</div></div>';
+            showGenericModal(html);
+        }
+
+        function generateLetterVariants(index) {
+            var targets = loadPrivateTargets();
+            var t = targets[index];
+            var name = document.getElementById('loiName').value.trim() || 'Buyer';
+            var email = document.getElementById('loiEmail').value.trim();
+            var phone = document.getElementById('loiPhone').value.trim();
+            var priceLow = parseInt(document.getElementById('loiPriceLow').value) || 0;
+            var priceHigh = parseInt(document.getElementById('loiPriceHigh').value) || 0;
+            var reasons = [];
+            document.querySelectorAll('.loi-reason:checked').forEach(function(cb) { reasons.push(cb.value); });
+            var timeline = document.getElementById('loiTimeline').value;
+            var financing = document.getElementById('loiFinancing').value;
+            var message = document.getElementById('loiMessage').value.trim();
+            var dateStr = new Date().toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric' });
+            var priceRange = priceLow && priceHigh ? formatPrice(priceLow) + ' – ' + formatPrice(priceHigh) : 'open to discussion';
+            var contactLine = name + (email ? ' | ' + email : '') + (phone ? ' | ' + phone : '');
+
+            var warmLetter = dateStr + '\n\nDear ' + (t.ownerName || 'Homeowner') + ',\n\n';
+            warmLetter += 'My name is ' + name + ' and I\'m writing because I have a genuine interest in your property at ' + t.address + ', ' + t.city + '.\n\n';
+            if (message) warmLetter += message + '\n\n';
+            else if (reasons.length > 0) warmLetter += 'I\'m interested because: ' + reasons.join(', ').toLowerCase() + '.\n\n';
+            warmLetter += 'I understand your home may not be on the market, and I completely respect that. However, if you\'d ever consider selling, I would be very interested in discussing a purchase in the range of ' + priceRange + '.\n\n';
+            warmLetter += 'I have ' + financing.toLowerCase() + ' and my preferred timeline is ' + timeline.toLowerCase() + '. This is a non-binding expression of interest — simply an invitation to start a conversation if the timing is right for you.\n\n';
+            warmLetter += 'Please feel free to reach out at your convenience.\n\nSincerely,\n' + contactLine;
+
+            var proLetter = dateStr + '\n\nRe: Expression of Interest — ' + t.address + ', ' + t.city + '\n\n';
+            proLetter += 'Dear ' + (t.ownerName || 'Property Owner') + ',\n\n';
+            proLetter += 'I am writing to express my interest in acquiring the property at ' + t.address + '. I am a qualified buyer with ' + financing.toLowerCase() + ' and I am prepared to move forward on a timeline of ' + timeline.toLowerCase() + '.\n\n';
+            proLetter += 'Based on my analysis of comparable properties and current market conditions, I am considering an offer in the range of ' + priceRange + '. This reflects fair market value while accounting for the significant savings in agent commissions that a private sale offers you (typically 4-7% of sale price).\n\n';
+            proLetter += 'This letter is a non-binding expression of interest. I would welcome the opportunity to discuss terms at your convenience.\n\n';
+            proLetter += 'Regards,\n' + contactLine;
+
+            var oppLetter = dateStr + '\n\nDear ' + (t.ownerName || 'Homeowner') + ',\n\n';
+            oppLetter += 'I\'m ' + name + ', and I\'d like to present you with an opportunity regarding your property at ' + t.address + ', ' + t.city + '.\n\n';
+            oppLetter += 'Selling privately means no showings, no staging, no open houses, and no agent commissions — saving you potentially ' + formatPrice(Math.round((t.estimatedValue||0)*0.05)) + ' or more. I\'m a serious buyer with ' + financing.toLowerCase() + ', ready to close on your timeline.\n\n';
+            oppLetter += 'I\'m considering a price in the range of ' + priceRange + ', and I\'m flexible on timing (' + timeline.toLowerCase() + '). My lawyer would handle all paperwork through proper legal channels.\n\n';
+            oppLetter += 'This is simply an expression of interest — no obligation whatsoever. If you\'d like to explore this, please don\'t hesitate to reach out.\n\n';
+            oppLetter += 'Best regards,\n' + contactLine;
+
+            var variants = [
+                { name: 'Warm & Personal', text: warmLetter, desc: 'Best for owner-occupied homes' },
+                { name: 'Professional & Direct', text: proLetter, desc: 'Best for investment properties or corporate owners' },
+                { name: 'Opportunity Focused', text: oppLetter, desc: 'Best for older owners or distressed properties' }
+            ];
+
+            var html = '<div style="max-height:80vh;overflow:auto;">';
+            html += '<h3 style="color:var(--primary);margin-bottom:16px;">Letter Variants for ' + t.address + '</h3>';
+            variants.forEach(function(v, vi) {
+                html += '<div style="margin-bottom:20px;border:1px solid #e0e0e0;border-radius:8px;overflow:hidden;">';
+                html += '<div style="background:var(--light-gray);padding:10px 14px;display:flex;justify-content:space-between;align-items:center;">';
+                html += '<div><strong>' + v.name + '</strong><span style="font-size:11px;color:#888;margin-left:8px;">' + v.desc + '</span></div>';
+                html += '<div style="display:flex;gap:6px;">';
+                html += '<button onclick="copyLetterToClipboard(' + vi + ')" style="padding:4px 10px;font-size:11px;border:1px solid var(--secondary);color:var(--secondary);border-radius:4px;background:white;cursor:pointer;">Copy</button>';
+                if (t.ownerContact && t.ownerContact.includes('@')) {
+                    html += '<button onclick="emailLetter(' + index + ',' + vi + ')" style="padding:4px 10px;font-size:11px;border:1px solid var(--primary);color:var(--primary);border-radius:4px;background:white;cursor:pointer;">Email</button>';
+                }
+                html += '</div></div>';
+                html += '<pre id="letterVariant' + vi + '" style="padding:14px;font-size:12px;line-height:1.6;white-space:pre-wrap;word-wrap:break-word;margin:0;max-height:200px;overflow:auto;">' + v.text + '</pre>';
+                html += '</div>';
+            });
+            html += '<button onclick="markLetterSent(' + index + ')" class="btn-primary" style="padding:10px 24px;margin-top:8px;">Mark as Letter Sent</button>';
+            html += '</div>';
+            showGenericModal(html);
+            window._letterVariants = variants;
+        }
+
+        function copyLetterToClipboard(variantIndex) {
+            var text = window._letterVariants[variantIndex].text;
+            navigator.clipboard.writeText(text).then(function() { alert('Letter copied to clipboard!'); });
+        }
+
+        function emailLetter(targetIndex, variantIndex) {
+            var targets = loadPrivateTargets();
+            var t = targets[targetIndex];
+            var text = window._letterVariants[variantIndex].text;
+            var subject = encodeURIComponent('Expression of Interest — ' + t.address);
+            var body = encodeURIComponent(text);
+            window.open('mailto:' + (t.ownerContact || '') + '?subject=' + subject + '&body=' + body, '_self');
+        }
+
+        function markLetterSent(index) {
+            updateTargetStatus(index, 'Letter Sent');
+            document.getElementById('genericModal').classList.remove('active');
+            renderPrivateTargets();
+        }
+
+        // ===================================================================
+        // PRIVATE OFFERS — PRIVATE SALE OFFER GENERATOR
+        // ===================================================================
+        function showPrivateOfferForm(index) {
+            var targets = loadPrivateTargets();
+            var t = targets[index];
+            var profile = JSON.parse(localStorage.getItem('buyerProfile') || '{}');
+            var today = new Date();
+            var completionDate = new Date(today); completionDate.setDate(completionDate.getDate() + 60);
+            var subjectDate = new Date(today); subjectDate.setDate(subjectDate.getDate() + 14);
+            var irrevocDate = new Date(today); irrevocDate.setDate(irrevocDate.getDate() + 3);
+            var fmtDate = function(d) { return d.toISOString().split('T')[0]; };
+            var suggestLow = Math.round((t.estimatedValue||0) * 0.88);
+            var suggestHigh = Math.round((t.estimatedValue||0) * 0.95);
+            var refNum = 'PS-' + today.getFullYear() + '-' + String(loadPrivateTargets().filter(function(x){return x.status==='Offer Submitted'||x.status==='Accepted';}).length + 1).padStart(3, '0');
+            var isStrata = t.propertyType === 'Apt/Condo' || t.propertyType === 'Townhouse';
+
+            var html = '<div style="max-height:85vh;overflow:auto;">';
+            html += '<h3 style="color:var(--primary);margin-bottom:4px;">Private Sale Offer — ' + t.address + '</h3>';
+            html += '<p style="font-size:12px;color:#888;margin-bottom:12px;">Ref: ' + refNum + ' &middot; Suggested range: ' + formatPrice(suggestLow) + ' – ' + formatPrice(suggestHigh) + '</p>';
+
+            html += '<div style="background:#fff3cd;border:1px solid #ffc107;border-radius:6px;padding:10px 14px;margin-bottom:16px;font-size:12px;color:#856404;">';
+            html += '<strong>Disclaimer:</strong> This offer template is for discussion purposes only. Both parties should have it reviewed by a BC lawyer or notary before signing. This is not a substitute for the standard BCREA Contract of Purchase and Sale.</div>';
+
+            html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">';
+            html += '<div class="offer-input-group"><label>Offer Price *</label><input type="number" id="poPrice" value="' + Math.round((t.estimatedValue||0)*0.90) + '"></div>';
+            html += '<div class="offer-input-group"><label>Deposit Amount</label><input type="number" id="poDeposit" value="' + Math.round((t.estimatedValue||0)*0.90*0.05) + '"></div>';
+            html += '<div class="offer-input-group"><label>Deposit Held By</label><input type="text" id="poTrustee" value="Buyer\'s lawyer/notary in trust"></div>';
+            html += '<div class="offer-input-group"><label>Completion Date</label><input type="date" id="poCompletion" value="' + fmtDate(completionDate) + '"></div>';
+            html += '<div class="offer-input-group"><label>Subject Removal Date</label><input type="date" id="poSubject" value="' + fmtDate(subjectDate) + '"></div>';
+            html += '<div class="offer-input-group"><label>Irrevocable Until</label><input type="date" id="poIrrevoc" value="' + fmtDate(irrevocDate) + '"></div>';
+            html += '<div class="offer-input-group"><label>Your Name</label><input type="text" id="poName" value="' + (profile.name||'') + '"></div>';
+            html += '<div class="offer-input-group"><label>Your Email</label><input type="text" id="poEmail" value="' + (profile.email||'') + '"></div>';
+            html += '</div>';
+
+            html += '<div style="margin-top:12px;"><h4 style="margin-bottom:8px;">Subject Conditions</h4><div class="subject-checks">';
+            html += '<label><input type="checkbox" class="po-subject" value="Subject to satisfactory home inspection by a qualified inspector at Buyer\'s expense, to be completed within the subject removal period." checked> Home Inspection</label>';
+            html += '<label><input type="checkbox" class="po-subject" value="Subject to Buyer obtaining satisfactory financing within the subject removal period." checked> Financing</label>';
+            html += '<label><input type="checkbox" class="po-subject" value="Subject to Buyer\'s lawyer or notary reviewing title, survey, and property disclosure statement within the subject removal period." checked> Lawyer/Notary Review (Title, Survey &amp; Disclosure)</label>';
+            html += '<label><input type="checkbox" class="po-subject" value="Subject to Seller providing a completed Property Disclosure Statement within 5 business days of acceptance." checked> Seller to Provide Property Disclosure</label>';
+            if (isStrata) {
+                html += '<label><input type="checkbox" class="po-subject" value="Subject to Buyer reviewing and approving strata documents (Form B, meeting minutes, depreciation report, bylaws, financial statements, and insurance certificate) within the subject removal period." checked> Strata Documents Review</label>';
+            }
+            html += '<label><input type="checkbox" class="po-subject" value="Subject to Buyer reviewing BC Assessment records and property tax history." checked> BC Assessment &amp; Tax Review</label>';
+            html += '</div></div>';
+
+            html += '<div class="offer-input-group" style="margin-top:12px;"><label>Additional Conditions</label><textarea id="poCustom" rows="2" style="width:100%;padding:8px;border:1px solid #ccc;border-radius:4px;font-size:13px;"></textarea></div>';
+
+            html += '<div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;">';
+            html += '<button class="btn-primary" onclick="generatePrivateOfferPDF(' + index + ')" style="padding:10px 20px;">Generate PDF Offer</button>';
+            if (t.ownerContact && t.ownerContact.includes('@')) {
+                html += '<button onclick="emailPrivateOffer(' + index + ')" style="padding:10px 20px;border:1px solid var(--secondary);color:var(--secondary);border-radius:6px;background:white;cursor:pointer;">Email to Owner</button>';
+            }
+            html += '<button onclick="document.getElementById(\'genericModal\').classList.remove(\'active\')" style="padding:10px 20px;border:1px solid #ccc;border-radius:6px;background:white;cursor:pointer;">Cancel</button>';
+            html += '</div></div>';
+            showGenericModal(html);
+        }
+
+        function generatePrivateOfferPDF(index) {
+            if (!window.jspdf) {
+                loadJsPdf().then(function() { generatePrivateOfferPDF(index); });
+                return;
+            }
+            var targets = loadPrivateTargets();
+            var t = targets[index];
+            var price = parseFloat(document.getElementById('poPrice').value) || 0;
+            var deposit = parseFloat(document.getElementById('poDeposit').value) || 0;
+            var trustee = document.getElementById('poTrustee').value;
+            var completionDate = document.getElementById('poCompletion').value;
+            var subjectDate = document.getElementById('poSubject').value;
+            var irrevocDate = document.getElementById('poIrrevoc').value;
+            var buyerName = document.getElementById('poName').value;
+            var buyerEmail = document.getElementById('poEmail').value;
+            var subjects = [];
+            document.querySelectorAll('.po-subject:checked').forEach(function(cb) { subjects.push(cb.value); });
+            var custom = document.getElementById('poCustom').value.trim();
+            if (custom) custom.split('\n').forEach(function(c) { if (c.trim()) subjects.push(c.trim()); });
+
+            var { jsPDF } = window.jspdf;
+            var doc = new jsPDF({ unit: 'mm', format: 'letter' });
+            var pageW = doc.internal.pageSize.getWidth();
+            var margin = 18;
+            var contentW = pageW - margin * 2;
+            var y = margin;
+            var fmtDt = function(d) { if (!d) return 'TBD'; var parts = d.split('-'); return parts[1]+'/'+parts[2]+'/'+parts[0]; };
+            var fmtCur = function(n) { return '$' + Math.round(n).toLocaleString(); };
+            var today = new Date();
+            var refNum = 'PS-' + today.getFullYear() + '-' + String(loadPrivateTargets().filter(function(x){return x.status==='Offer Submitted'||x.status==='Accepted';}).length + 1).padStart(3, '0');
+
+            // Header
+            doc.setFillColor(27, 58, 92);
+            doc.rect(0, 0, pageW, 20, 'F');
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(14);
+            doc.setFont('helvetica', 'bold');
+            doc.text('OFFER TO PURCHASE — PRIVATE SALE', margin, 13);
+            doc.setFontSize(9);
+            doc.text('Ref: ' + refNum, pageW - margin - 40, 13);
+            y = 28;
+
+            // Disclaimer
+            doc.setFillColor(255, 245, 235);
+            doc.setDrawColor(220, 120, 50);
+            doc.rect(margin, y-2, contentW, 16, 'FD');
+            doc.setFontSize(7);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(180, 80, 20);
+            doc.text('IMPORTANT DISCLAIMER', margin+3, y+3);
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(6.5);
+            doc.setTextColor(120, 60, 10);
+            var disclaimerText = 'This offer template is for discussion purposes only. Both parties are strongly advised to have this reviewed and formalized by a BC lawyer or notary before signing. This is not a substitute for the standard BCREA Contract of Purchase and Sale.';
+            var dLines = doc.splitTextToSize(disclaimerText, contentW-6);
+            doc.text(dLines, margin+3, y+7);
+            y += 20;
+
+            // Property & Parties table
+            doc.setTextColor(0,0,0);
+            doc.autoTable({
+                startY: y, margin: { left: margin, right: margin },
+                head: [['Field', 'Details']],
+                headStyles: { fillColor: [55, 90, 127], fontSize: 9, fontStyle: 'bold', textColor: [255,255,255] },
+                body: [
+                    ['Property Address', t.address + ', ' + t.city + (t.postalCode ? ', ' + t.postalCode : '') + ', BC'],
+                    ['Property Type', t.propertyType || 'N/A'],
+                    ['PID', t.pid || 'To be confirmed via title search'],
+                    ['Buyer', buyerName + (buyerEmail ? ' (' + buyerEmail + ')' : '')],
+                    ['Seller / Owner', t.ownerName || 'Current registered owner(s)'],
+                ],
+                styles: { fontSize: 9, cellPadding: 2.5 },
+                columnStyles: { 0: { fontStyle: 'bold', cellWidth: 42 } },
+            });
+            y = doc.lastAutoTable.finalY + 6;
+
+            // Financial Terms
+            doc.autoTable({
+                startY: y, margin: { left: margin, right: margin },
+                head: [['Term', 'Details']],
+                headStyles: { fillColor: [55, 90, 127], fontSize: 9, fontStyle: 'bold', textColor: [255,255,255] },
+                body: [
+                    ['Offer Price', fmtCur(price)],
+                    ['Deposit', fmtCur(deposit) + ', held in trust by ' + trustee],
+                    ['Deposit Delivery', 'Within 24 hours of subject removal'],
+                    ['Balance', fmtCur(price - deposit) + ' due on Completion Date'],
+                    ['Property Transfer Tax', fmtCur(calculatePTTWithFTHB(price, false, false).ptt) + ' (buyer responsibility)'],
+                ],
+                styles: { fontSize: 9, cellPadding: 2.5 },
+                columnStyles: { 0: { fontStyle: 'bold', cellWidth: 42 } },
+            });
+            y = doc.lastAutoTable.finalY + 6;
+
+            // Key Dates
+            doc.autoTable({
+                startY: y, margin: { left: margin, right: margin },
+                head: [['Date', 'Details']],
+                headStyles: { fillColor: [55, 90, 127], fontSize: 9, fontStyle: 'bold', textColor: [255,255,255] },
+                body: [
+                    ['Subject Removal', fmtDt(subjectDate) + ' at 11:59 PM Pacific Time'],
+                    ['Completion Date', fmtDt(completionDate) + ' (title transfer at Land Title Office)'],
+                    ['Possession Date', fmtDt(completionDate) + ' (vacant possession)'],
+                    ['Adjustment Date', fmtDt(completionDate) + ' (taxes, utilities, strata fees adjusted)'],
+                    ['Irrevocable Until', fmtDt(irrevocDate) + ' at 11:59 PM Pacific Time'],
+                ],
+                styles: { fontSize: 9, cellPadding: 2.5 },
+                columnStyles: { 0: { fontStyle: 'bold', cellWidth: 42 } },
+            });
+            y = doc.lastAutoTable.finalY + 6;
+
+            // Subject Conditions
+            if (subjects.length > 0) {
+                doc.setFillColor(27, 58, 92);
+                doc.rect(margin, y, contentW, 7, 'F');
+                doc.setTextColor(255,255,255);
+                doc.setFontSize(9);
+                doc.setFont('helvetica', 'bold');
+                doc.text('SUBJECT CONDITIONS', margin+3, y+5);
+                y += 10;
+                doc.setTextColor(0,0,0);
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(8.5);
+                subjects.forEach(function(s, i) {
+                    if (y > 250) { doc.addPage(); y = margin; }
+                    var lines = doc.splitTextToSize((i+1) + '. ' + s, contentW - 4);
+                    doc.text(lines, margin+2, y);
+                    y += lines.length * 4 + 2;
+                });
+                y += 4;
+            }
+
+            // HBRP Notice
+            if (y > 230) { doc.addPage(); y = margin; }
+            doc.setFillColor(255, 243, 205);
+            doc.rect(margin, y, contentW, 12, 'F');
+            doc.setFontSize(7.5);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(133, 100, 4);
+            doc.text('HOME BUYER RESCISSION PERIOD NOTICE', margin+3, y+4);
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(7);
+            doc.text('The buyer has a statutory right to rescind this contract within 3 business days of acceptance, subject to a 0.25% rescission fee per the Property Law Act.', margin+3, y+9);
+            y += 16;
+
+            // Recommendation
+            doc.setFontSize(8);
+            doc.setTextColor(80,80,80);
+            doc.text('Both parties are strongly encouraged to retain independent legal counsel (BC lawyer or notary) before executing this agreement.', margin, y);
+            y += 8;
+
+            // Signature lines
+            doc.setDrawColor(0);
+            doc.setTextColor(0,0,0);
+            doc.setFontSize(9);
+            doc.text('Buyer Signature: ____________________________  Date: ______________', margin, y);
+            y += 8;
+            doc.text('Seller Signature: ____________________________  Date: ______________', margin, y);
+            y += 10;
+
+            // Footer
+            doc.setFontSize(7);
+            doc.setTextColor(150,150,150);
+            doc.text('Generated by BC Real Estate Dashboard — Not legal advice', margin, doc.internal.pageSize.getHeight() - 8);
+
+            var filename = 'Private_Offer_' + t.address.replace(/[^a-zA-Z0-9]/g, '_') + '.pdf';
+            doc.save(filename);
+
+            // Update status
+            updateTargetStatus(index, 'Offer Submitted');
+            document.getElementById('genericModal').classList.remove('active');
+            renderPrivateTargets();
+        }
+
+        function emailPrivateOffer(index) {
+            var targets = loadPrivateTargets();
+            var t = targets[index];
+            var price = document.getElementById('poPrice').value;
+            var subject = encodeURIComponent('Offer to Purchase — ' + t.address);
+            var body = encodeURIComponent('Dear ' + (t.ownerName || 'Homeowner') + ',\n\nPlease find attached my offer to purchase your property at ' + t.address + ' for ' + formatPrice(parseInt(price)) + '.\n\nPlease review the attached PDF and let me know if you would like to discuss.\n\nBest regards,\n' + (document.getElementById('poName').value || 'Buyer'));
+            window.open('mailto:' + (t.ownerContact || '') + '?subject=' + subject + '&body=' + body, '_self');
+        }
+
+        // ===================================================================
         // STATS BAR DATA FRESHNESS INDICATOR
         // ===================================================================
         (function() {
@@ -7082,7 +7715,7 @@ Competitive: ${formatPrice(offers.competitive)}`;
             roi: 'ROI Calculator', lenders: 'Lender Directory', buyerprofile: 'My Profile',
             contactlog: 'Contact Log', viewings: 'Viewings', documents: 'Documents',
             pricehistory: 'Price History', neighborhooddata: 'Area Intel',
-            datafreshness: 'Data Health', norealtorguide: 'No-Realtor Guide', help: 'Help'
+            datafreshness: 'Data Health', norealtorguide: 'No-Realtor Guide', privateoffers: 'Private Offers', help: 'Help'
         };
 
         // ===== PHASE 7.3: FTHB PTT Exemption =====
