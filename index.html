@@ -1609,13 +1609,35 @@
     </div>
     
     <!-- External Scripts -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.3.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.4/jspdf.plugin.autotable.min.js"></script>
+    <!-- Libraries lazy-loaded on first use: Chart.js, Leaflet, jsPDF -->
     
     <script>
+        // ===== Lazy Script Loader =====
+        var _loadedScripts = {};
+        function loadScript(url) {
+            if (_loadedScripts[url]) return _loadedScripts[url];
+            _loadedScripts[url] = new Promise(function(resolve, reject) {
+                var s = document.createElement('script');
+                s.src = url;
+                s.onload = resolve;
+                s.onerror = reject;
+                document.head.appendChild(s);
+            });
+            return _loadedScripts[url];
+        }
+
+        function loadLeaflet() {
+            return loadScript('https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js')
+                .then(function() { return loadScript('https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.js'); });
+        }
+        function loadChartJs() {
+            return loadScript('https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js');
+        }
+        function loadJsPdf() {
+            return loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.3.1/jspdf.umd.min.js')
+                .then(function() { return loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.4/jspdf.plugin.autotable.min.js'); });
+        }
+
         let rawListings = [];
         const FALLBACK_LISTINGS = [
             {"addr":"14971 Prospect Ave","price":32500000,"beds":6,"baths":8,"sqft":11811,"type":"House","lot":null,"agent":"Malcolm Hasman","neighborhood":"White Rock","dom":38,"yearBuilt":1990,"waterView":false,"latitude":49.025,"longitude":-122.808,"region":"South Surrey / White Rock"},
@@ -2481,6 +2503,12 @@
         }
 
         function initializeMapTab() {
+            if (typeof L === 'undefined') {
+                var mapEl = document.getElementById('map');
+                if (mapEl) mapEl.innerHTML = '<div style="padding:40px;text-align:center;color:#888;">Loading map...</div>';
+                loadLeaflet().then(function() { initializeMapTab(); });
+                return;
+            }
             if (leafletMap) {
                 leafletMap.remove();
                 leafletMap = null;
@@ -2562,6 +2590,10 @@
         }
         
         function initializeNeighborhoodTab() {
+            if (typeof Chart === 'undefined') {
+                loadChartJs().then(function() { initializeNeighborhoodTab(); });
+                return;
+            }
             const neighborhoods = [...new Set(filteredListings.map(l => l.neighborhood))].sort();
             const neighborhoodData = neighborhoods.map(nbr => {
                 const nbrListings = filteredListings.filter(l => l.neighborhood === nbr);
@@ -2685,6 +2717,10 @@
         }
         
         function initializeDealsTab() {
+            if (typeof Chart === 'undefined') {
+                loadChartJs().then(function() { initializeDealsTab(); });
+                return;
+            }
             const topDeals = [...filteredListings].sort((a, b) => b.score - a.score).slice(0, 10);
             let dealsHtml = '';
             topDeals.forEach(listing => {
@@ -4229,6 +4265,12 @@ Competitive: ${formatPrice(offers.competitive)}`;
         }
 
         function generateOfferPDF() {
+          if (!window.jspdf) {
+            var statusEl = document.getElementById('offerStatus');
+            if (statusEl) { statusEl.textContent = 'Loading PDF library...'; statusEl.style.color = '#888'; }
+            loadJsPdf().then(function() { generateOfferPDF(); });
+            return;
+          }
           try {
             const listing = rawListings[currentOfferListingIndex];
             const city = getCityForListing(listing);
