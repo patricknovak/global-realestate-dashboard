@@ -4139,9 +4139,32 @@ Competitive: ${formatPrice(offers.competitive)}`;
         }
         
         function getListingBadge(listing) {
-            if (listing.dom <= 7) return '<span class="listing-badge badge-new">New</span>';
-            if (listing.dom >= 90) return '<span class="listing-badge badge-hot">90+ Days</span>';
-            return '';
+            var badges = '';
+            if (listing.dom <= 7) badges += '<span class="listing-badge badge-new">New</span>';
+            if (listing.dom >= 90) badges += '<span class="listing-badge badge-hot">90+ Days</span>';
+            badges += getMarketConditionBadge(listing);
+            return badges;
+        }
+
+        function getMarketConditionBadge(listing) {
+            var trend = marketTrends[listing.neighborhood];
+            if (!trend) return '';
+            // Score signals: negative YoY, high inventory, low sale-to-list, high median DOM → buyer's market
+            var signals = 0;
+            if (trend.yoyChange < -3) signals -= 2;
+            else if (trend.yoyChange < 0) signals -= 1;
+            else if (trend.yoyChange > 5) signals += 2;
+            else if (trend.yoyChange > 2) signals += 1;
+            if (trend.inventory === 'high') signals -= 1;
+            else if (trend.inventory === 'low') signals += 1;
+            if (trend.avgSaleToList < 0.96) signals -= 1;
+            else if (trend.avgSaleToList > 1.0) signals += 1;
+            if (trend.medianDOM > 50) signals -= 1;
+            else if (trend.medianDOM < 20) signals += 1;
+
+            if (signals <= -2) return '<span style="font-size:9px;padding:1px 6px;border-radius:8px;background:#d4edda;color:#155724;font-weight:600;white-space:nowrap;margin-left:3px;">Buyer\'s</span>';
+            if (signals >= 2) return '<span style="font-size:9px;padding:1px 6px;border-radius:8px;background:#f8d7da;color:#721c24;font-weight:600;white-space:nowrap;margin-left:3px;">Seller\'s</span>';
+            return '<span style="font-size:9px;padding:1px 6px;border-radius:8px;background:#fff3cd;color:#856404;font-weight:600;white-space:nowrap;margin-left:3px;">Balanced</span>';
         }
 
         function exportFilteredCSV() {
