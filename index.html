@@ -1614,9 +1614,12 @@
         
         async function loadExternalData() {
             try {
-                var resp = await fetch('listings.json');
-                if (resp.ok) rawListings = await resp.json();
-            } catch(e) { console.warn('Failed to load listings.json, using fallback'); }
+                var resp = await fetch('data/listings.json');
+                if (resp.ok) {
+                    var listingsData = await resp.json();
+                    rawListings = listingsData.listings || listingsData;
+                }
+            } catch(e) { console.warn('Failed to load data/listings.json, using fallback'); }
             if (rawListings.length === 0) rawListings = FALLBACK_LISTINGS;
 
             try {
