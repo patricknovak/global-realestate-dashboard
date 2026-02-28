@@ -667,6 +667,7 @@
                     <button onclick="switchTabDirect('lenders')" style="padding:8px 14px;border:1px solid var(--success);background:white;color:var(--success);border-radius:20px;cursor:pointer;font-size:12px;font-weight:600;">Rate Comparison &amp; Pre-Qualification &#8594;</button>
                     <button onclick="switchTabDirect('roi')" style="padding:8px 14px;border:1px solid var(--warning);background:white;color:var(--warning);border-radius:20px;cursor:pointer;font-size:12px;font-weight:600;">ROI Calculator &#8594;</button>
                     <button onclick="document.getElementById('cashToCloseSection').scrollIntoView({behavior:'smooth'})" style="padding:8px 14px;border:1px solid #6f42c1;background:white;color:#6f42c1;border-radius:20px;cursor:pointer;font-size:12px;font-weight:600;">Cash to Close</button>
+                    <button onclick="document.getElementById('cmhcSection').scrollIntoView({behavior:'smooth'})" style="padding:8px 14px;border:1px solid #e83e8c;background:white;color:#e83e8c;border-radius:20px;cursor:pointer;font-size:12px;font-weight:600;">CMHC Insurance</button>
                 </div>
                 <div id="affordabilitySection" style="margin-bottom:24px;padding-bottom:24px;border-bottom:2px solid #eee;">
                     <h3 style="color:var(--secondary);margin-bottom:8px;">How Much House Can I Afford?</h3>
@@ -881,6 +882,41 @@
                                 <tr style="background:linear-gradient(135deg,#6f42c1 0%,#9b59b6 100%);color:white;font-weight:700;font-size:14px;"><td style="padding:12px 8px;">TOTAL CASH TO CLOSE</td><td id="ctcGrandTotal" style="padding:12px 8px;text-align:right;">$0</td></tr>
                             </table>
                             <div id="ctcNotes" style="margin-top:12px;padding:12px;background:var(--light-gray);border-radius:8px;font-size:12px;color:#666;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="cmhcSection" style="margin-top:24px;padding-top:24px;border-top:2px solid #eee;">
+                    <h3 style="color: var(--secondary); margin-bottom: 8px;">CMHC Mortgage Insurance</h3>
+                    <p style="font-size:12px;color:#666;margin-bottom:16px;">In Canada, mortgage insurance is required when you put less than 20% down. CMHC (Canada Mortgage and Housing Corporation) insures your lender against default. The premium is added to your mortgage.</p>
+
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+                        <div>
+                            <div style="background:#fff3cd;border:1px solid #ffc107;border-radius:8px;padding:12px 16px;font-size:12px;color:#856404;margin-bottom:16px;">
+                                <strong>Key Rules:</strong><br>
+                                &bull; Properties over <strong>$1,500,000</strong> are NOT eligible for CMHC insurance — you MUST have 20%+ down<br>
+                                &bull; Max amortization with insured mortgage: <strong>25 years</strong> (30 years if uninsured)<br>
+                                &bull; Minimum down payment: <strong>5%</strong> on first $500K, <strong>10%</strong> on portion $500K-$1.5M
+                            </div>
+
+                            <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:16px;">
+                                <thead><tr style="background:var(--primary);color:white;"><th style="padding:10px 8px;text-align:left;">Down Payment</th><th style="padding:10px 8px;text-align:center;">Premium Rate</th><th style="padding:10px 8px;text-align:right;">Example ($800K)</th></tr></thead>
+                                <tbody>
+                                    <tr style="background:#f8d7da;"><td style="padding:8px;">5.00% – 9.99%</td><td style="padding:8px;text-align:center;font-weight:700;">4.00%</td><td style="padding:8px;text-align:right;">$30,400</td></tr>
+                                    <tr style="background:#fff3cd;"><td style="padding:8px;">10.00% – 14.99%</td><td style="padding:8px;text-align:center;font-weight:700;">3.10%</td><td style="padding:8px;text-align:right;">$22,320</td></tr>
+                                    <tr style="background:#d4edda;"><td style="padding:8px;">15.00% – 19.99%</td><td style="padding:8px;text-align:center;font-weight:700;">2.80%</td><td style="padding:8px;text-align:right;">$19,040</td></tr>
+                                    <tr style="background:#e7f3ff;"><td style="padding:8px;">20.00%+</td><td style="padding:8px;text-align:center;font-weight:700;">None</td><td style="padding:8px;text-align:right;">$0</td></tr>
+                                </tbody>
+                            </table>
+
+                            <h4 style="color:var(--primary);font-size:14px;margin-bottom:8px;">Minimum Down Payment Calculator</h4>
+                            <div class="form-group"><label>Purchase Price ($)</label><input type="number" id="cmhcPrice" value="750000" oninput="calcCMHCBreakdown()"></div>
+                            <button class="btn-primary" onclick="calcCMHCBreakdown()" style="width:auto;margin-top:4px;">Calculate</button>
+                        </div>
+                        <div>
+                            <div id="cmhcResults" style="background:var(--light-gray);border-radius:8px;padding:16px;">
+                                <div style="text-align:center;color:#999;padding:20px;">Enter a price and click Calculate</div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -6302,6 +6338,86 @@ Competitive: ${formatPrice(offers.competitive)}`;
             var withoutReserve = total - reserve;
             notes.push('Without emergency reserve: $' + Math.round(withoutReserve).toLocaleString() + ' needed at closing.');
             document.getElementById('ctcNotes').innerHTML = '<strong>Notes:</strong><ul style="margin:6px 0 0;padding-left:20px;">' + notes.map(function(n) { return '<li style="margin-bottom:4px;">' + n + '</li>'; }).join('') + '</ul>';
+        }
+
+        // ===== CMHC INSURANCE BREAKDOWN =====
+        function calcCMHCBreakdown() {
+            var price = parseFloat(document.getElementById('cmhcPrice').value) || 0;
+            var el = document.getElementById('cmhcResults');
+            if (price <= 0) { el.innerHTML = '<div style="text-align:center;color:#999;padding:20px;">Enter a valid price</div>'; return; }
+
+            // Min down payment rules
+            var minDown;
+            if (price <= 500000) { minDown = price * 0.05; }
+            else if (price <= 1500000) { minDown = 25000 + (price - 500000) * 0.10; }
+            else { minDown = price * 0.20; }
+            var minDownPct = (minDown / price * 100);
+
+            var html = '';
+            if (price > 1500000) {
+                html += '<div style="background:#f8d7da;border:1px solid #dc3545;border-radius:8px;padding:16px;text-align:center;margin-bottom:16px;">';
+                html += '<div style="font-size:16px;font-weight:700;color:#721c24;">NOT Eligible for CMHC Insurance</div>';
+                html += '<div style="font-size:13px;color:#856404;margin-top:6px;">Properties over $1,500,000 require a minimum 20% down payment.</div>';
+                html += '</div>';
+                html += '<table style="width:100%;border-collapse:collapse;font-size:13px;">';
+                html += '<tr style="background:var(--primary);color:white;font-weight:700;"><td style="padding:10px 8px;">Minimum Down Payment (20%)</td><td style="padding:10px 8px;text-align:right;">$' + Math.round(minDown).toLocaleString() + '</td></tr>';
+                html += '</table>';
+            } else {
+                // Calculate premiums at each tier
+                var tiers = [
+                    { label: '5% Down', pct: 5, rate: 4.00 },
+                    { label: '10% Down', pct: 10, rate: 3.10 },
+                    { label: '15% Down', pct: 15, rate: 2.80 },
+                    { label: '20% Down', pct: 20, rate: 0 }
+                ];
+
+                html += '<div style="text-align:center;margin-bottom:16px;">';
+                html += '<div style="font-size:12px;color:#888;">Min. Down Payment Required</div>';
+                html += '<div style="font-size:28px;font-weight:700;color:var(--primary);">$' + Math.round(minDown).toLocaleString() + '</div>';
+                html += '<div style="font-size:12px;color:#666;">(' + minDownPct.toFixed(1) + '% of $' + price.toLocaleString() + ')</div>';
+                html += '</div>';
+
+                html += '<table style="width:100%;border-collapse:collapse;font-size:12px;">';
+                html += '<thead><tr style="background:var(--primary);color:white;"><th style="padding:8px;text-align:left;">Scenario</th><th style="padding:8px;text-align:right;">Down $</th><th style="padding:8px;text-align:center;">Rate</th><th style="padding:8px;text-align:right;">Premium</th><th style="padding:8px;text-align:right;">Total Mortgage</th></tr></thead>';
+                html += '<tbody>';
+                tiers.forEach(function(tier) {
+                    var down = price * tier.pct / 100;
+                    if (down < minDown && tier.pct < 20) return; // Skip if below min
+                    var mortgage = price - down;
+                    var premium = mortgage * tier.rate / 100;
+                    var totalMort = mortgage + premium;
+                    var bg = tier.rate === 0 ? '#e7f3ff' : tier.rate <= 2.80 ? '#d4edda' : tier.rate <= 3.10 ? '#fff3cd' : '#f8d7da';
+                    html += '<tr style="background:' + bg + ';">';
+                    html += '<td style="padding:8px;font-weight:600;">' + tier.label + '</td>';
+                    html += '<td style="padding:8px;text-align:right;">$' + Math.round(down).toLocaleString() + '</td>';
+                    html += '<td style="padding:8px;text-align:center;font-weight:700;">' + (tier.rate > 0 ? tier.rate.toFixed(2) + '%' : 'None') + '</td>';
+                    html += '<td style="padding:8px;text-align:right;">' + (premium > 0 ? '$' + Math.round(premium).toLocaleString() : '$0') + '</td>';
+                    html += '<td style="padding:8px;text-align:right;font-weight:600;">$' + Math.round(totalMort).toLocaleString() + '</td>';
+                    html += '</tr>';
+                });
+                html += '</tbody></table>';
+
+                // Monthly payment comparison at 5.5%
+                var mRate = 0.055 / 12;
+                var nPmt = 300;
+                html += '<div style="margin-top:16px;"><div style="font-weight:700;color:var(--primary);margin-bottom:8px;font-size:13px;">Monthly Payment Comparison (5.5%, 25yr)</div>';
+                html += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;">';
+                tiers.forEach(function(tier) {
+                    var down = price * tier.pct / 100;
+                    if (down < minDown && tier.pct < 20) return;
+                    var mortgage = price - down;
+                    var premium = mortgage * tier.rate / 100;
+                    var totalMort = mortgage + premium;
+                    var pmt = mRate > 0 ? totalMort * (mRate * Math.pow(1+mRate,nPmt)) / (Math.pow(1+mRate,nPmt)-1) : 0;
+                    html += '<div style="background:white;border:1px solid #e0e0e0;border-radius:8px;padding:10px;text-align:center;">';
+                    html += '<div style="font-size:11px;color:#888;">' + tier.label + '</div>';
+                    html += '<div style="font-size:18px;font-weight:700;color:var(--primary);">$' + Math.round(pmt).toLocaleString() + '</div>';
+                    html += '<div style="font-size:10px;color:#999;">/month</div></div>';
+                });
+                html += '</div></div>';
+            }
+
+            el.innerHTML = html;
         }
 
         // ===== SHORTLIST NOTES =====
