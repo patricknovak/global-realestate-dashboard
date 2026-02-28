@@ -1199,8 +1199,18 @@
                     <div id="emptyCommunityFlags" style="text-align: center; padding: 20px; color: #999; font-size: 12px;">No community flags submitted yet. Use the flag button on any listing to report inaccuracies.</div>
                 </div>
 
-                <div style="background: #fff3cd; padding: 14px; border-radius: 8px; font-size: 12px; border-left: 4px solid #ffc107;">
-                    <strong>About Data Freshness:</strong> Listing data is sourced through a combination of manual scraping from REW.ca and Realtor.ca, supplemented by community corrections. Run the scraping pipeline regularly to keep data current. See the <code>tools/scraper/</code> directory for automation options.
+                <div id="dataSourceNote" style="background: #fff3cd; padding: 14px; border-radius: 8px; font-size: 12px; border-left: 4px solid #ffc107; margin-bottom: 12px;">
+                    <strong>Data Source:</strong> <span id="dataSourceDesc">Currently showing sample data. Listings are illustrative and may not reflect current market conditions. Run the scraper pipeline to populate with real listings from REW.ca and Realtor.ca.</span>
+                </div>
+                <div style="background: var(--light-gray); padding: 14px; border-radius: 8px; font-size: 12px;">
+                    <strong>Updating Listings:</strong> To refresh data with live listings:
+                    <ol style="margin:8px 0 0 16px;line-height:1.8;">
+                        <li>Configure regions in <code>tools/scraper/config.json</code></li>
+                        <li>Run <code>node tools/scraper/scraper.js</code> to scrape listings</li>
+                        <li>Run <code>node tools/scraper/merger.js</code> to merge into <code>data/listings.json</code></li>
+                        <li>Commit and push to deploy via GitHub Pages</li>
+                    </ol>
+                    <span style="color:#888;">See <code>tools/scraper/README.md</code> for full documentation.</span>
                 </div>
             </div>
 
@@ -6693,6 +6703,16 @@ Competitive: ${formatPrice(offers.competitive)}`;
 
         function initializeDataFreshness() {
             checkApiConnection();
+
+            // Update data source description
+            var descEl = document.getElementById('dataSourceDesc');
+            if (descEl) {
+                if (window._usingFallbackData) {
+                    descEl.textContent = 'Currently showing sample data. Listings are illustrative and may not reflect current market conditions. Run the scraper pipeline to populate with real listings.';
+                } else {
+                    descEl.textContent = 'Listings loaded from data/listings.json. Data was last updated ' + (window._dataAsOf || 'unknown') + '. Run the scraper pipeline regularly to keep data current.';
+                }
+            }
 
             // Compute freshness based on data metadata
             var now = new Date();
