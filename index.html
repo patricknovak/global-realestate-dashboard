@@ -184,6 +184,18 @@
                 </div>
             </div>
 
+            <h3>Tags</h3>
+            <div class="filter-group">
+                <div class="checkbox-group" id="tagFilterGroup">
+                    <div class="checkbox-item"><input type="checkbox" id="tag_favorite" class="tag-filter" onchange="applyFilters()"><label for="tag_favorite" style="font-size:11px;">⭐ Favorite</label></div>
+                    <div class="checkbox-item"><input type="checkbox" id="tag_needsViewing" class="tag-filter" onchange="applyFilters()"><label for="tag_needsViewing" style="font-size:11px;">👁 Needs Viewing</label></div>
+                    <div class="checkbox-item"><input type="checkbox" id="tag_underNegotiation" class="tag-filter" onchange="applyFilters()"><label for="tag_underNegotiation" style="font-size:11px;">🤝 Under Negotiation</label></div>
+                    <div class="checkbox-item"><input type="checkbox" id="tag_overpriced" class="tag-filter" onchange="applyFilters()"><label for="tag_overpriced" style="font-size:11px;">💰 Overpriced</label></div>
+                    <div class="checkbox-item"><input type="checkbox" id="tag_hidden_gem" class="tag-filter" onchange="applyFilters()"><label for="tag_hidden_gem" style="font-size:11px;">💎 Hidden Gem</label></div>
+                    <div class="checkbox-item"><input type="checkbox" id="tag_hasNotes" class="tag-filter" onchange="applyFilters()"><label for="tag_hasNotes" style="font-size:11px;">📝 Has Notes</label></div>
+                </div>
+            </div>
+
             <h3>Deal Score</h3>
             <div class="filter-group">
                 <div class="input-pair">
@@ -2411,6 +2423,9 @@
             const searchTerm = (document.getElementById('searchBox').value || '').toLowerCase().trim();
             const invMinCap = investorModeActive ? (parseFloat(document.getElementById('investorMinCap').value) || 0) : 0;
             const invMinCF = investorModeActive ? (parseFloat(document.getElementById('investorMinCF').value) || -Infinity) : -Infinity;
+            const selectedTags = [...document.querySelectorAll('.tag-filter:checked')].map(function(el) { return el.id.replace('tag_', ''); });
+            const filterHasNotes = selectedTags.indexOf('hasNotes') >= 0;
+            const filterTags = selectedTags.filter(function(t) { return t !== 'hasNotes'; });
 
             filteredListings = rawListings.filter((listing, idx) => {
                 listing.score = calculateScore(listing);
@@ -2428,6 +2443,11 @@
                 if (listing.score < scoreMin || listing.score > scoreMax) return false;
                 if (filterWaterView && !listing.waterView) return false;
                 if (filterHasLot && !listing.lot) return false;
+                if (filterHasNotes && !listingNotes[idx]) return false;
+                if (filterTags.length > 0) {
+                    var lt = listingTags[idx] || [];
+                    if (!filterTags.some(function(t) { return lt.indexOf(t) >= 0; })) return false;
+                }
 
                 // Investor mode filters
                 if (investorModeActive && (invMinCap > 0 || invMinCF > -Infinity)) {
@@ -2511,6 +2531,7 @@
             document.getElementById('scoreMax').value = '';
             document.getElementById('filterWaterView').checked = false;
             document.getElementById('filterHasLot').checked = false;
+            document.querySelectorAll('.tag-filter').forEach(function(el) { el.checked = false; });
             document.getElementById('investorModeToggle').checked = false;
             document.getElementById('investorMinCap').value = '';
             document.getElementById('investorMinCF').value = '';
@@ -2664,7 +2685,7 @@
                 html += `
                     <tr onclick="showDetailModal(${listing.listingIndex})">
                         <td><span class="star-toggle ${starClass}" onclick="event.stopPropagation(); toggleShortlist(${listing.listingIndex})">★</span></td>
-                        <td><span class="water-view-icon">${listing.waterView ? '🌊' : ''}</span>${listing.addr}${getListingBadge(listing)}</td>
+                        <td><span class="water-view-icon">${listing.waterView ? '🌊' : ''}</span>${listing.addr}${getListingBadge(listing)}${getListingTagBadges(listing.listingIndex)}</td>
                         <td>${listing.neighborhood}</td>
                         <td>${listing.type}</td>
                         <td>${formatPrice(listing.price)}</td>
@@ -2987,6 +3008,8 @@
                 html += '<div class="property-card-body">';
                 html += '<div class="property-card-price">' + formatPrice(listing.price) + '</div>';
                 html += '<div class="property-card-addr">' + listing.addr + getListingBadge(listing) + '</div>';
+                var tagBadges = getListingTagBadges(listing.listingIndex);
+                if (tagBadges) html += '<div style="padding:0 12px 4px;line-height:1.6;">' + tagBadges + '</div>';
                 html += '<div class="property-card-nbr">' + listing.neighborhood + ' &middot; ' + listing.region + '</div>';
                 html += '<div class="property-card-details">';
                 html += '<span><strong>' + listing.beds + '</strong> Beds</span>';
@@ -4027,11 +4050,19 @@
                     return html;
                 })()}
 
+                <div style="background:var(--light-gray);border-radius:8px;padding:14px 16px;margin:0 0 16px 0;">
+                    <div style="font-weight:700;color:var(--primary);margin-bottom:8px;font-size:13px;">Notes &amp; Tags</div>
+                    <div id="tagButtons_${listingIndex}" style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:10px;">
+                        ${renderTagButtons(listingIndex)}
+                    </div>
+                    <textarea id="listingNote_${listingIndex}" placeholder="Add a private note about this property..." style="width:100%;min-height:60px;padding:8px;border:1px solid var(--border);border-radius:4px;font-size:12px;resize:vertical;box-sizing:border-box;" oninput="saveListingNote(${listingIndex})">${(listingNotes[listingIndex] || '').replace(/</g, '&lt;')}</textarea>
+                </div>
+
                 <button class="btn-success" onclick="toggleShortlist(${listingIndex}); closeDetailModal(); initializeShortlistTab();" style="width: 100%;">
                     ${isShortlisted ? 'Remove from Shortlist' : 'Add to Shortlist'}
                 </button>
             `;
-            
+
             document.getElementById('modalBody').innerHTML = modalHtml;
             document.getElementById('detailModal').classList.add('active');
         }
@@ -6252,6 +6283,50 @@ Competitive: ${formatPrice(offers.competitive)}`;
             localStorage.setItem('shortlistNotes', JSON.stringify(shortlistNotes));
         }
 
+        // ===== LISTING NOTES & TAGS =====
+        var PRESET_TAGS = ['favorite', 'needsViewing', 'underNegotiation', 'overpriced', 'hidden_gem'];
+        var TAG_LABELS = { favorite: '⭐ Favorite', needsViewing: '👁 Needs Viewing', underNegotiation: '🤝 Under Negotiation', overpriced: '💰 Overpriced', hidden_gem: '💎 Hidden Gem' };
+        var listingNotes = JSON.parse(localStorage.getItem('listingNotes') || '{}');
+        var listingTags = JSON.parse(localStorage.getItem('listingTags') || '{}');
+
+        function saveListingNote(idx) {
+            var el = document.getElementById('listingNote_' + idx);
+            if (!el) return;
+            var note = el.value.trim();
+            if (note) { listingNotes[idx] = note; } else { delete listingNotes[idx]; }
+            localStorage.setItem('listingNotes', JSON.stringify(listingNotes));
+        }
+
+        function toggleListingTag(idx, tag) {
+            if (!listingTags[idx]) listingTags[idx] = [];
+            var i = listingTags[idx].indexOf(tag);
+            if (i >= 0) { listingTags[idx].splice(i, 1); } else { listingTags[idx].push(tag); }
+            if (listingTags[idx].length === 0) delete listingTags[idx];
+            localStorage.setItem('listingTags', JSON.stringify(listingTags));
+            // Re-render tag buttons
+            var container = document.getElementById('tagButtons_' + idx);
+            if (container) container.innerHTML = renderTagButtons(idx);
+        }
+
+        function renderTagButtons(idx) {
+            var tags = listingTags[idx] || [];
+            return PRESET_TAGS.map(function(t) {
+                var active = tags.indexOf(t) >= 0;
+                return '<button onclick="event.stopPropagation(); toggleListingTag(' + idx + ', \'' + t + '\')" style="padding:3px 8px;font-size:10px;border:1px solid ' + (active ? 'var(--primary)' : 'var(--border)') + ';background:' + (active ? 'var(--primary)' : 'var(--white)') + ';color:' + (active ? 'white' : 'var(--text)') + ';border-radius:12px;cursor:pointer;white-space:nowrap;">' + TAG_LABELS[t] + '</button>';
+            }).join('');
+        }
+
+        function getListingTagBadges(idx) {
+            var tags = listingTags[idx] || [];
+            if (tags.length === 0 && !listingNotes[idx]) return '';
+            var html = '';
+            tags.forEach(function(t) {
+                html += '<span style="font-size:9px;padding:1px 5px;border-radius:8px;background:var(--primary);color:white;white-space:nowrap;">' + TAG_LABELS[t] + '</span>';
+            });
+            if (listingNotes[idx]) html += '<span style="font-size:9px;padding:1px 5px;border-radius:8px;background:#6f42c1;color:white;" title="' + listingNotes[idx].replace(/"/g, '&quot;') + '">📝</span>';
+            return '<span style="display:inline-flex;gap:3px;flex-wrap:wrap;margin-left:4px;">' + html + '</span>';
+        }
+
         // ===== CONTACT LISTING AGENT =====
         function contactListingAgent(listingIndex) {
             var listing = rawListings[listingIndex];
@@ -6881,6 +6956,8 @@ Competitive: ${formatPrice(offers.competitive)}`;
                 buyerProfile: JSON.parse(localStorage.getItem('buyerProfile') || '{}'),
                 shortlist: JSON.parse(localStorage.getItem('shortlist') || '[]'),
                 shortlistNotes: JSON.parse(localStorage.getItem('shortlistNotes') || '{}'),
+                listingNotes: JSON.parse(localStorage.getItem('listingNotes') || '{}'),
+                listingTags: JSON.parse(localStorage.getItem('listingTags') || '{}'),
                 offerHistory: JSON.parse(localStorage.getItem('offerHistory') || '[]'),
                 filterPresets: JSON.parse(localStorage.getItem('filterPresets') || '[]'),
                 contactLog: JSON.parse(localStorage.getItem('contactLog') || '[]'),
@@ -6913,6 +6990,8 @@ Competitive: ${formatPrice(offers.competitive)}`;
                     if (data.buyerProfile) localStorage.setItem('buyerProfile', JSON.stringify(data.buyerProfile));
                     if (data.shortlist) localStorage.setItem('shortlist', JSON.stringify(data.shortlist));
                     if (data.shortlistNotes) localStorage.setItem('shortlistNotes', JSON.stringify(data.shortlistNotes));
+                    if (data.listingNotes) { localStorage.setItem('listingNotes', JSON.stringify(data.listingNotes)); listingNotes = data.listingNotes; }
+                    if (data.listingTags) { localStorage.setItem('listingTags', JSON.stringify(data.listingTags)); listingTags = data.listingTags; }
                     if (data.offerHistory) localStorage.setItem('offerHistory', JSON.stringify(data.offerHistory));
                     if (data.filterPresets) localStorage.setItem('filterPresets', JSON.stringify(data.filterPresets));
                     if (data.contactLog) localStorage.setItem('contactLog', JSON.stringify(data.contactLog));
