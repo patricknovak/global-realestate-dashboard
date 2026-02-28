@@ -163,6 +163,27 @@
                 </div>
             </div>
             
+            <h3>Investor Mode</h3>
+            <div class="filter-group">
+                <div class="checkbox-group">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="investorModeToggle" onchange="toggleInvestorMode()">
+                        <label for="investorModeToggle" style="font-weight:600;">Show Cap Rate &amp; Cash Flow</label>
+                    </div>
+                </div>
+                <div id="investorModeOptions" style="display:none;margin-top:8px;">
+                    <div style="font-size:11px;color:#666;margin-bottom:6px;">Estimates based on area rent-to-price ratios</div>
+                    <div class="input-pair" style="margin-bottom:4px;">
+                        <label style="font-size:11px;width:80px;">Min Cap Rate</label>
+                        <input type="number" id="investorMinCap" placeholder="e.g. 3" step="0.5" oninput="debouncedApply()">
+                    </div>
+                    <div class="input-pair">
+                        <label style="font-size:11px;width:80px;">Min Cash Flow</label>
+                        <input type="number" id="investorMinCF" placeholder="$/mo" oninput="debouncedApply()">
+                    </div>
+                </div>
+            </div>
+
             <h3>Deal Score</h3>
             <div class="filter-group">
                 <div class="input-pair">
@@ -189,6 +210,8 @@
                     <option value="price-desc">Price High → Low</option>
                     <option value="ppsf-asc">$/SqFt Low → High</option>
                     <option value="gap-desc">Value Gap</option>
+                    <option value="caprate-desc">Cap Rate (Best)</option>
+                    <option value="cashflow-desc">Cash Flow (Best)</option>
                 </select>
             </div>
             
@@ -358,7 +381,7 @@
                 </div>
                 <div style="overflow-x: auto; flex: 1; display: flex; flex-direction: column;">
                     <table class="listings-table">
-                        <thead>
+                        <thead id="listingsTableHead">
                             <tr>
                                 <th style="width: 40px;">★</th>
                                 <th class="sortable-th" onclick="sortTable('addr')">Address</th>
@@ -1865,6 +1888,45 @@
             renderCurrentTab();
         }
         
+        // ===== INVESTOR MODE =====
+        var investorModeActive = false;
+
+        function toggleInvestorMode() {
+            investorModeActive = document.getElementById('investorModeToggle').checked;
+            document.getElementById('investorModeOptions').style.display = investorModeActive ? 'block' : 'none';
+            applyFilters();
+        }
+
+        function estimateMonthlyRent(listing) {
+            // Estimate rent based on property type and typical BC rent-to-price ratios
+            var price = listing.price;
+            var type = (listing.type || '').toLowerCase();
+            var ratio;
+            if (type.indexOf('condo') >= 0 || type.indexOf('apartment') >= 0) ratio = 0.0040;
+            else if (type.indexOf('town') >= 0 || type.indexOf('row') >= 0) ratio = 0.0035;
+            else ratio = 0.0030; // house/detached
+            return Math.round(price * ratio);
+        }
+
+        function estimateInvestorMetrics(listing) {
+            var rent = estimateMonthlyRent(listing);
+            var price = listing.price;
+            var annualRent = rent * 12;
+            var vacancyRate = 0.05;
+            var effectiveIncome = annualRent * (1 - vacancyRate);
+            // Estimate operating expenses: property tax + insurance + maintenance ~ 1.5% of price/year
+            var opEx = price * 0.015;
+            var noi = effectiveIncome - opEx;
+            var capRate = price > 0 ? (noi / price) * 100 : 0;
+            // Monthly mortgage estimate (20% down, 5.5%, 25yr)
+            var mortAmount = price * 0.80;
+            var mRate = 0.055 / 12;
+            var nPmt = 300;
+            var mortPayment = mRate > 0 ? mortAmount * (mRate * Math.pow(1 + mRate, nPmt)) / (Math.pow(1 + mRate, nPmt) - 1) : 0;
+            var monthlyCashFlow = rent * (1 - vacancyRate) - (opEx / 12) - mortPayment;
+            return { rent: rent, capRate: capRate, cashFlow: Math.round(monthlyCashFlow), noi: Math.round(noi) };
+        }
+
         // Debounce utility for number inputs
         var _debounceTimer = null;
         function debouncedApply() {
@@ -2079,6 +2141,8 @@
             const filterWaterView = document.getElementById('filterWaterView').checked;
             const filterHasLot = document.getElementById('filterHasLot').checked;
             const searchTerm = (document.getElementById('searchBox').value || '').toLowerCase().trim();
+            const invMinCap = investorModeActive ? (parseFloat(document.getElementById('investorMinCap').value) || 0) : 0;
+            const invMinCF = investorModeActive ? (parseFloat(document.getElementById('investorMinCF').value) || -Infinity) : -Infinity;
 
             filteredListings = rawListings.filter((listing, idx) => {
                 listing.score = calculateScore(listing);
@@ -2096,7 +2160,17 @@
                 if (listing.score < scoreMin || listing.score > scoreMax) return false;
                 if (filterWaterView && !listing.waterView) return false;
                 if (filterHasLot && !listing.lot) return false;
-                
+
+                // Investor mode filters
+                if (investorModeActive && (invMinCap > 0 || invMinCF > -Infinity)) {
+                    var metrics = estimateInvestorMetrics(listing);
+                    listing._investorMetrics = metrics;
+                    if (metrics.capRate < invMinCap) return false;
+                    if (metrics.cashFlow < invMinCF) return false;
+                } else if (investorModeActive) {
+                    listing._investorMetrics = estimateInvestorMetrics(listing);
+                }
+
                 return true;
             });
             
@@ -2138,6 +2212,20 @@
                         return gapB - gapA;
                     });
                     break;
+                case 'caprate-desc':
+                    filteredListings.sort((a, b) => {
+                        const mA = a._investorMetrics || estimateInvestorMetrics(a);
+                        const mB = b._investorMetrics || estimateInvestorMetrics(b);
+                        return mB.capRate - mA.capRate;
+                    });
+                    break;
+                case 'cashflow-desc':
+                    filteredListings.sort((a, b) => {
+                        const mA = a._investorMetrics || estimateInvestorMetrics(a);
+                        const mB = b._investorMetrics || estimateInvestorMetrics(b);
+                        return mB.cashFlow - mA.cashFlow;
+                    });
+                    break;
             }
         }
         
@@ -2155,6 +2243,11 @@
             document.getElementById('scoreMax').value = '';
             document.getElementById('filterWaterView').checked = false;
             document.getElementById('filterHasLot').checked = false;
+            document.getElementById('investorModeToggle').checked = false;
+            document.getElementById('investorMinCap').value = '';
+            document.getElementById('investorMinCF').value = '';
+            investorModeActive = false;
+            document.getElementById('investorModeOptions').style.display = 'none';
             document.getElementById('sortBy').value = 'score-desc';
             applyFilters();
         }
@@ -2261,10 +2354,14 @@
         }
         
         function renderListingsTable() {
+            // Update table header for investor mode
+            var investorTh = investorModeActive ? '<th class="sortable-th" onclick="sortTable(\'caprate-desc\')" style="color:#6f42c1;">Cap Rate</th><th class="sortable-th" onclick="sortTable(\'cashflow-desc\')" style="color:#6f42c1;">Cash Flow</th>' : '';
+            document.getElementById('listingsTableHead').innerHTML = '<tr><th style="width:40px;">★</th><th class="sortable-th" onclick="sortTable(\'addr\')">Address</th><th class="sortable-th" onclick="sortTable(\'neighborhood\')">Neighborhood</th><th class="sortable-th" onclick="sortTable(\'type\')">Type</th><th class="sortable-th" onclick="sortTable(\'price-asc\')">Price</th><th>Beds/Baths</th><th class="sortable-th" onclick="sortTable(\'sqft\')">SqFt</th><th class="sortable-th" onclick="sortTable(\'ppsf-asc\')">$/SqFt</th><th class="sortable-th" onclick="sortTable(\'dom-desc\')">DOM</th><th class="sortable-th" onclick="sortTable(\'year\')">Year</th><th class="sortable-th" onclick="sortTable(\'score-desc\')">Score</th>' + investorTh + '<th>Agg. Offer</th><th>Agent</th></tr>';
+
             const start = currentPage * listingsPerPage;
             const end = start + listingsPerPage;
             const pageData = filteredListings.slice(start, end);
-            
+
             if (filteredListings.length === 0) {
                 document.getElementById('listingsTableBody').innerHTML = '<tr><td colspan="13" style="text-align:center;padding:40px;color:#999;"><div style="font-size:18px;font-weight:700;color:#666;margin-bottom:8px;">No Properties Found</div><p>Try adjusting your filters or search terms</p></td></tr>';
                 document.getElementById('listingsPagination').innerHTML = '';
@@ -2283,6 +2380,13 @@
                 const starClass = isShortlisted ? 'shortlisted' : 'not-shortlisted';
                 const scoreClass = getScoreClass(listing.score);
                 
+                var investorCols = '';
+                if (investorModeActive) {
+                    const im = listing._investorMetrics || estimateInvestorMetrics(listing);
+                    const capColor = im.capRate >= 4 ? 'var(--success)' : im.capRate >= 2 ? '#856404' : 'var(--danger)';
+                    const cfColor = im.cashFlow >= 0 ? 'var(--success)' : 'var(--danger)';
+                    investorCols = `<td style="font-weight:600;color:${capColor};">${im.capRate.toFixed(1)}%</td><td style="font-weight:600;color:${cfColor};">${im.cashFlow >= 0 ? '' : '-'}$${Math.abs(im.cashFlow).toLocaleString()}</td>`;
+                }
                 html += `
                     <tr onclick="showDetailModal(${listing.listingIndex})">
                         <td><span class="star-toggle ${starClass}" onclick="event.stopPropagation(); toggleShortlist(${listing.listingIndex})">★</span></td>
@@ -2296,6 +2400,7 @@
                         <td>${listing.dom}</td>
                         <td>${listing.yearBuilt}</td>
                         <td><span class="score-badge ${scoreClass}">${Math.round(listing.score)}</span></td>
+                        ${investorCols}
                         <td>${formatPrice(offers.aggressive)}</td>
                         <td>${listing.agent}</td>
                     </tr>
@@ -2615,6 +2720,17 @@
                 if (listing.yearBuilt) html += '<span>Built <strong>' + listing.yearBuilt + '</strong></span>';
                 html += '</div>';
                 html += '</div>';
+                if (investorModeActive) {
+                    var im = listing._investorMetrics || estimateInvestorMetrics(listing);
+                    var capColor = im.capRate >= 4 ? '#155724' : im.capRate >= 2 ? '#856404' : '#721c24';
+                    var capBg = im.capRate >= 4 ? '#d4edda' : im.capRate >= 2 ? '#fff3cd' : '#f8d7da';
+                    var cfColor = im.cashFlow >= 0 ? '#155724' : '#721c24';
+                    html += '<div style="display:flex;justify-content:space-between;padding:6px 12px;background:' + capBg + ';font-size:11px;">';
+                    html += '<span style="color:' + capColor + ';font-weight:600;">Cap: ' + im.capRate.toFixed(1) + '%</span>';
+                    html += '<span style="color:' + cfColor + ';font-weight:600;">CF: ' + (im.cashFlow >= 0 ? '' : '-') + '$' + Math.abs(im.cashFlow).toLocaleString() + '/mo</span>';
+                    html += '<span style="color:#666;">Rent: $' + im.rent.toLocaleString() + '/mo</span>';
+                    html += '</div>';
+                }
                 html += '<div class="property-card-footer">';
                 html += '<span class="property-card-dom">' + listing.dom + ' days on market</span>';
                 html += '<span class="property-card-score ' + scoreClass + '" style="color: white; padding: 2px 8px; border-radius: 10px;">' + score + ' Score</span>';
