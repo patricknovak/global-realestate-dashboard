@@ -6683,7 +6683,7 @@ Competitive: ${formatPrice(offers.competitive)}`;
                     fthbSavingsEl.innerHTML = '<strong>First-Time Home Buyer Savings: ' + formatPrice(fthbResult.savings) + '</strong><br><span style="font-size:12px;">PTT reduced from ' + formatPrice(Math.round(ptt1+ptt2+ptt3)) + ' to ' + formatPrice(fthbResult.ptt) + '</span>';
                 } else if (fthbSavingsEl) {
                     fthbSavingsEl.style.display = 'block';
-                    fthbSavingsEl.innerHTML = '<span style="font-size:12px;">FTHB exemption does not apply at this price (' + (isNewBuild ? 'max $1.1M new builds' : 'max $525K') + ').</span>';
+                    fthbSavingsEl.innerHTML = '<span style="font-size:12px;">FTHB exemption does not apply at this price (' + (isNewBuild ? 'max $1.15M new builds' : 'max $860K existing') + ').</span>';
                 }
                 pttTotal = fthbResult.ptt;
             } else {
@@ -8790,25 +8790,28 @@ Competitive: ${formatPrice(offers.competitive)}`;
         // ===== PHASE 7.3: FTHB PTT Exemption =====
         function calculatePTTWithFTHB(price, isFTHB, isNewBuild) {
             var ptt = 0;
-            // Standard BC PTT
+            // Standard BC PTT rates
             if (price <= 200000) ptt = price * 0.01;
             else if (price <= 2000000) ptt = 2000 + (price - 200000) * 0.02;
             else if (price <= 3000000) ptt = 2000 + 36000 + (price - 2000000) * 0.03;
             else ptt = 2000 + 36000 + 30000 + (price - 3000000) * 0.05;
 
             var savings = 0;
+            // April 2024+ FTHB thresholds
             if (isFTHB && !isNewBuild) {
-                if (price <= 500000) { savings = ptt; ptt = 0; }
-                else if (price <= 525000) {
-                    var ratio = (525000 - price) / 25000;
+                // Existing homes: full exemption up to $835K, partial $835K-$860K
+                if (price <= 835000) { savings = ptt; ptt = 0; }
+                else if (price <= 860000) {
+                    var ratio = (860000 - price) / 25000;
                     savings = ptt * ratio;
                     ptt = ptt - savings;
                 }
             }
             if (isFTHB && isNewBuild) {
-                if (price <= 750000) { savings = ptt; ptt = 0; }
-                else if (price <= 1100000) {
-                    var ratio2 = (1100000 - price) / 350000;
+                // New builds: full exemption up to $1.1M, partial $1.1M-$1.15M
+                if (price <= 1100000) { savings = ptt; ptt = 0; }
+                else if (price <= 1150000) {
+                    var ratio2 = (1150000 - price) / 50000;
                     savings = ptt * ratio2;
                     ptt = ptt - savings;
                 }
