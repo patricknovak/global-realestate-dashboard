@@ -506,8 +506,31 @@
                     
                     <div id="offerSummary" style="display: none; margin-top: 20px;"></div>
                 </div>
+
+                <div style="margin-top:24px;padding-top:24px;border-top:2px solid #eee;">
+                    <h3 style="color:var(--secondary);margin-bottom:8px;">Home Buyer Rescission Period Calculator</h3>
+                    <p style="font-size:12px;color:#666;margin-bottom:16px;">Under BC's <em>Property Law Act</em>, buyers have a <strong>3 business day</strong> rescission (cooling-off) period after an accepted offer. Weekends and BC statutory holidays are excluded. A <strong>0.25% rescission fee</strong> applies if you rescind.</p>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;max-width:800px;">
+                        <div>
+                            <div class="form-group">
+                                <label>Offer Acceptance Date</label>
+                                <input type="date" id="rescissionDate" onchange="calcRescission()">
+                            </div>
+                            <div class="form-group">
+                                <label>Offer Price ($)</label>
+                                <input type="number" id="rescissionPrice" value="900000" oninput="calcRescission()">
+                            </div>
+                            <button class="btn-primary" onclick="calcRescission()" style="width:auto;margin-top:8px;">Calculate Rescission Deadline</button>
+                        </div>
+                        <div>
+                            <div id="rescissionResult" style="background:var(--light-gray);padding:16px;border-radius:8px;font-size:13px;min-height:120px;">
+                                <p style="color:#888;">Enter the acceptance date to see your rescission deadline and fee.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-            
+
             <!-- Tab 6: Shortlist -->
             <div id="shortlist" class="tab-content">
                 <div class="shortlist-controls">
@@ -5393,6 +5416,74 @@ Competitive: ${formatPrice(offers.competitive)}`;
             alerts.splice(index, 1);
             saveSearchAlerts(alerts);
             renderSearchAlerts();
+        }
+
+        // ===== HOME BUYER RESCISSION PERIOD CALCULATOR =====
+        function calcRescission() {
+            var dateStr = document.getElementById('rescissionDate').value;
+            var price = parseFloat(document.getElementById('rescissionPrice').value) || 0;
+            if (!dateStr) {
+                document.getElementById('rescissionResult').innerHTML = '<p style="color:#888;">Enter the acceptance date to see your rescission deadline and fee.</p>';
+                return;
+            }
+            // BC statutory holidays (2025-2027 common dates)
+            var bcHolidays = [
+                // 2025
+                '2025-01-01','2025-02-17','2025-04-18','2025-05-19','2025-06-30','2025-07-01','2025-08-04','2025-09-01','2025-09-30','2025-10-13','2025-11-11','2025-12-25',
+                // 2026
+                '2026-01-01','2026-02-16','2026-04-03','2026-05-18','2026-06-21','2026-07-01','2026-08-03','2026-09-07','2026-09-30','2026-10-12','2026-11-11','2026-12-25',
+                // 2027
+                '2027-01-01','2027-02-15','2027-03-26','2027-05-24','2027-06-21','2027-07-01','2027-08-02','2027-09-06','2027-09-30','2027-10-11','2027-11-11','2027-12-25'
+            ];
+            function isBusinessDay(d) {
+                var day = d.getDay();
+                if (day === 0 || day === 6) return false; // weekend
+                var ds = d.toISOString().split('T')[0];
+                return bcHolidays.indexOf(ds) < 0;
+            }
+            function addBusinessDays(start, days) {
+                var current = new Date(start);
+                var added = 0;
+                while (added < days) {
+                    current.setDate(current.getDate() + 1);
+                    if (isBusinessDay(current)) added++;
+                }
+                return current;
+            }
+            var acceptDate = new Date(dateStr + 'T12:00:00');
+            var deadline = addBusinessDays(acceptDate, 3);
+            var rescissionFee = Math.round(price * 0.0025);
+            var dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+            var monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+            var fmtDate = function(d) {
+                return dayNames[d.getDay()] + ', ' + monthNames[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear();
+            };
+
+            // Check if any holidays fell in the period
+            var holidaysInPeriod = [];
+            var check = new Date(acceptDate);
+            for (var i = 0; i < 10; i++) {
+                check.setDate(check.getDate() + 1);
+                if (check > deadline) break;
+                var cs = check.toISOString().split('T')[0];
+                if (bcHolidays.indexOf(cs) >= 0) holidaysInPeriod.push(fmtDate(new Date(check)));
+            }
+
+            var html = '<div style="background:var(--primary);color:white;padding:14px;border-radius:8px;text-align:center;margin-bottom:12px;">';
+            html += '<div style="font-size:11px;opacity:0.8;">Rescission Deadline (end of day)</div>';
+            html += '<div style="font-size:20px;font-weight:700;">' + fmtDate(deadline) + '</div>';
+            html += '</div>';
+            html += '<table style="width:100%;font-size:12px;border-collapse:collapse;">';
+            html += '<tr><td style="padding:4px 0;">Acceptance Date:</td><td style="text-align:right;font-weight:600;">' + fmtDate(acceptDate) + '</td></tr>';
+            html += '<tr><td style="padding:4px 0;">Business Days:</td><td style="text-align:right;font-weight:600;">3 business days</td></tr>';
+            if (holidaysInPeriod.length > 0) {
+                html += '<tr><td style="padding:4px 0;color:var(--danger);">Holidays in period:</td><td style="text-align:right;font-weight:600;color:var(--danger);">' + holidaysInPeriod.join(', ') + '</td></tr>';
+            }
+            html += '<tr><td style="padding:4px 0;border-top:1px solid #ddd;padding-top:8px;">Rescission Fee (0.25%):</td><td style="text-align:right;font-weight:700;color:var(--danger);border-top:1px solid #ddd;padding-top:8px;">$' + rescissionFee.toLocaleString() + '</td></tr>';
+            html += '</table>';
+            html += '<div style="margin-top:10px;padding:8px;background:#fff3cd;border-radius:4px;font-size:11px;color:#856404;"><strong>Important:</strong> You must deliver written notice of rescission before midnight on the deadline date. The 0.25% fee is payable to the seller. Consult a lawyer for proper rescission procedure.</div>';
+            document.getElementById('rescissionResult').innerHTML = html;
         }
 
         function validateAndGenerateOffer() {
