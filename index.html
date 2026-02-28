@@ -619,6 +619,7 @@
                 <h2 style="margin-bottom: 8px; color: var(--primary);">Financing Hub</h2>
                 <p style="color: #666; margin-bottom: 20px;">Everything you need to understand your mortgage options, costs, and affordability. No realtor referral needed.</p>
                 <div style="display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap;">
+                    <button onclick="document.getElementById('affordabilitySection').scrollIntoView({behavior:'smooth'})" style="padding:8px 14px;border:1px solid var(--primary);background:var(--primary);color:white;border-radius:20px;cursor:pointer;font-size:12px;font-weight:600;">Affordability Calculator</button>
                     <button onclick="document.getElementById('mortCalcSection').scrollIntoView({behavior:'smooth'})" style="padding:8px 14px;border:1px solid var(--secondary);background:white;color:var(--secondary);border-radius:20px;cursor:pointer;font-size:12px;font-weight:600;">Mortgage Calculator</button>
                     <button onclick="document.getElementById('pttSection').scrollIntoView({behavior:'smooth'})" style="padding:8px 14px;border:1px solid var(--secondary);background:white;color:var(--secondary);border-radius:20px;cursor:pointer;font-size:12px;font-weight:600;">Property Transfer Tax</button>
                     <button onclick="document.getElementById('closingSection').scrollIntoView({behavior:'smooth'})" style="padding:8px 14px;border:1px solid var(--secondary);background:white;color:var(--secondary);border-radius:20px;cursor:pointer;font-size:12px;font-weight:600;">Closing Costs</button>
@@ -626,6 +627,62 @@
                     <button onclick="switchTabDirect('roi')" style="padding:8px 14px;border:1px solid var(--warning);background:white;color:var(--warning);border-radius:20px;cursor:pointer;font-size:12px;font-weight:600;">ROI Calculator &#8594;</button>
                     <button onclick="document.getElementById('cashToCloseSection').scrollIntoView({behavior:'smooth'})" style="padding:8px 14px;border:1px solid #6f42c1;background:white;color:#6f42c1;border-radius:20px;cursor:pointer;font-size:12px;font-weight:600;">Cash to Close</button>
                 </div>
+                <div id="affordabilitySection" style="margin-bottom:24px;padding-bottom:24px;border-bottom:2px solid #eee;">
+                    <h3 style="color:var(--secondary);margin-bottom:8px;">How Much House Can I Afford?</h3>
+                    <p style="font-size:12px;color:#666;margin-bottom:16px;">Canadian lenders use GDS/TDS ratios and a stress test rate (contract rate + 2%, min 5.25%) to determine your maximum purchase price.</p>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+                        <div>
+                            <div class="form-group"><label>Annual Gross Income ($)</label><input type="number" id="affIncome" value="100000" oninput="calcAffordability()"></div>
+                            <div class="form-group"><label>Monthly Debts (car, student loans, etc.) ($)</label><input type="number" id="affDebts" value="500" oninput="calcAffordability()"></div>
+                            <div class="form-group"><label>Down Payment Available ($)</label><input type="number" id="affDown" value="200000" oninput="calcAffordability()"></div>
+                            <div class="form-group"><label>Interest Rate (%)</label><input type="number" id="affRate" value="5.5" step="0.1" oninput="calcAffordability()"></div>
+                            <div class="form-group"><label>Amortization (years)</label>
+                                <select id="affAmort" onchange="calcAffordability()">
+                                    <option value="25" selected>25 years</option><option value="30">30 years</option><option value="20">20 years</option>
+                                </select>
+                            </div>
+                            <div class="form-group"><label>Property Tax Rate (annual % of price)</label><input type="number" id="affTaxRate" value="0.35" step="0.05" oninput="calcAffordability()"></div>
+                            <div class="form-group"><label>Strata/Condo Fees ($/month)</label><input type="number" id="affStrata" value="0" oninput="calcAffordability()"></div>
+                            <div class="form-group"><label>Heating Costs ($/month)</label><input type="number" id="affHeat" value="150" oninput="calcAffordability()"></div>
+                            <div class="form-group">
+                                <label>First-Time Home Buyer?</label>
+                                <select id="affFTHB" onchange="calcAffordability()"><option value="no">No</option><option value="yes">Yes</option></select>
+                            </div>
+                            <button class="btn-primary" onclick="calcAffordability()" style="width:auto;margin-top:8px;">Calculate Affordability</button>
+                        </div>
+                        <div>
+                            <div style="background:linear-gradient(135deg,var(--primary) 0%,var(--secondary) 100%);color:white;padding:20px;border-radius:10px;text-align:center;margin-bottom:16px;">
+                                <div style="font-size:12px;opacity:0.8;">Maximum Purchase Price</div>
+                                <div id="affMaxPrice" style="font-size:32px;font-weight:700;">$0</div>
+                                <div id="affStressNote" style="font-size:11px;opacity:0.7;margin-top:4px;"></div>
+                            </div>
+                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+                                <div style="background:#d4edda;padding:14px;border-radius:8px;text-align:center;">
+                                    <div style="font-size:11px;color:#155724;text-transform:uppercase;font-weight:600;">GDS Ratio</div>
+                                    <div id="affGDS" style="font-size:22px;font-weight:700;color:#155724;">0%</div>
+                                    <div style="font-size:10px;color:#155724;">Target &le; 39%</div>
+                                </div>
+                                <div style="background:#e7f3ff;padding:14px;border-radius:8px;text-align:center;">
+                                    <div style="font-size:11px;color:#004085;text-transform:uppercase;font-weight:600;">TDS Ratio</div>
+                                    <div id="affTDS" style="font-size:22px;font-weight:700;color:#004085;">0%</div>
+                                    <div style="font-size:10px;color:#004085;">Target &le; 44%</div>
+                                </div>
+                            </div>
+                            <table style="width:100%;border-collapse:collapse;font-size:13px;">
+                                <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;">Max Mortgage Amount</td><td id="affMaxMort" style="padding:6px 8px;text-align:right;border-bottom:1px solid #eee;font-weight:600;">$0</td></tr>
+                                <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;">Monthly Mortgage Payment</td><td id="affMortPmt" style="padding:6px 8px;text-align:right;border-bottom:1px solid #eee;font-weight:600;">$0</td></tr>
+                                <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;">Monthly Property Tax</td><td id="affTaxPmt" style="padding:6px 8px;text-align:right;border-bottom:1px solid #eee;font-weight:600;">$0</td></tr>
+                                <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;">Heating + Strata</td><td id="affHeatStrata" style="padding:6px 8px;text-align:right;border-bottom:1px solid #eee;font-weight:600;">$0</td></tr>
+                                <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;">Other Monthly Debts</td><td id="affDebtsPmt" style="padding:6px 8px;text-align:right;border-bottom:1px solid #eee;font-weight:600;">$0</td></tr>
+                                <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;">CMHC Insurance</td><td id="affCMHC" style="padding:6px 8px;text-align:right;border-bottom:1px solid #eee;font-weight:600;">$0</td></tr>
+                                <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;">Min. Down Payment Required</td><td id="affMinDown" style="padding:6px 8px;text-align:right;border-bottom:1px solid #eee;font-weight:600;">$0</td></tr>
+                            </table>
+                            <div id="affNotes" style="margin-top:12px;padding:12px;background:var(--light-gray);border-radius:8px;font-size:12px;color:#666;"></div>
+                            <button id="affShowBtn" onclick="applyAffordabilityFilter()" style="margin-top:12px;padding:10px 20px;background:var(--success);color:white;border:none;border-radius:6px;cursor:pointer;font-weight:600;font-size:13px;width:100%;display:none;">Show Me Properties I Can Afford &rarr;</button>
+                        </div>
+                    </div>
+                </div>
+
                 <div id="mortCalcSection"></div>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
                     <div>
@@ -5626,6 +5683,130 @@ Competitive: ${formatPrice(offers.competitive)}`;
                 return;
             }
             generateOfferSummary();
+        }
+
+        // ===== AFFORDABILITY CALCULATOR =====
+        var _lastAffordMaxPrice = 0;
+        function calcAffordability() {
+            var income = parseFloat(document.getElementById('affIncome').value) || 0;
+            var debts = parseFloat(document.getElementById('affDebts').value) || 0;
+            var downAvail = parseFloat(document.getElementById('affDown').value) || 0;
+            var contractRate = parseFloat(document.getElementById('affRate').value) || 5.5;
+            var years = parseInt(document.getElementById('affAmort').value) || 25;
+            var taxRate = parseFloat(document.getElementById('affTaxRate').value) || 0.35;
+            var strata = parseFloat(document.getElementById('affStrata').value) || 0;
+            var heat = parseFloat(document.getElementById('affHeat').value) || 0;
+            var monthlyIncome = income / 12;
+
+            // Stress test: higher of contract + 2% or 5.25%
+            var stressRate = Math.max(contractRate + 2, 5.25);
+            var monthlyStressRate = stressRate / 100 / 12;
+            var nPayments = years * 12;
+
+            // Binary search for max purchase price where GDS <= 39% AND TDS <= 44%
+            var lo = 0, hi = 5000000;
+            for (var iter = 0; iter < 50; iter++) {
+                var mid = (lo + hi) / 2;
+                var mortAmt = mid - downAvail;
+                if (mortAmt < 0) mortAmt = 0;
+                // Add CMHC if < 20% down
+                var downPct = mid > 0 ? (downAvail / mid * 100) : 100;
+                var cmhcPremium = 0;
+                if (downPct < 20 && mid <= 1500000) {
+                    var cmhcRate = downPct >= 15 ? 0.028 : downPct >= 10 ? 0.031 : downPct >= 5 ? 0.04 : 0;
+                    cmhcPremium = mortAmt * cmhcRate;
+                    mortAmt += cmhcPremium;
+                }
+                var mortPmt = monthlyStressRate > 0 && mortAmt > 0 ? mortAmt * (monthlyStressRate * Math.pow(1 + monthlyStressRate, nPayments)) / (Math.pow(1 + monthlyStressRate, nPayments) - 1) : 0;
+                var taxPmt = mid * (taxRate / 100) / 12;
+                var gds = monthlyIncome > 0 ? (mortPmt + taxPmt + heat + strata * 0.5) / monthlyIncome : 1;
+                var tds = monthlyIncome > 0 ? (mortPmt + taxPmt + heat + strata * 0.5 + debts) / monthlyIncome : 1;
+                if (gds <= 0.39 && tds <= 0.44) { lo = mid; } else { hi = mid; }
+            }
+            var maxPrice = Math.floor(lo / 1000) * 1000; // Round down to nearest $1K
+
+            // Check minimum down payment requirement
+            var minDown;
+            if (maxPrice <= 500000) minDown = maxPrice * 0.05;
+            else if (maxPrice <= 1500000) minDown = 25000 + (maxPrice - 500000) * 0.10;
+            else minDown = maxPrice * 0.20;
+            minDown = Math.ceil(minDown);
+
+            // If available down < minimum required, cap the price
+            if (downAvail < minDown) {
+                // Re-search with minimum down constraint
+                lo = 0; hi = maxPrice;
+                for (var iter2 = 0; iter2 < 50; iter2++) {
+                    var mid2 = (lo + hi) / 2;
+                    var reqDown;
+                    if (mid2 <= 500000) reqDown = mid2 * 0.05;
+                    else if (mid2 <= 1500000) reqDown = 25000 + (mid2 - 500000) * 0.10;
+                    else reqDown = mid2 * 0.20;
+                    if (downAvail >= reqDown) { lo = mid2; } else { hi = mid2; }
+                }
+                maxPrice = Math.floor(lo / 1000) * 1000;
+            }
+
+            // Recalculate final values at maxPrice
+            var finalMort = maxPrice - downAvail;
+            if (finalMort < 0) finalMort = 0;
+            var finalDownPct = maxPrice > 0 ? (downAvail / maxPrice * 100) : 100;
+            var finalCMHC = 0;
+            if (finalDownPct < 20 && maxPrice <= 1500000) {
+                var cr = finalDownPct >= 15 ? 0.028 : finalDownPct >= 10 ? 0.031 : finalDownPct >= 5 ? 0.04 : 0;
+                finalCMHC = Math.round(finalMort * cr);
+                finalMort += finalCMHC;
+            }
+            var monthlyActualRate = contractRate / 100 / 12;
+            var actualMortPmt = monthlyActualRate > 0 && finalMort > 0 ? finalMort * (monthlyActualRate * Math.pow(1 + monthlyActualRate, nPayments)) / (Math.pow(1 + monthlyActualRate, nPayments) - 1) : 0;
+            var finalTax = maxPrice * (taxRate / 100) / 12;
+            var gdsActual = monthlyIncome > 0 ? (actualMortPmt + finalTax + heat + strata * 0.5) / monthlyIncome * 100 : 0;
+            var tdsActual = monthlyIncome > 0 ? (actualMortPmt + finalTax + heat + strata * 0.5 + debts) / monthlyIncome * 100 : 0;
+
+            // Min down for final price
+            if (maxPrice <= 500000) minDown = maxPrice * 0.05;
+            else if (maxPrice <= 1500000) minDown = 25000 + (maxPrice - 500000) * 0.10;
+            else minDown = maxPrice * 0.20;
+
+            _lastAffordMaxPrice = maxPrice;
+
+            // Update UI
+            document.getElementById('affMaxPrice').textContent = '$' + maxPrice.toLocaleString();
+            document.getElementById('affStressNote').textContent = 'Stress-tested at ' + stressRate.toFixed(2) + '% (contract ' + contractRate + '% + 2%)';
+            document.getElementById('affMaxMort').textContent = '$' + Math.round(finalMort).toLocaleString();
+            document.getElementById('affMortPmt').textContent = '$' + Math.round(actualMortPmt).toLocaleString();
+            document.getElementById('affTaxPmt').textContent = '$' + Math.round(finalTax).toLocaleString();
+            document.getElementById('affHeatStrata').textContent = '$' + (heat + strata).toLocaleString();
+            document.getElementById('affDebtsPmt').textContent = '$' + debts.toLocaleString();
+            document.getElementById('affCMHC').textContent = finalCMHC > 0 ? '$' + finalCMHC.toLocaleString() + ' (added to mortgage)' : '$0';
+            document.getElementById('affMinDown').textContent = '$' + Math.ceil(minDown).toLocaleString() + ' (' + (maxPrice > 0 ? (minDown / maxPrice * 100).toFixed(1) : 0) + '%)';
+
+            var gdsEl = document.getElementById('affGDS');
+            gdsEl.textContent = gdsActual.toFixed(1) + '%';
+            gdsEl.style.color = gdsActual <= 32 ? '#155724' : gdsActual <= 39 ? '#856404' : '#721c24';
+            gdsEl.parentElement.style.background = gdsActual <= 32 ? '#d4edda' : gdsActual <= 39 ? '#fff3cd' : '#f8d7da';
+
+            var tdsEl = document.getElementById('affTDS');
+            tdsEl.textContent = tdsActual.toFixed(1) + '%';
+            tdsEl.style.color = tdsActual <= 39 ? '#004085' : tdsActual <= 44 ? '#856404' : '#721c24';
+            tdsEl.parentElement.style.background = tdsActual <= 39 ? '#e7f3ff' : tdsActual <= 44 ? '#fff3cd' : '#f8d7da';
+
+            var notes = [];
+            notes.push('Qualification uses stress test rate of ' + stressRate.toFixed(2) + '%. Your actual payments use the contract rate of ' + contractRate + '%.');
+            if (finalCMHC > 0) notes.push('CMHC insurance of $' + finalCMHC.toLocaleString() + ' is added to your mortgage balance.');
+            if (downAvail < minDown) notes.push('<strong style="color:var(--danger);">Your down payment ($' + downAvail.toLocaleString() + ') is below the minimum required ($' + Math.ceil(minDown).toLocaleString() + ').</strong>');
+            if (maxPrice > 1500000) notes.push('Properties over $1.5M require minimum 20% down payment and are not eligible for CMHC insurance.');
+            document.getElementById('affNotes').innerHTML = '<ul style="margin:0;padding-left:18px;">' + notes.map(function(n) { return '<li style="margin-bottom:4px;">' + n + '</li>'; }).join('') + '</ul>';
+
+            document.getElementById('affShowBtn').style.display = maxPrice > 0 ? 'block' : 'none';
+        }
+
+        function applyAffordabilityFilter() {
+            if (_lastAffordMaxPrice <= 0) return;
+            document.getElementById('priceMin').value = '';
+            document.getElementById('priceMax').value = _lastAffordMaxPrice;
+            applyFilters();
+            switchTabDirect('listings');
         }
 
         // ===== MORTGAGE CALCULATOR =====
