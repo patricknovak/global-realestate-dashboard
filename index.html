@@ -2059,13 +2059,34 @@
         }
 
         function estimateMonthlyRent(listing) {
-            // Estimate rent based on property type and typical BC rent-to-price ratios
             var price = listing.price;
             var type = (listing.type || '').toLowerCase();
+            var sqft = listing.sqft || 0;
+
+            // Primary model: sqft-based rent (more accurate than price for expensive properties)
+            if (sqft > 0) {
+                var rentPerSqft; // monthly $/sqft
+                if (type.indexOf('condo') >= 0 || type.indexOf('apt') >= 0) {
+                    rentPerSqft = 3.00;
+                    return Math.max(1800, Math.min(Math.round(sqft * rentPerSqft), 5500));
+                } else if (type.indexOf('town') >= 0 || type.indexOf('row') >= 0) {
+                    rentPerSqft = 2.40;
+                    return Math.max(2400, Math.min(Math.round(sqft * rentPerSqft), 6000));
+                } else {
+                    rentPerSqft = 1.80;
+                    return Math.max(2800, Math.min(Math.round(sqft * rentPerSqft), 8000));
+                }
+            }
+
+            // Fallback: diminishing price ratio when sqft is missing
             var ratio;
-            if (type.indexOf('condo') >= 0 || type.indexOf('apartment') >= 0) ratio = 0.0040;
-            else if (type.indexOf('town') >= 0 || type.indexOf('row') >= 0) ratio = 0.0035;
-            else ratio = 0.0030; // house/detached
+            if (type.indexOf('condo') >= 0 || type.indexOf('apt') >= 0) {
+                ratio = price <= 600000 ? 0.0040 : price <= 1000000 ? 0.0033 : 0.0025;
+            } else if (type.indexOf('town') >= 0 || type.indexOf('row') >= 0) {
+                ratio = price <= 800000 ? 0.0035 : price <= 1200000 ? 0.0028 : 0.0022;
+            } else {
+                ratio = price <= 1000000 ? 0.0030 : price <= 2000000 ? 0.0022 : 0.0015;
+            }
             return Math.round(price * ratio);
         }
 
