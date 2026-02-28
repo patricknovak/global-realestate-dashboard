@@ -5487,14 +5487,54 @@ Competitive: ${formatPrice(offers.competitive)}`;
                 document.getElementById('rescissionResult').innerHTML = '<p style="color:#888;">Enter the acceptance date to see your rescission deadline and fee.</p>';
                 return;
             }
-            // BC statutory holidays (2025-2027 common dates)
+            // HBRP holidays per BC Interpretation Act s.29 — NOT the same as Employment Standards holidays.
+            // Includes Easter Monday and Boxing Day (Dec 26).
+            // Does NOT include National Indigenous Peoples Day (Jun 21) or any non-Interpretation Act holidays.
+            // Thanksgiving kept as it arguably falls under s.29(d) (day set by Parliament for thanksgiving).
+            // Source: BCREA HBRP Calculator, BCFSA HBRP Guideline, Interpretation Act [RSBC 1996] c.238 s.29
             var bcHolidays = [
                 // 2025
-                '2025-01-01','2025-02-17','2025-04-18','2025-05-19','2025-06-30','2025-07-01','2025-08-04','2025-09-01','2025-09-30','2025-10-13','2025-11-11','2025-12-25',
+                '2025-01-01',  // New Year's Day
+                '2025-02-17',  // Family Day (3rd Monday Feb)
+                '2025-04-18',  // Good Friday
+                '2025-04-21',  // Easter Monday
+                '2025-05-19',  // Victoria Day
+                '2025-07-01',  // Canada Day
+                '2025-08-04',  // BC Day (1st Monday Aug)
+                '2025-09-01',  // Labour Day (1st Monday Sep)
+                '2025-09-30',  // National Day for Truth and Reconciliation
+                '2025-10-13',  // Thanksgiving (2nd Monday Oct) — s.29(d) federal proclamation
+                '2025-11-11',  // Remembrance Day
+                '2025-12-25',  // Christmas Day
+                '2025-12-26',  // Boxing Day
                 // 2026
-                '2026-01-01','2026-02-16','2026-04-03','2026-05-18','2026-06-21','2026-07-01','2026-08-03','2026-09-07','2026-09-30','2026-10-12','2026-11-11','2026-12-25',
+                '2026-01-01',  // New Year's Day
+                '2026-02-16',  // Family Day
+                '2026-04-03',  // Good Friday
+                '2026-04-06',  // Easter Monday
+                '2026-05-18',  // Victoria Day
+                '2026-07-01',  // Canada Day
+                '2026-08-03',  // BC Day
+                '2026-09-07',  // Labour Day
+                '2026-09-30',  // Truth and Reconciliation
+                '2026-10-12',  // Thanksgiving
+                '2026-11-11',  // Remembrance Day
+                '2026-12-25',  // Christmas Day
+                '2026-12-26',  // Boxing Day
                 // 2027
-                '2027-01-01','2027-02-15','2027-03-26','2027-05-24','2027-06-21','2027-07-01','2027-08-02','2027-09-06','2027-09-30','2027-10-11','2027-11-11','2027-12-25'
+                '2027-01-01',  // New Year's Day
+                '2027-02-15',  // Family Day
+                '2027-03-26',  // Good Friday
+                '2027-03-29',  // Easter Monday
+                '2027-05-24',  // Victoria Day
+                '2027-07-01',  // Canada Day
+                '2027-08-02',  // BC Day
+                '2027-09-06',  // Labour Day
+                '2027-09-30',  // Truth and Reconciliation
+                '2027-10-11',  // Thanksgiving
+                '2027-11-11',  // Remembrance Day
+                '2027-12-25',  // Christmas Day
+                '2027-12-26'   // Boxing Day
             ];
             function isBusinessDay(d) {
                 var day = d.getDay();
@@ -5543,7 +5583,7 @@ Competitive: ${formatPrice(offers.competitive)}`;
             }
             html += '<tr><td style="padding:4px 0;border-top:1px solid #ddd;padding-top:8px;">Rescission Fee (0.25%):</td><td style="text-align:right;font-weight:700;color:var(--danger);border-top:1px solid #ddd;padding-top:8px;">$' + rescissionFee.toLocaleString() + '</td></tr>';
             html += '</table>';
-            html += '<div style="margin-top:10px;padding:8px;background:#fff3cd;border-radius:4px;font-size:11px;color:#856404;"><strong>Important:</strong> You must deliver written notice of rescission before midnight on the deadline date. The 0.25% fee is payable to the seller. Consult a lawyer for proper rescission procedure.</div>';
+            html += '<div style="margin-top:10px;padding:8px;background:#fff3cd;border-radius:4px;font-size:11px;color:#856404;line-height:1.5;"><strong>Important:</strong> You must deliver written notice of rescission before midnight on the deadline date. The 0.25% fee is payable to the seller. Consult a lawyer for proper rescission procedure.<br><br><strong>Note:</strong> "Business days" for HBRP exclude Saturdays, Sundays, and holidays as defined in the BC <em>Interpretation Act</em> (s.29), which differs from Employment Standards holidays. This includes Easter Monday and Boxing Day.</div>';
             document.getElementById('rescissionResult').innerHTML = html;
         }
 
