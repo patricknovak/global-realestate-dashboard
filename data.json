@@ -1,0 +1,1033 @@
+{
+    "benchmarks": {
+        "White Rock": {
+            "House": 1732300,
+            "Townhouse": 885700,
+            "Apt/Condo": 570600,
+            "Land/Lot": 1000000,
+            "Duplex": 1200000,
+            "Mfd Home": 400000
+        },
+        "Crescent Beach": {
+            "House": 2200000,
+            "Townhouse": 1100000,
+            "Apt/Condo": 650000,
+            "Land/Lot": 2000000,
+            "Duplex": 1300000,
+            "Mfd Home": 450000
+        },
+        "Morgan Creek": {
+            "House": 2100000,
+            "Townhouse": 1000000,
+            "Apt/Condo": 600000,
+            "Land/Lot": 1800000,
+            "Duplex": 1100000,
+            "Mfd Home": 400000
+        },
+        "Grandview Heights": {
+            "House": 1600000,
+            "Townhouse": 950000,
+            "Apt/Condo": 550000,
+            "Land/Lot": 1200000,
+            "Duplex": 1100000,
+            "Mfd Home": 400000
+        },
+        "King George Corridor": {
+            "House": 1450000,
+            "Townhouse": 850000,
+            "Apt/Condo": 520000,
+            "Land/Lot": 900000,
+            "Duplex": 1100000,
+            "Mfd Home": 400000
+        },
+        "Pacific Douglas": {
+            "House": 1550000,
+            "Townhouse": 900000,
+            "Apt/Condo": 550000,
+            "Land/Lot": 1300000,
+            "Duplex": 1200000,
+            "Mfd Home": 400000
+        },
+        "Elgin Chantrell": {
+            "House": 2500000,
+            "Townhouse": 1200000,
+            "Apt/Condo": 650000,
+            "Land/Lot": 1800000,
+            "Duplex": 1300000,
+            "Mfd Home": 450000
+        },
+        "Sunnyside Park": {
+            "House": 1600000,
+            "Townhouse": 900000,
+            "Apt/Condo": 500000,
+            "Land/Lot": 1000000,
+            "Duplex": 1200000,
+            "Mfd Home": 400000
+        },
+        "Ocean Park": {
+            "House": 1800000,
+            "Townhouse": 950000,
+            "Apt/Condo": 580000,
+            "Land/Lot": 1200000,
+            "Duplex": 1100000,
+            "Mfd Home": 400000
+        },
+        "Hazelmere": {
+            "House": 1800000,
+            "Townhouse": 900000,
+            "Apt/Condo": 500000,
+            "Land/Lot": 2000000,
+            "Duplex": 1100000,
+            "Mfd Home": 400000
+        },
+        "Parksville": {
+            "House": 850000,
+            "Townhouse": 600000,
+            "Apt/Condo": 450000,
+            "Land/Lot": 400000,
+            "Duplex": 700000,
+            "Mfd Home": 350000
+        },
+        "Qualicum Beach": {
+            "House": 900000,
+            "Townhouse": 650000,
+            "Apt/Condo": 500000,
+            "Land/Lot": 450000,
+            "Duplex": 750000,
+            "Mfd Home": 350000
+        },
+        "Nanoose Bay": {
+            "House": 1200000,
+            "Townhouse": 750000,
+            "Apt/Condo": 550000,
+            "Land/Lot": 600000,
+            "Duplex": 900000,
+            "Mfd Home": 400000
+        },
+        "Lantzville": {
+            "House": 950000,
+            "Townhouse": 650000,
+            "Apt/Condo": 500000,
+            "Land/Lot": 450000,
+            "Duplex": 800000,
+            "Mfd Home": 400000
+        },
+        "Nanaimo": {
+            "House": 800000,
+            "Townhouse": 550000,
+            "Apt/Condo": 400000,
+            "Land/Lot": 350000,
+            "Duplex": 650000,
+            "Mfd Home": 300000
+        },
+        "Courtenay": {
+            "House": 750000,
+            "Townhouse": 550000,
+            "Apt/Condo": 400000,
+            "Land/Lot": 350000,
+            "Duplex": 650000,
+            "Mfd Home": 300000
+        },
+        "Comox": {
+            "House": 850000,
+            "Townhouse": 600000,
+            "Apt/Condo": 450000,
+            "Land/Lot": 400000,
+            "Duplex": 700000,
+            "Mfd Home": 350000
+        },
+        "Cumberland": {
+            "House": 700000,
+            "Townhouse": 500000,
+            "Apt/Condo": 400000,
+            "Land/Lot": 300000,
+            "Duplex": 600000,
+            "Mfd Home": 300000
+        },
+        "Campbell River": {
+            "House": 650000,
+            "Townhouse": 500000,
+            "Apt/Condo": 350000,
+            "Land/Lot": 300000,
+            "Duplex": 550000,
+            "Mfd Home": 280000
+        }
+    },
+    "marketTrends": {
+        "White Rock": {
+            "yoyChange": -6.6,
+            "medianDOM": 42,
+            "inventory": "high",
+            "avgSaleToList": 0.94,
+            "recentSales": 28
+        },
+        "Crescent Beach": {
+            "yoyChange": -5.8,
+            "medianDOM": 48,
+            "inventory": "high",
+            "avgSaleToList": 0.93,
+            "recentSales": 6
+        },
+        "Morgan Creek": {
+            "yoyChange": -4.2,
+            "medianDOM": 38,
+            "inventory": "high",
+            "avgSaleToList": 0.94,
+            "recentSales": 14
+        },
+        "Grandview Heights": {
+            "yoyChange": -3.5,
+            "medianDOM": 35,
+            "inventory": "high",
+            "avgSaleToList": 0.95,
+            "recentSales": 22
+        },
+        "King George Corridor": {
+            "yoyChange": -3.8,
+            "medianDOM": 36,
+            "inventory": "high",
+            "avgSaleToList": 0.94,
+            "recentSales": 18
+        },
+        "Pacific Douglas": {
+            "yoyChange": -4.5,
+            "medianDOM": 52,
+            "inventory": "high",
+            "avgSaleToList": 0.93,
+            "recentSales": 5
+        },
+        "Elgin Chantrell": {
+            "yoyChange": -5,
+            "medianDOM": 55,
+            "inventory": "high",
+            "avgSaleToList": 0.92,
+            "recentSales": 4
+        },
+        "Sunnyside Park": {
+            "yoyChange": -4.8,
+            "medianDOM": 40,
+            "inventory": "high",
+            "avgSaleToList": 0.94,
+            "recentSales": 8
+        },
+        "Ocean Park": {
+            "yoyChange": -5.2,
+            "medianDOM": 44,
+            "inventory": "high",
+            "avgSaleToList": 0.93,
+            "recentSales": 10
+        },
+        "Hazelmere": {
+            "yoyChange": -6,
+            "medianDOM": 65,
+            "inventory": "high",
+            "avgSaleToList": 0.91,
+            "recentSales": 3
+        },
+        "Semiahmoo": {
+            "yoyChange": -4,
+            "medianDOM": 38,
+            "inventory": "high",
+            "avgSaleToList": 0.94,
+            "recentSales": 12
+        },
+        "South Surrey": {
+            "yoyChange": -4.5,
+            "medianDOM": 40,
+            "inventory": "high",
+            "avgSaleToList": 0.94,
+            "recentSales": 16
+        },
+        "Parksville": {
+            "yoyChange": 2.8,
+            "medianDOM": 32,
+            "inventory": "balanced",
+            "avgSaleToList": 0.97,
+            "recentSales": 18
+        },
+        "Qualicum Beach": {
+            "yoyChange": 2.5,
+            "medianDOM": 36,
+            "inventory": "balanced",
+            "avgSaleToList": 0.96,
+            "recentSales": 12
+        },
+        "Nanoose Bay": {
+            "yoyChange": 1.5,
+            "medianDOM": 38,
+            "inventory": "balanced",
+            "avgSaleToList": 0.96,
+            "recentSales": 7
+        },
+        "Lantzville": {
+            "yoyChange": 0.5,
+            "medianDOM": 35,
+            "inventory": "balanced",
+            "avgSaleToList": 0.96,
+            "recentSales": 6
+        },
+        "Nanaimo": {
+            "yoyChange": -1,
+            "medianDOM": 30,
+            "inventory": "balanced",
+            "avgSaleToList": 0.97,
+            "recentSales": 40
+        },
+        "Courtenay": {
+            "yoyChange": 2,
+            "medianDOM": 32,
+            "inventory": "balanced",
+            "avgSaleToList": 0.97,
+            "recentSales": 22
+        },
+        "Comox": {
+            "yoyChange": 1.8,
+            "medianDOM": 34,
+            "inventory": "balanced",
+            "avgSaleToList": 0.96,
+            "recentSales": 16
+        },
+        "Cumberland": {
+            "yoyChange": 1,
+            "medianDOM": 30,
+            "inventory": "balanced",
+            "avgSaleToList": 0.98,
+            "recentSales": 8
+        },
+        "Campbell River": {
+            "yoyChange": 0.8,
+            "medianDOM": 34,
+            "inventory": "balanced",
+            "avgSaleToList": 0.95,
+            "recentSales": 18
+        }
+    },
+    "trendBonus": {
+        "White Rock": 9,
+        "Crescent Beach": 8,
+        "Ocean Park": 8,
+        "Elgin Chantrell": 8,
+        "Sunnyside Park": 8,
+        "Morgan Creek": 7,
+        "Grandview Heights": 7,
+        "King George Corridor": 7,
+        "Pacific Douglas": 7,
+        "Hazelmere": 9,
+        "Parksville": 5,
+        "Qualicum Beach": 5,
+        "Nanoose Bay": 5,
+        "Lantzville": 5,
+        "Nanaimo": 6,
+        "Courtenay": 4,
+        "Comox": 4,
+        "Cumberland": 4,
+        "Campbell River": 5
+    },
+    "areaIntel": {
+        "White Rock": {
+            "walkScore": 72,
+            "transitScore": 45,
+            "bikeScore": 55,
+            "population": 21000,
+            "avgHouseholdIncome": 82000,
+            "crimeIndex": 22,
+            "parksNearby": 8,
+            "groceryNearby": 6,
+            "restaurantsNearby": 42,
+            "schools": [
+                {
+                    "name": "Earl Marriott Secondary",
+                    "type": "Secondary",
+                    "rating": 7.2
+                },
+                {
+                    "name": "White Rock Elementary",
+                    "type": "Elementary",
+                    "rating": 7.8
+                },
+                {
+                    "name": "Semiahmoo Secondary",
+                    "type": "Secondary",
+                    "rating": 7.5
+                }
+            ],
+            "amenities": [
+                "Beach Promenade",
+                "Pier",
+                "Marine Drive",
+                "Memorial Park",
+                "Library",
+                "Community Centre"
+            ]
+        },
+        "Crescent Beach": {
+            "walkScore": 42,
+            "transitScore": 20,
+            "bikeScore": 35,
+            "population": 3200,
+            "avgHouseholdIncome": 112000,
+            "crimeIndex": 12,
+            "parksNearby": 4,
+            "groceryNearby": 1,
+            "restaurantsNearby": 8,
+            "schools": [
+                {
+                    "name": "Crescent Park Elementary",
+                    "type": "Elementary",
+                    "rating": 7.6
+                }
+            ],
+            "amenities": [
+                "Beach",
+                "Blackie Spit Park",
+                "Dunsmuir Gardens",
+                "Art Studios"
+            ]
+        },
+        "Morgan Creek": {
+            "walkScore": 35,
+            "transitScore": 25,
+            "bikeScore": 30,
+            "population": 8500,
+            "avgHouseholdIncome": 145000,
+            "crimeIndex": 8,
+            "parksNearby": 5,
+            "groceryNearby": 3,
+            "restaurantsNearby": 15,
+            "schools": [
+                {
+                    "name": "Morgan Elementary",
+                    "type": "Elementary",
+                    "rating": 8.1
+                },
+                {
+                    "name": "Grandview Heights Secondary",
+                    "type": "Secondary",
+                    "rating": 7.3
+                }
+            ],
+            "amenities": [
+                "Morgan Creek Golf Course",
+                "South Surrey Athletic Park",
+                "Nature Trails"
+            ]
+        },
+        "Grandview Heights": {
+            "walkScore": 52,
+            "transitScore": 38,
+            "bikeScore": 42,
+            "population": 28000,
+            "avgHouseholdIncome": 105000,
+            "crimeIndex": 15,
+            "parksNearby": 7,
+            "groceryNearby": 5,
+            "restaurantsNearby": 30,
+            "schools": [
+                {
+                    "name": "Grandview Heights Secondary",
+                    "type": "Secondary",
+                    "rating": 7.3
+                },
+                {
+                    "name": "Sunnyside Elementary",
+                    "type": "Elementary",
+                    "rating": 7.9
+                }
+            ],
+            "amenities": [
+                "Grandview Corners",
+                "South Point Exchange",
+                "Trails",
+                "New Town Centre"
+            ]
+        },
+        "King George Corridor": {
+            "walkScore": 58,
+            "transitScore": 50,
+            "bikeScore": 45,
+            "population": 19000,
+            "avgHouseholdIncome": 78000,
+            "crimeIndex": 28,
+            "parksNearby": 4,
+            "groceryNearby": 4,
+            "restaurantsNearby": 20,
+            "schools": [
+                {
+                    "name": "King George Secondary",
+                    "type": "Secondary",
+                    "rating": 6.5
+                },
+                {
+                    "name": "Jessie Lee Elementary",
+                    "type": "Elementary",
+                    "rating": 7
+                }
+            ],
+            "amenities": [
+                "King George Hub",
+                "SkyTrain Access (future)",
+                "Shopping"
+            ]
+        },
+        "Pacific Douglas": {
+            "walkScore": 30,
+            "transitScore": 15,
+            "bikeScore": 25,
+            "population": 6000,
+            "avgHouseholdIncome": 95000,
+            "crimeIndex": 10,
+            "parksNearby": 3,
+            "groceryNearby": 2,
+            "restaurantsNearby": 8,
+            "schools": [
+                {
+                    "name": "Pacific Academy",
+                    "type": "K-12 Private",
+                    "rating": 8
+                }
+            ],
+            "amenities": [
+                "Peace Arch Provincial Park",
+                "Border Crossing",
+                "Nature Reserve"
+            ]
+        },
+        "Elgin Chantrell": {
+            "walkScore": 25,
+            "transitScore": 10,
+            "bikeScore": 20,
+            "population": 4800,
+            "avgHouseholdIncome": 165000,
+            "crimeIndex": 5,
+            "parksNearby": 3,
+            "groceryNearby": 2,
+            "restaurantsNearby": 6,
+            "schools": [
+                {
+                    "name": "Chantrell Creek Elementary",
+                    "type": "Elementary",
+                    "rating": 8.5
+                },
+                {
+                    "name": "Elgin Park Secondary",
+                    "type": "Secondary",
+                    "rating": 7.8
+                }
+            ],
+            "amenities": [
+                "Chantrell Creek Park",
+                "Equestrian Trails",
+                "Exclusive Estates"
+            ]
+        },
+        "Sunnyside Park": {
+            "walkScore": 45,
+            "transitScore": 30,
+            "bikeScore": 38,
+            "population": 7500,
+            "avgHouseholdIncome": 88000,
+            "crimeIndex": 18,
+            "parksNearby": 5,
+            "groceryNearby": 3,
+            "restaurantsNearby": 12,
+            "schools": [
+                {
+                    "name": "Sunnyside Elementary",
+                    "type": "Elementary",
+                    "rating": 7.4
+                }
+            ],
+            "amenities": [
+                "Sunnyside Park",
+                "Shops",
+                "Local Dining"
+            ]
+        },
+        "Ocean Park": {
+            "walkScore": 48,
+            "transitScore": 22,
+            "bikeScore": 40,
+            "population": 5200,
+            "avgHouseholdIncome": 98000,
+            "crimeIndex": 14,
+            "parksNearby": 6,
+            "groceryNearby": 2,
+            "restaurantsNearby": 10,
+            "schools": [
+                {
+                    "name": "Ocean Park Elementary",
+                    "type": "Elementary",
+                    "rating": 7.6
+                }
+            ],
+            "amenities": [
+                "Ocean Park Village",
+                "Beach Access",
+                "Nature Trails",
+                "Art Galleries"
+            ]
+        },
+        "Hazelmere": {
+            "walkScore": 10,
+            "transitScore": 5,
+            "bikeScore": 15,
+            "population": 2100,
+            "avgHouseholdIncome": 95000,
+            "crimeIndex": 6,
+            "parksNearby": 2,
+            "groceryNearby": 1,
+            "restaurantsNearby": 3,
+            "schools": [],
+            "amenities": [
+                "Hazelmere Golf Course",
+                "Rural Acreages",
+                "Farm Markets"
+            ]
+        },
+        "Parksville": {
+            "walkScore": 62,
+            "transitScore": 25,
+            "bikeScore": 50,
+            "population": 13000,
+            "avgHouseholdIncome": 65000,
+            "crimeIndex": 25,
+            "parksNearby": 6,
+            "groceryNearby": 4,
+            "restaurantsNearby": 28,
+            "schools": [
+                {
+                    "name": "Ballenas Secondary",
+                    "type": "Secondary",
+                    "rating": 6.8
+                },
+                {
+                    "name": "Parksville Elementary",
+                    "type": "Elementary",
+                    "rating": 7.2
+                }
+            ],
+            "amenities": [
+                "Rathtrevor Beach",
+                "Community Beach",
+                "Parksville Boardwalk",
+                "Shops"
+            ]
+        },
+        "Qualicum Beach": {
+            "walkScore": 58,
+            "transitScore": 20,
+            "bikeScore": 48,
+            "population": 9000,
+            "avgHouseholdIncome": 68000,
+            "crimeIndex": 18,
+            "parksNearby": 5,
+            "groceryNearby": 3,
+            "restaurantsNearby": 22,
+            "schools": [
+                {
+                    "name": "Kwalikum Secondary",
+                    "type": "Secondary",
+                    "rating": 7
+                },
+                {
+                    "name": "Qualicum Beach Elementary",
+                    "type": "Elementary",
+                    "rating": 7.5
+                }
+            ],
+            "amenities": [
+                "Beach Walk",
+                "Heritage Forest",
+                "Old Town",
+                "Art Galleries",
+                "Golf Courses"
+            ]
+        },
+        "Nanoose Bay": {
+            "walkScore": 18,
+            "transitScore": 8,
+            "bikeScore": 22,
+            "population": 5500,
+            "avgHouseholdIncome": 78000,
+            "crimeIndex": 10,
+            "parksNearby": 4,
+            "groceryNearby": 1,
+            "restaurantsNearby": 5,
+            "schools": [
+                {
+                    "name": "Nanoose Bay Elementary",
+                    "type": "Elementary",
+                    "rating": 7.3
+                }
+            ],
+            "amenities": [
+                "Moorecroft Regional Park",
+                "Kayaking",
+                "Private Beaches",
+                "Nature"
+            ]
+        },
+        "Lantzville": {
+            "walkScore": 22,
+            "transitScore": 10,
+            "bikeScore": 28,
+            "population": 3800,
+            "avgHouseholdIncome": 85000,
+            "crimeIndex": 8,
+            "parksNearby": 3,
+            "groceryNearby": 1,
+            "restaurantsNearby": 4,
+            "schools": [
+                {
+                    "name": "Lantzville Elementary",
+                    "type": "Elementary",
+                    "rating": 7.6
+                }
+            ],
+            "amenities": [
+                "Copley Ridge Trail",
+                "Beach Access",
+                "Village Core",
+                "Ocean Views"
+            ]
+        },
+        "Nanaimo": {
+            "walkScore": 65,
+            "transitScore": 42,
+            "bikeScore": 52,
+            "population": 99000,
+            "avgHouseholdIncome": 72000,
+            "crimeIndex": 42,
+            "parksNearby": 15,
+            "groceryNearby": 12,
+            "restaurantsNearby": 85,
+            "schools": [
+                {
+                    "name": "Nanaimo District Secondary",
+                    "type": "Secondary",
+                    "rating": 6.5
+                },
+                {
+                    "name": "Dover Bay Secondary",
+                    "type": "Secondary",
+                    "rating": 6.8
+                },
+                {
+                    "name": "VIU Campus",
+                    "type": "University",
+                    "rating": null
+                }
+            ],
+            "amenities": [
+                "Harbourfront",
+                "Departure Bay",
+                "Bowen Park",
+                "Malls",
+                "Hospital",
+                "University"
+            ]
+        },
+        "Courtenay": {
+            "walkScore": 60,
+            "transitScore": 30,
+            "bikeScore": 55,
+            "population": 28000,
+            "avgHouseholdIncome": 68000,
+            "crimeIndex": 30,
+            "parksNearby": 8,
+            "groceryNearby": 5,
+            "restaurantsNearby": 35,
+            "schools": [
+                {
+                    "name": "GP Vanier Secondary",
+                    "type": "Secondary",
+                    "rating": 6.8
+                },
+                {
+                    "name": "Courtenay Elementary",
+                    "type": "Elementary",
+                    "rating": 7.2
+                }
+            ],
+            "amenities": [
+                "Downtown Core",
+                "Puntledge River",
+                "Simms Park",
+                "Hospital",
+                "NIC Campus"
+            ]
+        },
+        "Comox": {
+            "walkScore": 55,
+            "transitScore": 25,
+            "bikeScore": 50,
+            "population": 15000,
+            "avgHouseholdIncome": 75000,
+            "crimeIndex": 20,
+            "parksNearby": 7,
+            "groceryNearby": 3,
+            "restaurantsNearby": 20,
+            "schools": [
+                {
+                    "name": "Highland Secondary",
+                    "type": "Secondary",
+                    "rating": 7
+                },
+                {
+                    "name": "Airport Elementary",
+                    "type": "Elementary",
+                    "rating": 7.4
+                }
+            ],
+            "amenities": [
+                "Marina",
+                "Filberg Park",
+                "Comox Ave Shops",
+                "Air Force Base",
+                "Mountain Views"
+            ]
+        },
+        "Cumberland": {
+            "walkScore": 68,
+            "transitScore": 12,
+            "bikeScore": 75,
+            "population": 4200,
+            "avgHouseholdIncome": 62000,
+            "crimeIndex": 15,
+            "parksNearby": 4,
+            "groceryNearby": 2,
+            "restaurantsNearby": 10,
+            "schools": [
+                {
+                    "name": "Cumberland Community School",
+                    "type": "K-8",
+                    "rating": 7.3
+                }
+            ],
+            "amenities": [
+                "Mountain Bike Trails",
+                "Village Core",
+                "Comox Lake",
+                "Historic Downtown",
+                "Brewing"
+            ]
+        },
+        "Campbell River": {
+            "walkScore": 55,
+            "transitScore": 22,
+            "bikeScore": 42,
+            "population": 35000,
+            "avgHouseholdIncome": 70000,
+            "crimeIndex": 35,
+            "parksNearby": 10,
+            "groceryNearby": 6,
+            "restaurantsNearby": 40,
+            "schools": [
+                {
+                    "name": "Carihi Secondary",
+                    "type": "Secondary",
+                    "rating": 6.5
+                },
+                {
+                    "name": "Timberline Secondary",
+                    "type": "Secondary",
+                    "rating": 6.8
+                }
+            ],
+            "amenities": [
+                "Fishing",
+                "Discovery Passage",
+                "Elk Falls",
+                "Shopping",
+                "Hospital",
+                "Whale Watching"
+            ]
+        }
+    },
+    "lenders": [
+        {
+            "name": "RBC Royal Bank",
+            "type": "Big 5 Bank",
+            "fix5": "4.99%",
+            "fix3": "5.19%",
+            "variable": "5.85%",
+            "insured": "-0.10%",
+            "url": "https://www.rbcroyalbank.com/mortgages/"
+        },
+        {
+            "name": "TD Canada Trust",
+            "type": "Big 5 Bank",
+            "fix5": "4.94%",
+            "fix3": "5.14%",
+            "variable": "5.80%",
+            "insured": "-0.15%",
+            "url": "https://www.td.com/ca/en/personal-banking/products/mortgages/"
+        },
+        {
+            "name": "BMO",
+            "type": "Big 5 Bank",
+            "fix5": "4.99%",
+            "fix3": "5.24%",
+            "variable": "5.90%",
+            "insured": "-0.10%",
+            "url": "https://www.bmo.com/main/personal/mortgages/"
+        },
+        {
+            "name": "Scotiabank",
+            "type": "Big 5 Bank",
+            "fix5": "5.04%",
+            "fix3": "5.29%",
+            "variable": "5.75%",
+            "insured": "-0.10%",
+            "url": "https://www.scotiabank.com/ca/en/personal/mortgages.html"
+        },
+        {
+            "name": "CIBC",
+            "type": "Big 5 Bank",
+            "fix5": "4.99%",
+            "fix3": "5.19%",
+            "variable": "5.85%",
+            "insured": "-0.10%",
+            "url": "https://www.cibc.com/en/personal-banking/mortgages.html"
+        },
+        {
+            "name": "National Bank",
+            "type": "Bank",
+            "fix5": "4.94%",
+            "fix3": "5.09%",
+            "variable": "5.70%",
+            "insured": "-0.15%",
+            "url": "https://www.nbc.ca/personal/mortgages.html"
+        },
+        {
+            "name": "Coast Capital",
+            "type": "Credit Union",
+            "fix5": "4.89%",
+            "fix3": "5.09%",
+            "variable": "5.65%",
+            "insured": "-0.15%",
+            "url": "https://www.coastcapitalsavings.com/mortgages"
+        },
+        {
+            "name": "Vancity",
+            "type": "Credit Union",
+            "fix5": "4.94%",
+            "fix3": "5.14%",
+            "variable": "5.70%",
+            "insured": "-0.15%",
+            "url": "https://www.vancity.com/Mortgages/"
+        },
+        {
+            "name": "MCAP",
+            "type": "Monoline",
+            "fix5": "4.79%",
+            "fix3": "4.99%",
+            "variable": "5.50%",
+            "insured": "-0.20%",
+            "url": "https://www.mcap.com/"
+        },
+        {
+            "name": "First National",
+            "type": "Monoline",
+            "fix5": "4.84%",
+            "fix3": "5.04%",
+            "variable": "5.55%",
+            "insured": "-0.20%",
+            "url": "https://www.firstnational.ca/"
+        },
+        {
+            "name": "RMG Mortgages",
+            "type": "Monoline",
+            "fix5": "4.79%",
+            "fix3": "4.99%",
+            "variable": "5.55%",
+            "insured": "-0.20%",
+            "url": "https://www.rmgmortgages.ca/"
+        },
+        {
+            "name": "Tangerine",
+            "type": "Online",
+            "fix5": "4.89%",
+            "fix3": "5.09%",
+            "variable": "5.60%",
+            "insured": "-0.15%",
+            "url": "https://www.tangerine.ca/en/products/borrowing/mortgages"
+        },
+        {
+            "name": "EQ Bank",
+            "type": "Online",
+            "fix5": "4.84%",
+            "fix3": "5.04%",
+            "variable": "5.55%",
+            "insured": "-0.15%",
+            "url": "https://www.eqbank.ca/personal-banking/mortgages"
+        }
+    ],
+    "brokers": [
+        {
+            "name": "Dominion Lending Centres",
+            "specialty": "Full-service mortgage broker network",
+            "region": "All BC",
+            "phone": "1-888-806-8080",
+            "note": "Canada's largest mortgage brokerage. Access to 60+ lenders.",
+            "color": "#1B3A5C"
+        },
+        {
+            "name": "Mortgage Alliance",
+            "specialty": "First-time buyers, self-employed",
+            "region": "All BC",
+            "phone": "1-877-420-2627",
+            "note": "Specializes in non-traditional income verification.",
+            "color": "#2E75B6"
+        },
+        {
+            "name": "True North Mortgage",
+            "specialty": "Low-rate specialists",
+            "region": "All BC",
+            "phone": "1-866-407-0004",
+            "note": "Online-first broker known for negotiating the lowest rates.",
+            "color": "#17a2b8"
+        },
+        {
+            "name": "CanWise Financial",
+            "specialty": "Digital-first mortgage platform",
+            "region": "All BC",
+            "phone": "Online only",
+            "note": "Fully digital application. Often has the best published rates.",
+            "color": "#28a745"
+        },
+        {
+            "name": "Outline Financial",
+            "specialty": "Investment properties, HELOCs",
+            "region": "Metro Vancouver",
+            "phone": "604-339-4488",
+            "note": "Specialists in investment property financing and equity extraction.",
+            "color": "#fd7e14"
+        },
+        {
+            "name": "BC Mortgage Group",
+            "specialty": "White Rock & South Surrey",
+            "region": "South Surrey / White Rock",
+            "phone": "604-531-4499",
+            "note": "Local expertise in the South Surrey and White Rock market.",
+            "color": "#e83e8c"
+        },
+        {
+            "name": "Nanaimo Mortgage Broker",
+            "specialty": "Vancouver Island specialists",
+            "region": "Vancouver Island",
+            "phone": "250-585-2150",
+            "note": "Deep knowledge of the Island market. Serves Nanaimo to Campbell River.",
+            "color": "#6f42c1"
+        },
+        {
+            "name": "Parksville Qualicum Mortgage",
+            "specialty": "Retirement & vacation properties",
+            "region": "Parksville / Qualicum",
+            "phone": "250-248-1341",
+            "note": "Specializes in financing for retirees and vacation homes.",
+            "color": "#20c997"
+        }
+    ],
+    "dataAsOf": "2026-02-28"
+}
