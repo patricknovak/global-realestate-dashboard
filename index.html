@@ -3420,13 +3420,6 @@ Competitive: ${formatPrice(offers.competitive)}`;
             return '';
         }
 
-        function getScoreClass(score) {
-            if (score >= 70) return 'score-hot';
-            if (score >= 50) return 'score-good';
-            if (score >= 30) return 'score-watching';
-            return 'score-low';
-        }
-        
         function exportFilteredCSV() {
             let csv = 'Address,Neighborhood,Type,Price,Beds,Baths,SqFt,$/SqFt,DOM,Year,Score,Agg. Offer,Agent\n';
             filteredListings.forEach(l => {
@@ -3799,8 +3792,8 @@ Competitive: ${formatPrice(offers.competitive)}`;
             showGenericModal(html);
         }
 
-        // ===== PHASE 3.3: Post-Offer Checklist =====
-        function showPostSubmissionChecklist(listing) {
+        // ===== PHASE 3.3: Post-Offer Timeline =====
+        function showPostOfferTimeline(listing) {
             var steps = [
                 { title: 'Offer Sent', desc: 'Your offer has been emailed to the listing agent.', done: true },
                 { title: 'Wait for Response', desc: 'The seller typically responds within 24-72 hours. The offer is irrevocable until the date you specified.', done: false },
@@ -5206,7 +5199,7 @@ Competitive: ${formatPrice(offers.competitive)}`;
             localStorage.setItem('offerHistory', JSON.stringify(history));
             if (offerData && offerData.property) {
                 var matchedListing = rawListings.find(function(l) { return l.addr === offerData.property; });
-                if (matchedListing) setTimeout(function() { showPostSubmissionChecklist(matchedListing); }, 500);
+                if (matchedListing) setTimeout(function() { showPostOfferTimeline(matchedListing); }, 500);
             }
         }
 
