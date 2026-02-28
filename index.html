@@ -560,6 +560,7 @@
                     <button onclick="document.getElementById('closingSection').scrollIntoView({behavior:'smooth'})" style="padding:8px 14px;border:1px solid var(--secondary);background:white;color:var(--secondary);border-radius:20px;cursor:pointer;font-size:12px;font-weight:600;">Closing Costs</button>
                     <button onclick="switchTabDirect('lenders')" style="padding:8px 14px;border:1px solid var(--success);background:white;color:var(--success);border-radius:20px;cursor:pointer;font-size:12px;font-weight:600;">Rate Comparison &amp; Pre-Qualification &#8594;</button>
                     <button onclick="switchTabDirect('roi')" style="padding:8px 14px;border:1px solid var(--warning);background:white;color:var(--warning);border-radius:20px;cursor:pointer;font-size:12px;font-weight:600;">ROI Calculator &#8594;</button>
+                    <button onclick="document.getElementById('cashToCloseSection').scrollIntoView({behavior:'smooth'})" style="padding:8px 14px;border:1px solid #6f42c1;background:white;color:#6f42c1;border-radius:20px;cursor:pointer;font-size:12px;font-weight:600;">Cash to Close</button>
                 </div>
                 <div id="mortCalcSection"></div>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
@@ -634,6 +635,90 @@
                                 <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;">CMHC Insurance (if &lt;20% down)</td><td id="ccCMHC" style="padding:6px 8px;text-align:right;border-bottom:1px solid #eee;">$0</td></tr>
                                 <tr style="background:#f8d7da;font-weight:700;"><td style="padding:10px 8px;">Estimated Total Closing Costs</td><td id="ccTotal" style="padding:10px 8px;text-align:right;">$0</td></tr>
                             </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="cashToCloseSection" style="margin-top:24px;padding-top:24px;border-top:2px solid #eee;">
+                    <h3 style="color: var(--secondary); margin-bottom: 8px;">Cash to Close Calculator</h3>
+                    <p style="font-size:12px;color:#666;margin-bottom:16px;">Total funds needed on closing day, including down payment, closing costs, prepaid expenses, and reserve.</p>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+                        <div>
+                            <div class="form-group">
+                                <label>Purchase Price ($)</label>
+                                <input type="number" id="ctcPrice" value="900000" oninput="calcCashToClose()">
+                            </div>
+                            <div class="form-group">
+                                <label>Down Payment (%)</label>
+                                <input type="number" id="ctcDownPct" value="20" step="1" oninput="calcCashToClose()">
+                            </div>
+                            <div class="form-group">
+                                <label>First-Time Home Buyer?</label>
+                                <select id="ctcFTHB" onchange="calcCashToClose()">
+                                    <option value="no">No</option>
+                                    <option value="yes">Yes - Existing Home</option>
+                                    <option value="new">Yes - New Build</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Legal / Notary Fees ($)</label>
+                                <input type="number" id="ctcLegal" value="2000" oninput="calcCashToClose()">
+                            </div>
+                            <div class="form-group">
+                                <label>Home Inspection ($)</label>
+                                <input type="number" id="ctcInspection" value="550" oninput="calcCashToClose()">
+                            </div>
+                            <div class="form-group">
+                                <label>Appraisal ($)</label>
+                                <input type="number" id="ctcAppraisal" value="400" oninput="calcCashToClose()">
+                            </div>
+                            <div class="form-group">
+                                <label>Title Insurance ($)</label>
+                                <input type="number" id="ctcTitleIns" value="300" oninput="calcCashToClose()">
+                            </div>
+                            <div class="form-group">
+                                <label>Property Tax Adjustment ($) <span style="font-weight:normal;color:#888;">prorated to closing</span></label>
+                                <input type="number" id="ctcTaxAdj" value="0" oninput="calcCashToClose()">
+                            </div>
+                            <div class="form-group">
+                                <label>Home Insurance Prepaid ($) <span style="font-weight:normal;color:#888;">first year</span></label>
+                                <input type="number" id="ctcHomeIns" value="1800" oninput="calcCashToClose()">
+                            </div>
+                            <div class="form-group">
+                                <label>Moving Costs ($)</label>
+                                <input type="number" id="ctcMoving" value="2000" oninput="calcCashToClose()">
+                            </div>
+                            <div class="form-group">
+                                <label>Emergency Reserve ($) <span style="font-weight:normal;color:#888;">recommended 3-6 mo expenses</span></label>
+                                <input type="number" id="ctcReserve" value="10000" oninput="calcCashToClose()">
+                            </div>
+                            <button class="btn-primary" onclick="calcCashToClose()" style="width:auto;margin-top:8px;">Calculate Cash to Close</button>
+                        </div>
+                        <div>
+                            <div style="background:linear-gradient(135deg,#6f42c1 0%,#9b59b6 100%);color:white;padding:20px;border-radius:10px;text-align:center;margin-bottom:16px;">
+                                <div style="font-size:12px;opacity:0.8;">Total Cash to Close</div>
+                                <div id="ctcTotal" style="font-size:32px;font-weight:700;">$0</div>
+                            </div>
+                            <table style="width:100%;border-collapse:collapse;font-size:13px;">
+                                <tr style="background:#e7f3ff;"><td style="padding:8px;font-weight:700;" colspan="2">Down Payment &amp; Mortgage</td></tr>
+                                <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;">Down Payment</td><td id="ctcDownAmt" style="padding:6px 8px;text-align:right;border-bottom:1px solid #eee;font-weight:600;">$0</td></tr>
+                                <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;">CMHC Insurance (if &lt;20% down)</td><td id="ctcCMHC" style="padding:6px 8px;text-align:right;border-bottom:1px solid #eee;font-weight:600;">$0</td></tr>
+                                <tr style="background:#e7f3ff;"><td style="padding:8px;font-weight:700;" colspan="2">Government Taxes</td></tr>
+                                <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;">Property Transfer Tax</td><td id="ctcPTT" style="padding:6px 8px;text-align:right;border-bottom:1px solid #eee;font-weight:600;">$0</td></tr>
+                                <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;">FTHB Exemption Savings</td><td id="ctcFTHBSavings" style="padding:6px 8px;text-align:right;border-bottom:1px solid #eee;font-weight:600;color:var(--success);">$0</td></tr>
+                                <tr style="background:#e7f3ff;"><td style="padding:8px;font-weight:700;" colspan="2">Professional Services</td></tr>
+                                <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;">Legal / Notary</td><td id="ctcLegalAmt" style="padding:6px 8px;text-align:right;border-bottom:1px solid #eee;">$0</td></tr>
+                                <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;">Home Inspection</td><td id="ctcInspAmt" style="padding:6px 8px;text-align:right;border-bottom:1px solid #eee;">$0</td></tr>
+                                <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;">Appraisal</td><td id="ctcApprAmt" style="padding:6px 8px;text-align:right;border-bottom:1px solid #eee;">$0</td></tr>
+                                <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;">Title Insurance</td><td id="ctcTitleAmt" style="padding:6px 8px;text-align:right;border-bottom:1px solid #eee;">$0</td></tr>
+                                <tr style="background:#e7f3ff;"><td style="padding:8px;font-weight:700;" colspan="2">Prepaid &amp; Other</td></tr>
+                                <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;">Property Tax Adjustment</td><td id="ctcTaxAdjAmt" style="padding:6px 8px;text-align:right;border-bottom:1px solid #eee;">$0</td></tr>
+                                <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;">Home Insurance (prepaid)</td><td id="ctcHomeInsAmt" style="padding:6px 8px;text-align:right;border-bottom:1px solid #eee;">$0</td></tr>
+                                <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;">Moving Costs</td><td id="ctcMovingAmt" style="padding:6px 8px;text-align:right;border-bottom:1px solid #eee;">$0</td></tr>
+                                <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;">Emergency Reserve</td><td id="ctcReserveAmt" style="padding:6px 8px;text-align:right;border-bottom:1px solid #eee;">$0</td></tr>
+                                <tr style="background:linear-gradient(135deg,#6f42c1 0%,#9b59b6 100%);color:white;font-weight:700;font-size:14px;"><td style="padding:12px 8px;">TOTAL CASH TO CLOSE</td><td id="ctcGrandTotal" style="padding:12px 8px;text-align:right;">$0</td></tr>
+                            </table>
+                            <div id="ctcNotes" style="margin-top:12px;padding:12px;background:var(--light-gray);border-radius:8px;font-size:12px;color:#666;"></div>
                         </div>
                     </div>
                 </div>
@@ -5395,6 +5480,68 @@ Competitive: ${formatPrice(offers.competitive)}`;
             var result = calculatePTTWithFTHB(price, false, false);
             var ptt = result.ptt;
             return { ptt: ptt, legal: 2000, inspection: 550, appraisal: 400, titleIns: 300, total: Math.round(ptt + 3250) };
+        }
+
+        // ===== CASH TO CLOSE CALCULATOR =====
+        function calcCashToClose() {
+            var price = parseFloat(document.getElementById('ctcPrice').value) || 0;
+            var downPct = parseFloat(document.getElementById('ctcDownPct').value) || 0;
+            var fthb = document.getElementById('ctcFTHB').value;
+            var legal = parseFloat(document.getElementById('ctcLegal').value) || 0;
+            var inspection = parseFloat(document.getElementById('ctcInspection').value) || 0;
+            var appraisal = parseFloat(document.getElementById('ctcAppraisal').value) || 0;
+            var titleIns = parseFloat(document.getElementById('ctcTitleIns').value) || 0;
+            var taxAdj = parseFloat(document.getElementById('ctcTaxAdj').value) || 0;
+            var homeIns = parseFloat(document.getElementById('ctcHomeIns').value) || 0;
+            var moving = parseFloat(document.getElementById('ctcMoving').value) || 0;
+            var reserve = parseFloat(document.getElementById('ctcReserve').value) || 0;
+
+            var downPayment = Math.round(price * downPct / 100);
+            var mortAmount = price - downPayment;
+
+            // CMHC insurance (if less than 20% down)
+            var cmhc = 0;
+            if (downPct < 20 && price <= 1500000) {
+                var cmhcRate = downPct >= 15 ? 0.028 : downPct >= 10 ? 0.031 : 0.04;
+                cmhc = Math.round(mortAmount * cmhcRate);
+            }
+
+            // PTT
+            var isFTHB = fthb !== 'no';
+            var isNewBuild = fthb === 'new';
+            var pttResult = calculatePTTWithFTHB(price, isFTHB, isNewBuild);
+            var ptt = pttResult.ptt;
+            var fthbSavings = pttResult.exemption || 0;
+
+            // Total
+            var total = downPayment + cmhc + ptt + legal + inspection + appraisal + titleIns + taxAdj + homeIns + moving + reserve;
+
+            // Update displays
+            document.getElementById('ctcTotal').textContent = '$' + Math.round(total).toLocaleString();
+            document.getElementById('ctcGrandTotal').textContent = '$' + Math.round(total).toLocaleString();
+            document.getElementById('ctcDownAmt').textContent = '$' + downPayment.toLocaleString();
+            document.getElementById('ctcCMHC').textContent = cmhc > 0 ? '$' + cmhc.toLocaleString() : '$0';
+            document.getElementById('ctcPTT').textContent = '$' + Math.round(ptt).toLocaleString();
+            document.getElementById('ctcFTHBSavings').textContent = fthbSavings > 0 ? '-$' + Math.round(fthbSavings).toLocaleString() : '$0';
+            document.getElementById('ctcLegalAmt').textContent = '$' + legal.toLocaleString();
+            document.getElementById('ctcInspAmt').textContent = '$' + inspection.toLocaleString();
+            document.getElementById('ctcApprAmt').textContent = '$' + appraisal.toLocaleString();
+            document.getElementById('ctcTitleAmt').textContent = '$' + titleIns.toLocaleString();
+            document.getElementById('ctcTaxAdjAmt').textContent = '$' + taxAdj.toLocaleString();
+            document.getElementById('ctcHomeInsAmt').textContent = '$' + homeIns.toLocaleString();
+            document.getElementById('ctcMovingAmt').textContent = '$' + moving.toLocaleString();
+            document.getElementById('ctcReserveAmt').textContent = '$' + reserve.toLocaleString();
+
+            // Notes
+            var notes = [];
+            if (cmhc > 0) notes.push('CMHC insurance of $' + cmhc.toLocaleString() + ' is added to your mortgage balance, but required at closing.');
+            if (fthbSavings > 0) notes.push('FTHB exemption saves you $' + Math.round(fthbSavings).toLocaleString() + ' on Property Transfer Tax.');
+            if (downPct < 5) notes.push('Minimum 5% down payment required in Canada for homes under $500K.');
+            if (price > 1000000 && downPct < 20) notes.push('Properties over $1M require minimum 20% down payment.');
+            if (reserve < 5000) notes.push('Consider increasing your emergency reserve. 3-6 months of expenses is recommended.');
+            var withoutReserve = total - reserve;
+            notes.push('Without emergency reserve: $' + Math.round(withoutReserve).toLocaleString() + ' needed at closing.');
+            document.getElementById('ctcNotes').innerHTML = '<strong>Notes:</strong><ul style="margin:6px 0 0;padding-left:20px;">' + notes.map(function(n) { return '<li style="margin-bottom:4px;">' + n + '</li>'; }).join('') + '</ul>';
         }
 
         // ===== SHORTLIST NOTES =====
