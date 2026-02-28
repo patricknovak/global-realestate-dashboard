@@ -238,6 +238,43 @@
         
         <!-- Main Content -->
         <div class="main-content">
+            <div class="mobile-tab-nav" style="display:none;">
+                <select id="mobileTabSelect" onchange="switchTabDirect(this.value);this.blur();" style="width:100%;padding:10px 12px;font-size:14px;font-weight:600;border:2px solid var(--secondary);border-radius:6px;color:var(--primary);background:white;cursor:pointer;">
+                    <optgroup label="Browse">
+                        <option value="dashboard">Dashboard</option>
+                        <option value="listings">All Listings</option>
+                        <option value="map">Map View</option>
+                        <option value="neighborhood">Neighborhoods</option>
+                        <option value="deals">Deal Analysis</option>
+                    </optgroup>
+                    <optgroup label="Offers &amp; Shortlist">
+                        <option value="offers">Offer Generator</option>
+                        <option value="myoffers">My Offers</option>
+                        <option value="shortlist">Shortlist</option>
+                        <option value="privateoffers">Private Offers</option>
+                    </optgroup>
+                    <optgroup label="Financial">
+                        <option value="mortgage">Financing Hub</option>
+                        <option value="roi">ROI Calculator</option>
+                        <option value="lenders">Lender Directory</option>
+                    </optgroup>
+                    <optgroup label="My Activity">
+                        <option value="buyerprofile">My Profile</option>
+                        <option value="contactlog">Contact Log</option>
+                        <option value="viewings">Viewings</option>
+                        <option value="documents">Documents</option>
+                    </optgroup>
+                    <optgroup label="Market Data">
+                        <option value="pricehistory">Price History</option>
+                        <option value="neighborhooddata">Area Intel</option>
+                        <option value="datafreshness">Data Health</option>
+                    </optgroup>
+                    <optgroup label="Resources">
+                        <option value="norealtorguide">No-Realtor Guide</option>
+                        <option value="help">Help &amp; Settings</option>
+                    </optgroup>
+                </select>
+            </div>
             <div class="tabs">
                 <button class="tab-button active" onclick="switchTab('dashboard')">Dashboard</button>
                 <button class="tab-button" onclick="switchTab('listings')">All Listings</button>
@@ -2393,6 +2430,9 @@
         function switchTab(tabName) {
             document.title = (tabTitles[tabName] || 'Dashboard') + ' — BC Real Estate Dashboard';
             updateBottomNav(tabName);
+            // Sync mobile tab dropdown
+            var mobileSelect = document.getElementById('mobileTabSelect');
+            if (mobileSelect) mobileSelect.value = tabName;
             document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
             if (event && event.target) event.target.classList.add('active');
 
@@ -2426,6 +2466,9 @@
         function switchTabDirect(tabName) {
             document.title = (tabTitles[tabName] || 'Dashboard') + ' — BC Real Estate Dashboard';
             updateBottomNav(tabName);
+            // Sync mobile tab dropdown
+            var mobileSelect = document.getElementById('mobileTabSelect');
+            if (mobileSelect) mobileSelect.value = tabName;
             document.querySelectorAll('.tab-button').forEach(btn => {
                 btn.classList.remove('active');
                 if (btn.getAttribute('onclick') && btn.getAttribute('onclick').includes("'" + tabName + "'")) {
