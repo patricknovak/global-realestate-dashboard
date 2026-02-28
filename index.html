@@ -448,7 +448,36 @@
             </div>
             
             <!-- Tab 2: Map View -->
-            <div id="map" class="tab-content"></div>
+            <div id="map" class="tab-content">
+                <div id="mapToolbar" style="display:none; padding:8px 12px; background:var(--white); border-bottom:1px solid var(--border); position:relative; z-index:500;">
+                    <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+                        <span style="font-weight:600; font-size:13px; color:var(--primary);">Map View</span>
+                        <div style="display:flex; gap:4px; background:var(--light-gray); border-radius:6px; padding:2px;">
+                            <button id="mapModePins" onclick="setMapMode('pins')" style="padding:5px 12px; border:none; border-radius:4px; font-size:12px; font-weight:600; cursor:pointer; background:var(--primary); color:white;">Pins</button>
+                            <button id="mapModeHeatmap" onclick="setMapMode('heatmap')" style="padding:5px 12px; border:none; border-radius:4px; font-size:12px; font-weight:600; cursor:pointer; background:transparent; color:var(--text);">Yield Heatmap</button>
+                        </div>
+                        <div id="heatmapLegend" style="display:none; font-size:11px; color:var(--text-muted); margin-left:auto;">
+                            <span style="font-weight:600;">Avg Cap Rate:</span>
+                            <span style="display:inline-flex; align-items:center; gap:3px; margin-left:6px;">
+                                <span style="width:12px; height:12px; border-radius:50%; background:#dc3545; display:inline-block;"></span>&lt;2%
+                            </span>
+                            <span style="display:inline-flex; align-items:center; gap:3px; margin-left:6px;">
+                                <span style="width:12px; height:12px; border-radius:50%; background:#fd7e14; display:inline-block;"></span>2-3%
+                            </span>
+                            <span style="display:inline-flex; align-items:center; gap:3px; margin-left:6px;">
+                                <span style="width:12px; height:12px; border-radius:50%; background:#ffc107; display:inline-block;"></span>3-4%
+                            </span>
+                            <span style="display:inline-flex; align-items:center; gap:3px; margin-left:6px;">
+                                <span style="width:12px; height:12px; border-radius:50%; background:#28a745; display:inline-block;"></span>4-5%
+                            </span>
+                            <span style="display:inline-flex; align-items:center; gap:3px; margin-left:6px;">
+                                <span style="width:12px; height:12px; border-radius:50%; background:#155724; display:inline-block;"></span>&gt;5%
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div id="mapCanvas" style="height:600px;"></div>
+            </div>
             
             <!-- Tab 3: Neighborhood Analysis -->
             <div id="neighborhood" class="tab-content">
@@ -2991,34 +3020,119 @@
             document.getElementById('cardGridContainer').innerHTML = html;
         }
 
+        var _mapMode = 'pins';
+        var _heatmapLayer = null;
+
+        function setMapMode(mode) {
+            _mapMode = mode;
+            document.getElementById('mapModePins').style.background = mode === 'pins' ? 'var(--primary)' : 'transparent';
+            document.getElementById('mapModePins').style.color = mode === 'pins' ? 'white' : 'var(--text)';
+            document.getElementById('mapModeHeatmap').style.background = mode === 'heatmap' ? 'var(--primary)' : 'transparent';
+            document.getElementById('mapModeHeatmap').style.color = mode === 'heatmap' ? 'white' : 'var(--text)';
+            document.getElementById('heatmapLegend').style.display = mode === 'heatmap' ? 'flex' : 'none';
+            if (!leafletMap) return;
+            if (mode === 'pins') {
+                if (_heatmapLayer) { leafletMap.removeLayer(_heatmapLayer); _heatmapLayer = null; }
+                if (markerClusterGroup) leafletMap.addLayer(markerClusterGroup);
+            } else {
+                if (markerClusterGroup) leafletMap.removeLayer(markerClusterGroup);
+                renderYieldHeatmap();
+            }
+        }
+
+        function getCapRateColor(capRate) {
+            if (capRate >= 5) return '#155724';
+            if (capRate >= 4) return '#28a745';
+            if (capRate >= 3) return '#ffc107';
+            if (capRate >= 2) return '#fd7e14';
+            return '#dc3545';
+        }
+
+        function renderYieldHeatmap() {
+            if (_heatmapLayer) { leafletMap.removeLayer(_heatmapLayer); _heatmapLayer = null; }
+            _heatmapLayer = L.layerGroup();
+
+            // Aggregate by neighborhood
+            var nbhMap = {};
+            filteredListings.forEach(function(listing) {
+                if (!listing.latitude || !listing.longitude) return;
+                var n = listing.neighborhood;
+                if (!nbhMap[n]) nbhMap[n] = { lats: [], lngs: [], capRates: [], cashFlows: [], prices: [], count: 0 };
+                var m = listing._investorMetrics || estimateInvestorMetrics(listing);
+                nbhMap[n].lats.push(listing.latitude);
+                nbhMap[n].lngs.push(listing.longitude);
+                nbhMap[n].capRates.push(m.capRate);
+                nbhMap[n].cashFlows.push(m.cashFlow);
+                nbhMap[n].prices.push(listing.price);
+                nbhMap[n].count++;
+            });
+
+            Object.keys(nbhMap).forEach(function(nbh) {
+                var d = nbhMap[nbh];
+                var avgLat = d.lats.reduce(function(a,b){return a+b;},0) / d.count;
+                var avgLng = d.lngs.reduce(function(a,b){return a+b;},0) / d.count;
+                var avgCapRate = d.capRates.reduce(function(a,b){return a+b;},0) / d.count;
+                var avgCashFlow = d.cashFlows.reduce(function(a,b){return a+b;},0) / d.count;
+                var avgPrice = d.prices.reduce(function(a,b){return a+b;},0) / d.count;
+                var color = getCapRateColor(avgCapRate);
+                var radius = Math.max(800, Math.min(d.count * 250, 3000));
+
+                var circle = L.circle([avgLat, avgLng], {
+                    radius: radius,
+                    color: color,
+                    fillColor: color,
+                    fillOpacity: 0.45,
+                    weight: 2
+                });
+
+                circle.bindPopup(
+                    '<div style="min-width:180px;">' +
+                    '<div style="font-weight:700; font-size:14px; margin-bottom:6px; color:var(--primary);">' + nbh + '</div>' +
+                    '<div style="font-size:12px; line-height:1.8;">' +
+                    '<div><strong>Listings:</strong> ' + d.count + '</div>' +
+                    '<div><strong>Avg Cap Rate:</strong> <span style="color:' + color + '; font-weight:700;">' + avgCapRate.toFixed(2) + '%</span></div>' +
+                    '<div><strong>Avg Cash Flow:</strong> ' + (avgCashFlow >= 0 ? '+' : '') + '$' + Math.round(avgCashFlow).toLocaleString() + '/mo</div>' +
+                    '<div><strong>Avg Price:</strong> ' + formatPrice(avgPrice) + '</div>' +
+                    '</div>' +
+                    '<div style="margin-top:8px;">' +
+                    '<button onclick="filterByNeighborhood(\'' + nbh + '\')" style="width:100%;padding:6px;background:var(--primary);color:white;border:none;border-radius:4px;cursor:pointer;font-size:11px;font-weight:600;">View Listings</button>' +
+                    '</div></div>'
+                );
+
+                circle.bindTooltip(nbh + ': ' + avgCapRate.toFixed(1) + '% cap', { permanent: false, direction: 'top' });
+                _heatmapLayer.addLayer(circle);
+            });
+
+            _heatmapLayer.addTo(leafletMap);
+        }
+
         function initializeMapTab() {
             if (typeof L === 'undefined') {
-                var mapEl = document.getElementById('map');
+                var mapEl = document.getElementById('mapCanvas');
                 if (mapEl) mapEl.innerHTML = '<div style="padding:40px;text-align:center;color:#888;">Loading map...</div>';
                 loadLeaflet().then(function() { initializeMapTab(); });
                 return;
             }
+            document.getElementById('mapToolbar').style.display = 'block';
             if (leafletMap) {
                 leafletMap.remove();
                 leafletMap = null;
+                _heatmapLayer = null;
             }
-            
-            const mapContainer = document.getElementById('map');
-            mapContainer.innerHTML = '<div id="mapCanvas" style="height: 100%;"></div>';
-            
-            leafletMap = L.map('mapCanvas').setView([49.2, -123.5], 9);  // Center between South Surrey and Vancouver Island
+
+            leafletMap = L.map('mapCanvas').setView([49.2, -123.5], 9);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '© OpenStreetMap contributors',
                 maxZoom: 19
             }).addTo(leafletMap);
-            
+
             if (markerClusterGroup) {
                 leafletMap.removeLayer(markerClusterGroup);
             }
             markerClusterGroup = L.markerClusterGroup();
-            
+
             const bounds = L.latLngBounds();
-            
+
             filteredListings.forEach((listing) => {
                 if (listing.latitude && listing.longitude) {
                     const color = getMarkerColor(listing.score, listing.listingIndex);
@@ -3027,9 +3141,9 @@
                         iconSize: [24, 24],
                         iconAnchor: [12, 12]
                     });
-                    
+
                     const marker = L.marker([listing.latitude, listing.longitude], { icon });
-                    
+
                     const offers = calculateOffers(listing);
                     const popupHtml = `
                         <div class="map-popup">
@@ -3057,14 +3171,18 @@
                             </div>
                         </div>
                     `;
-                    
+
                     marker.bindPopup(popupHtml);
                     markerClusterGroup.addLayer(marker);
                     bounds.extend([listing.latitude, listing.longitude]);
                 }
             });
-            
-            leafletMap.addLayer(markerClusterGroup);
+
+            if (_mapMode === 'pins') {
+                leafletMap.addLayer(markerClusterGroup);
+            } else {
+                renderYieldHeatmap();
+            }
             if (bounds.isValid()) {
                 leafletMap.fitBounds(bounds, { padding: [50, 50] });
             }
