@@ -21,6 +21,9 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <!-- Skip Link -->
+    <a href="#mainContent" class="skip-link" style="position:absolute;top:-40px;left:0;background:var(--primary);color:white;padding:8px 16px;z-index:10000;font-weight:600;transition:top 0.2s;" onfocus="this.style.top='0'" onblur="this.style.top='-40px'">Skip to main content</a>
+
     <!-- Loading Overlay -->
     <div id="loadingOverlay" class="loading-overlay">
         <div class="loading-spinner"></div>
@@ -37,13 +40,13 @@
     <!-- Staleness Warning (populated by JS) -->
     <div id="stalenessWarning" style="display:none;"></div>
     <!-- Header -->
-    <div class="header">
+    <header class="header" role="banner">
         <div>
             <h1>Real Estate Investment Dashboard</h1>
             <p>Find deals, analyze neighborhoods, compare mortgage rates, and generate offers — connect directly with sellers and lenders, no realtor required <span id="streetViewIndicator" style="margin-left:12px;"></span></p>
         </div>
-        <button id="darkModeToggle" class="dark-mode-toggle" onclick="toggleDarkMode()" title="Toggle dark mode">Dark Mode</button>
-    </div>
+        <button id="darkModeToggle" class="dark-mode-toggle" onclick="toggleDarkMode()" title="Toggle dark mode" aria-label="Toggle dark mode">Dark Mode</button>
+    </header>
     
     <!-- Stats Bar -->
     <div class="stats-bar">
@@ -79,8 +82,8 @@
         <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeMobileSidebar()"></div>
 
         <!-- Sidebar with Filters -->
-        <div class="sidebar" id="filterSidebar">
-            <button class="sidebar-close-btn" onclick="closeMobileSidebar()">&times;</button>
+        <aside class="sidebar" id="filterSidebar" role="complementary" aria-label="Filters">
+            <button class="sidebar-close-btn" onclick="closeMobileSidebar()" aria-label="Close filters">&times;</button>
             <h3>Search</h3>
             <div class="filter-group">
                 <input type="text" id="searchBox" placeholder="Search address, agent, neighborhood..." oninput="applyFilters()" style="width:100%;padding:8px 10px;border:1px solid var(--border-gray);border-radius:4px;font-size:13px;">
@@ -246,10 +249,10 @@
             <div class="button-group">
                 <button class="btn-success" onclick="exportFilteredCSV()">Export CSV</button>
             </div>
-        </div>
-        
+        </aside>
+
         <!-- Main Content -->
-        <div class="main-content">
+        <main class="main-content" id="mainContent" role="main">
             <div class="mobile-tab-nav" style="display:none;">
                 <select id="mobileTabSelect" onchange="switchTabDirect(this.value);this.blur();" style="width:100%;padding:10px 12px;font-size:14px;font-weight:600;border:2px solid var(--secondary);border-radius:6px;color:var(--primary);background:white;cursor:pointer;">
                     <optgroup label="Browse">
@@ -287,7 +290,7 @@
                     </optgroup>
                 </select>
             </div>
-            <div class="tabs">
+            <nav class="tabs" role="navigation" aria-label="Main navigation">
                 <button class="tab-button active" onclick="switchTab('dashboard')">Dashboard</button>
                 <button class="tab-button" onclick="switchTab('listings')">All Listings</button>
                 <button class="tab-button" onclick="switchTab('map')">Map View</button>
@@ -315,7 +318,7 @@
                 <button class="tab-button" onclick="switchTab('norealtorguide')">No-Realtor Guide</button>
                 <button class="tab-button" onclick="switchTab('privateoffers')">Private Offers</button>
                 <button class="tab-button" onclick="switchTab('help')">Help</button>
-            </div>
+            </nav>
             
             <!-- Tab: Dashboard Home -->
             <div id="dashboard" class="tab-content active">
@@ -2002,12 +2005,13 @@
                 <p id="feedbackConfigNote" style="margin-top: 20px; font-size: 12px; color: #999;">Feedback is submitted as GitHub Issues. Configure your GitHub token and repository in the <strong>GitHub Feedback Integration</strong> settings section above to activate.</p>
             </div>
         </div>
+    </main>
     </div>
 
     <!-- Offer Builder Modal -->
-    <div id="offerModal" class="modal" onclick="if(event.target===this)closeOfferModal()">
+    <div id="offerModal" class="modal" role="dialog" aria-modal="true" aria-label="Offer builder" onclick="if(event.target===this)closeOfferModal()">
         <div class="modal-content" style="max-width: 820px; max-height: 92vh;">
-            <button class="modal-close" onclick="closeOfferModal()">&times;</button>
+            <button class="modal-close" onclick="closeOfferModal()" aria-label="Close modal">&times;</button>
             <div id="offerModalBody"></div>
         </div>
     </div>
@@ -2041,17 +2045,17 @@
         </div>
     </div>
 
-    <div id="comparisonModal" class="modal" onclick="if(event.target===this)this.classList.remove('active')">
+    <div id="comparisonModal" class="modal" role="dialog" aria-modal="true" aria-label="Property comparison" onclick="if(event.target===this)this.classList.remove('active')">
         <div class="modal-content" style="max-width: 95vw; max-height: 92vh; overflow: auto;">
-            <button class="modal-close" onclick="document.getElementById('comparisonModal').classList.remove('active')">&times;</button>
+            <button class="modal-close" onclick="document.getElementById('comparisonModal').classList.remove('active')" aria-label="Close modal">&times;</button>
             <div id="comparisonBody"></div>
         </div>
     </div>
 
     <!-- Detail Modal -->
-    <div id="detailModal" class="modal" onclick="if(event.target===this)closeDetailModal()">
+    <div id="detailModal" class="modal" role="dialog" aria-modal="true" aria-label="Property details" onclick="if(event.target===this)closeDetailModal()">
         <div class="modal-content">
-            <button class="modal-close" onclick="closeDetailModal()">&times;</button>
+            <button class="modal-close" onclick="closeDetailModal()" aria-label="Close modal">&times;</button>
             <div id="modalBody"></div>
         </div>
     </div>
@@ -2729,7 +2733,7 @@
                 }
                 html += `
                     <tr onclick="showDetailModal(${listing.listingIndex})">
-                        <td><span class="star-toggle ${starClass}" onclick="event.stopPropagation(); toggleShortlist(${listing.listingIndex})">★</span></td>
+                        <td><span class="star-toggle ${starClass}" onclick="event.stopPropagation(); toggleShortlist(${listing.listingIndex})" role="button" aria-label="${isShortlisted ? 'Remove from shortlist' : 'Add to shortlist'}" tabindex="0">★</span></td>
                         <td><span class="water-view-icon">${listing.waterView ? '🌊' : ''}</span>${listing.addr}${getListingBadge(listing)}${getListingTagBadges(listing.listingIndex)}</td>
                         <td>${listing.neighborhood}</td>
                         <td>${listing.type}</td>
@@ -9263,10 +9267,24 @@ Competitive: ${formatPrice(offers.competitive)}`;
             });
         }
 
+        // Accessibility: Keyboard Escape to close modals
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                var detailModal = document.getElementById('detailModal');
+                if (detailModal && detailModal.classList.contains('active')) { closeDetailModal(); return; }
+                var genericModal = document.getElementById('genericModal');
+                if (genericModal && genericModal.classList.contains('active')) { genericModal.classList.remove('active'); return; }
+                var offerModal = document.getElementById('offerModal');
+                if (offerModal && offerModal.classList.contains('active')) { closeOfferModal(); return; }
+                var compModal = document.getElementById('comparisonModal');
+                if (compModal && compModal.classList.contains('active')) { compModal.classList.remove('active'); return; }
+            }
+        });
+
     </script>
 
     <!-- Mobile filter toggle button -->
-    <button class="filter-toggle" id="filterToggle" onclick="openMobileSidebar()">&#9776; Filters</button>
+    <button class="filter-toggle" id="filterToggle" onclick="openMobileSidebar()" aria-label="Open filter panel">&#9776; Filters</button>
 
     <!-- Mobile Bottom Nav -->
     <div class="mobile-bottom-nav" id="mobileBottomNav">
