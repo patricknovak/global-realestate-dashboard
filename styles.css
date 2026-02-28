@@ -1525,9 +1525,8 @@ button {
     }
 
     /* Tab content padding reduction */
-    .tab-content[style*="padding: 20px"],
-    .tab-content[style*="padding: 24px"] {
-        padding: 14px !important;
+    .tab-content {
+        padding: 14px;
     }
 }
 
@@ -1830,6 +1829,29 @@ body.dark-mode .mobile-bottom-nav { background: #1a202c; border-color: #2d3748; 
 body.dark-mode .mobile-bottom-nav button { color: #a0aec0; }
 body.dark-mode .mobile-bottom-nav button.active { color: var(--secondary); }
 body.dark-mode .call-script-step { background: #1e2530; }
+
+/* Header layout */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Dark mode toggle */
+.dark-mode-toggle {
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.3);
+    color: white;
+    padding: 8px 14px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+.dark-mode-toggle:hover {
+    background: rgba(255,255,255,0.25);
+}
 
 /* Fallback data warning */
 .fallback-warning {

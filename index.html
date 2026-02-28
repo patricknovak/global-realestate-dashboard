@@ -37,12 +37,12 @@
     <!-- Staleness Warning (populated by JS) -->
     <div id="stalenessWarning" style="display:none;"></div>
     <!-- Header -->
-    <div class="header" style="display:flex;justify-content:space-between;align-items:center;">
+    <div class="header">
         <div>
             <h1>Real Estate Investment Dashboard</h1>
             <p>Find deals, analyze neighborhoods, compare mortgage rates, and generate offers — connect directly with sellers and lenders, no realtor required <span id="streetViewIndicator" style="margin-left:12px;"></span></p>
         </div>
-        <button id="darkModeToggle" onclick="toggleDarkMode()" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:white;padding:8px 14px;border-radius:20px;cursor:pointer;font-size:12px;font-weight:600;white-space:nowrap;" title="Toggle dark mode">Dark Mode</button>
+        <button id="darkModeToggle" class="dark-mode-toggle" onclick="toggleDarkMode()" title="Toggle dark mode">Dark Mode</button>
     </div>
     
     <!-- Stats Bar -->
@@ -241,7 +241,7 @@
             </div>
             
             <!-- Tab: Dashboard Home -->
-            <div id="dashboard" class="tab-content active" style="overflow: auto; padding: 24px;">
+            <div id="dashboard" class="tab-content active">
                 <div id="welcomeBanner" class="welcome-banner" style="display:none;">
                     <h2>Buy Property in BC — Without a Realtor</h2>
                     <p>This free dashboard helps unrepresented buyers find deals, generate professional offers,
@@ -368,7 +368,7 @@
             <div id="map" class="tab-content"></div>
             
             <!-- Tab 3: Neighborhood Analysis -->
-            <div id="neighborhood" class="tab-content" style="overflow: auto;">
+            <div id="neighborhood" class="tab-content">
                 <h2 style="margin-bottom: 8px; color: var(--primary);">Neighborhood Comparison</h2>
                 <div style="background: #e7f3ff; border: 1px solid #b8daff; border-radius: 6px; padding: 12px 16px; margin-bottom: 16px; font-size: 12px; color: #004085; line-height: 1.6;">
                     <strong>Data Sources &amp; Disclaimer:</strong> Market trend data approximated from
@@ -416,7 +416,7 @@
             </div>
             
             <!-- Tab 4: Deal Analysis -->
-            <div id="deals" class="tab-content" style="overflow: auto;">
+            <div id="deals" class="tab-content">
                 <h2 style="margin-bottom: 20px; color: var(--primary);">Top 10 Best Deals</h2>
                 <div id="dealsList" style="margin-bottom: 40px;"></div>
                 
@@ -437,7 +437,7 @@
             </div>
             
             <!-- Tab 5: Offer Generator -->
-            <div id="offers" class="tab-content" style="overflow: auto;">
+            <div id="offers" class="tab-content">
                 <h2 style="margin-bottom: 20px; color: var(--primary);">Generate Offer</h2>
                 <div class="offer-form">
                     <div class="form-group">
@@ -463,7 +463,7 @@
             </div>
             
             <!-- Tab 6: Shortlist -->
-            <div id="shortlist" class="tab-content" style="overflow: auto; flex-direction: column;">
+            <div id="shortlist" class="tab-content">
                 <div class="shortlist-controls">
                     <button class="btn-success" onclick="exportShortlistCSV()">Export Shortlist</button>
                 </div>
@@ -509,7 +509,7 @@
 
 
             <!-- Tab: Financing Hub (formerly Mortgage Calculator) -->
-            <div id="mortgage" class="tab-content" style="overflow: auto; padding: 20px;">
+            <div id="mortgage" class="tab-content">
                 <h2 style="margin-bottom: 8px; color: var(--primary);">Financing Hub</h2>
                 <p style="color: #666; margin-bottom: 20px;">Everything you need to understand your mortgage options, costs, and affordability. No realtor referral needed.</p>
                 <div style="display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap;">
@@ -616,7 +616,7 @@
             </div>
 
             <!-- Tab: My Offers Tracking -->
-            <div id="myoffers" class="tab-content" style="overflow: auto; padding: 20px;">
+            <div id="myoffers" class="tab-content">
                 <h2 style="margin-bottom: 8px; color: var(--primary);">My Offers</h2>
                 <p style="color: #666; margin-bottom: 16px;">Track all offers you've generated. Update statuses as negotiations progress.</p>
                 <div style="display: flex; gap: 12px; margin-bottom: 20px;">
@@ -660,7 +660,7 @@
             </div>
 
             <!-- Tab: Investment ROI Calculator -->
-            <div id="roi" class="tab-content" style="overflow: auto; padding: 20px;">
+            <div id="roi" class="tab-content">
                 <h2 style="margin-bottom: 8px; color: var(--primary);">Investment ROI Calculator</h2>
                 <p style="color: #666; margin-bottom: 20px;">Analyze potential rental income and returns for investment properties.</p>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
@@ -768,7 +768,7 @@
             </div>
 
             <!-- Tab: Lender Directory -->
-            <div id="lenders" class="tab-content" style="overflow: auto; padding: 20px;">
+            <div id="lenders" class="tab-content">
                 <h2 style="margin-bottom: 8px; color: var(--primary);">Lender Directory</h2>
                 <p style="color: #666; margin-bottom: 20px;">Compare mortgage options from major Canadian lenders and BC mortgage brokers. Contact them directly -- no realtor needed.</p>
 
@@ -891,7 +891,7 @@
             </div>
 
             <!-- Tab: Buyer Profile -->
-            <div id="buyerprofile" class="tab-content" style="overflow: auto; padding: 20px;">
+            <div id="buyerprofile" class="tab-content">
                 <h2 style="margin-bottom: 8px; color: var(--primary);">My Buyer Profile</h2>
                 <p style="color: #666; margin-bottom: 20px;">Save your details here. They'll auto-fill into offers, inquiries, and pre-qualification tools across the dashboard.</p>
 
@@ -999,7 +999,7 @@
             </div>
 
             <!-- Tab: Viewing Scheduler -->
-            <div id="viewings" class="tab-content" style="overflow: auto; padding: 20px;">
+            <div id="viewings" class="tab-content">
                 <h2 style="margin-bottom: 8px; color: var(--primary);">Viewing Scheduler</h2>
                 <p style="color: #666; margin-bottom: 16px;">Schedule and track property viewings. Add notes and ratings after each visit.</p>
 
@@ -1038,7 +1038,7 @@
             </div>
 
             <!-- Tab: Document Vault -->
-            <div id="documents" class="tab-content" style="overflow: auto; padding: 20px;">
+            <div id="documents" class="tab-content">
                 <h2 style="margin-bottom: 8px; color: var(--primary);">Document Vault</h2>
                 <p style="color: #666; margin-bottom: 16px;">Store and organize property-related documents. Inspection reports, title searches, strata documents, contracts, and more.</p>
 
@@ -1073,7 +1073,7 @@
             </div>
 
             <!-- Tab: Price History -->
-            <div id="pricehistory" class="tab-content" style="overflow: auto; padding: 20px;">
+            <div id="pricehistory" class="tab-content">
                 <h2 style="margin-bottom: 8px; color: var(--primary);">Price History Tracker</h2>
                 <p style="color: #666; margin-bottom: 16px;">Track price changes across all listings. Spot motivated sellers and market shifts.</p>
 
@@ -1115,7 +1115,7 @@
             </div>
 
             <!-- Tab: Neighborhood Enrichment / Area Intel -->
-            <div id="neighborhooddata" class="tab-content" style="overflow: auto; padding: 20px;">
+            <div id="neighborhooddata" class="tab-content">
                 <div style="display:flex;gap:12px;align-items:center;margin-bottom:16px;"><button class="btn-primary" onclick="openNeighborhoodComparison()" style="align-self:flex-start;">Compare Neighborhoods</button></div>
                 <h2 style="margin-bottom: 8px; color: var(--primary);">Area Intelligence</h2>
                 <p style="color: #666; margin-bottom: 16px;">Walk scores, schools, amenities, and livability data for each neighborhood.</p>
@@ -1136,7 +1136,7 @@
             </div>
 
             <!-- Tab: Data Health / Freshness -->
-            <div id="datafreshness" class="tab-content" style="overflow: auto; padding: 20px;">
+            <div id="datafreshness" class="tab-content">
                 <h2 style="margin-bottom: 8px; color: var(--primary);">Data Health Dashboard</h2>
                 <p style="color: #666; margin-bottom: 16px;">Monitor data freshness, flag inaccuracies, and track the quality of listings data.</p>
 
@@ -1194,7 +1194,7 @@
             </div>
 
             <!-- Tab: Contact Log -->
-            <div id="contactlog" class="tab-content" style="overflow: auto; padding: 20px;">
+            <div id="contactlog" class="tab-content">
                 <h2 style="margin-bottom: 8px; color: var(--primary);">Agent Contact Log</h2>
                 <p style="color: #666; margin-bottom: 16px;">Track all your communications with listing agents. Add notes after viewings, calls, and emails.</p>
                 <button class="btn-primary" onclick="addContactLogEntry()" style="margin-bottom: 16px; align-self: flex-start; padding: 10px 20px;">+ Add Contact Entry</button>
@@ -1206,7 +1206,7 @@
             </div>
 
             <!-- Tab 7: No-Realtor Guide -->
-            <div id="norealtorguide" class="tab-content" style="overflow: auto; padding: 20px;">
+            <div id="norealtorguide" class="tab-content">
                 <h2 style="margin-bottom: 8px; color: var(--primary);">Buying Property Without a Realtor</h2>
                 <p style="color: #666; margin-bottom: 24px;">A comprehensive guide for unrepresented buyers in British Columbia. Save thousands in commission while staying protected.</p>
 
@@ -1364,7 +1364,7 @@
             </div>
 
             <!-- Tab 8: Help -->
-            <div id="help" class="tab-content" style="overflow: auto; padding: 20px;">
+            <div id="help" class="tab-content">
                 <h2 style="margin-bottom: 8px; color: var(--primary);">Help &amp; Getting Started</h2>
                 <p style="color: #666; margin-bottom: 24px;">Learn how to use the Real Estate Investment Dashboard to find deals, analyze markets, and generate professional offers.</p>
 
@@ -6935,7 +6935,8 @@ Competitive: ${formatPrice(offers.competitive)}`;
 
                 // Update data health on load
                 setTimeout(function() {
-                    var dataAge = Math.floor((new Date() - new Date('2026-02-28')) / (1000*60*60*24));
+                    var dataDate = window._dataAsOf ? new Date(window._dataAsOf) : new Date('2026-02-28');
+                    var dataAge = Math.floor((new Date() - dataDate) / (1000*60*60*24));
                     var healthEl = document.getElementById('dataHealthScore');
                     if (healthEl) {
                         if (dataAge <= 3) { healthEl.textContent = 'Fresh'; healthEl.style.color = 'var(--success)'; }
@@ -6945,6 +6946,7 @@ Competitive: ${formatPrice(offers.competitive)}`;
                     }
                 }, 500);
             }
+        })();
 
         // ===== Welcome Banner =====
         function showWelcomeBanner() {
@@ -7073,7 +7075,6 @@ Competitive: ${formatPrice(offers.competitive)}`;
                 btn.className = (tabs[i] === activeTab) ? 'active' : '';
             });
         }
-        })();
 
     </script>
 
