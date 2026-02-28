@@ -276,13 +276,24 @@
 
                 <!-- Stale Listing Opportunities -->
                 <div style="margin-bottom: 24px;">
-                    <h3 style="color: var(--primary); margin-bottom: 12px; font-size: 16px;">
-                        Stale Listing Opportunities
-                        <span style="font-size: 12px; color: #888; font-weight: normal; margin-left: 8px;">
-                            Properties with 60+ days on market — highest negotiation potential
-                        </span>
-                    </h3>
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+                        <h3 style="color: var(--primary); font-size: 16px; margin: 0;">
+                            Stale Listing Opportunities
+                            <span style="font-size: 12px; color: #888; font-weight: normal; margin-left: 8px;">
+                                Properties with 60+ days on market — highest negotiation potential
+                            </span>
+                        </h3>
+                        <select id="staleSortBy" onchange="renderStaleDeals()" style="font-size:12px;padding:4px 8px;border-radius:4px;border:1px solid #ccc;">
+                            <option value="score">Highest Score</option>
+                            <option value="dom">Highest DOM</option>
+                            <option value="price">Lowest Price</option>
+                            <option value="motivation">Highest Motivation</option>
+                        </select>
+                    </div>
                     <div id="dashStaleDeals" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;"></div>
+                    <div id="staleShowMoreWrap" style="text-align:center;margin-top:10px;display:none;">
+                        <button id="staleShowMoreBtn" onclick="toggleStaleShowMore()" style="background:none;border:1px solid var(--secondary);color:var(--secondary);padding:6px 18px;border-radius:20px;cursor:pointer;font-size:12px;font-weight:600;">Show More</button>
+                    </div>
                 </div>
 
                 <!-- Recently Viewed -->
@@ -1188,8 +1199,18 @@
                     <div id="emptyCommunityFlags" style="text-align: center; padding: 20px; color: #999; font-size: 12px;">No community flags submitted yet. Use the flag button on any listing to report inaccuracies.</div>
                 </div>
 
-                <div style="background: #fff3cd; padding: 14px; border-radius: 8px; font-size: 12px; border-left: 4px solid #ffc107;">
-                    <strong>About Data Freshness:</strong> Listing data is sourced through a combination of manual scraping from REW.ca and Realtor.ca, supplemented by community corrections. Run the scraping pipeline regularly to keep data current. See the <code>tools/scraper/</code> directory for automation options.
+                <div id="dataSourceNote" style="background: #fff3cd; padding: 14px; border-radius: 8px; font-size: 12px; border-left: 4px solid #ffc107; margin-bottom: 12px;">
+                    <strong>Data Source:</strong> <span id="dataSourceDesc">Currently showing sample data. Listings are illustrative and may not reflect current market conditions. Run the scraper pipeline to populate with real listings from REW.ca and Realtor.ca.</span>
+                </div>
+                <div style="background: var(--light-gray); padding: 14px; border-radius: 8px; font-size: 12px;">
+                    <strong>Updating Listings:</strong> To refresh data with live listings:
+                    <ol style="margin:8px 0 0 16px;line-height:1.8;">
+                        <li>Configure regions in <code>tools/scraper/config.json</code></li>
+                        <li>Run <code>node tools/scraper/scraper.js</code> to scrape listings</li>
+                        <li>Run <code>node tools/scraper/merger.js</code> to merge into <code>data/listings.json</code></li>
+                        <li>Commit and push to deploy via GitHub Pages</li>
+                    </ol>
+                    <span style="color:#888;">See <code>tools/scraper/README.md</code> for full documentation.</span>
                 </div>
             </div>
 
@@ -1588,13 +1609,35 @@
     </div>
     
     <!-- External Scripts -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.3.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.4/jspdf.plugin.autotable.min.js"></script>
+    <!-- Libraries lazy-loaded on first use: Chart.js, Leaflet, jsPDF -->
     
     <script>
+        // ===== Lazy Script Loader =====
+        var _loadedScripts = {};
+        function loadScript(url) {
+            if (_loadedScripts[url]) return _loadedScripts[url];
+            _loadedScripts[url] = new Promise(function(resolve, reject) {
+                var s = document.createElement('script');
+                s.src = url;
+                s.onload = resolve;
+                s.onerror = reject;
+                document.head.appendChild(s);
+            });
+            return _loadedScripts[url];
+        }
+
+        function loadLeaflet() {
+            return loadScript('https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js')
+                .then(function() { return loadScript('https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.js'); });
+        }
+        function loadChartJs() {
+            return loadScript('https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js');
+        }
+        function loadJsPdf() {
+            return loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.3.1/jspdf.umd.min.js')
+                .then(function() { return loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.4/jspdf.plugin.autotable.min.js'); });
+        }
+
         let rawListings = [];
         const FALLBACK_LISTINGS = [
             {"addr":"14971 Prospect Ave","price":32500000,"beds":6,"baths":8,"sqft":11811,"type":"House","lot":null,"agent":"Malcolm Hasman","neighborhood":"White Rock","dom":38,"yearBuilt":1990,"waterView":false,"latitude":49.025,"longitude":-122.808,"region":"South Surrey / White Rock"},
@@ -2460,6 +2503,12 @@
         }
 
         function initializeMapTab() {
+            if (typeof L === 'undefined') {
+                var mapEl = document.getElementById('map');
+                if (mapEl) mapEl.innerHTML = '<div style="padding:40px;text-align:center;color:#888;">Loading map...</div>';
+                loadLeaflet().then(function() { initializeMapTab(); });
+                return;
+            }
             if (leafletMap) {
                 leafletMap.remove();
                 leafletMap = null;
@@ -2541,6 +2590,10 @@
         }
         
         function initializeNeighborhoodTab() {
+            if (typeof Chart === 'undefined') {
+                loadChartJs().then(function() { initializeNeighborhoodTab(); });
+                return;
+            }
             const neighborhoods = [...new Set(filteredListings.map(l => l.neighborhood))].sort();
             const neighborhoodData = neighborhoods.map(nbr => {
                 const nbrListings = filteredListings.filter(l => l.neighborhood === nbr);
@@ -2664,6 +2717,10 @@
         }
         
         function initializeDealsTab() {
+            if (typeof Chart === 'undefined') {
+                loadChartJs().then(function() { initializeDealsTab(); });
+                return;
+            }
             const topDeals = [...filteredListings].sort((a, b) => b.score - a.score).slice(0, 10);
             let dealsHtml = '';
             topDeals.forEach(listing => {
@@ -3420,13 +3477,6 @@ Competitive: ${formatPrice(offers.competitive)}`;
             return '';
         }
 
-        function getScoreClass(score) {
-            if (score >= 70) return 'score-hot';
-            if (score >= 50) return 'score-good';
-            if (score >= 30) return 'score-watching';
-            return 'score-low';
-        }
-        
         function exportFilteredCSV() {
             let csv = 'Address,Neighborhood,Type,Price,Beds,Baths,SqFt,$/SqFt,DOM,Year,Score,Agg. Offer,Agent\n';
             filteredListings.forEach(l => {
@@ -3472,28 +3522,56 @@ Competitive: ${formatPrice(offers.competitive)}`;
         window.addEventListener('resize', function() { checkViewMode(); });
 
         // ===== PHASE 2.1: Stale Deals Dashboard =====
+        var _staleShowAll = false;
+        function toggleStaleShowMore() {
+            _staleShowAll = !_staleShowAll;
+            renderStaleDeals();
+        }
+
         function renderStaleDeals() {
             var container = document.getElementById('dashStaleDeals');
             if (!container) return;
+
+            var sortBy = (document.getElementById('staleSortBy') || {}).value || 'score';
             var staleDeals = rawListings
                 .map(function(l, idx) { return Object.assign({}, l, { idx: idx, score: calculateScore(l), motivation: calculateMotivationScore(l) }); })
-                .filter(function(l) { return l.dom > 60; })
-                .sort(function(a, b) { return b.score - a.score; })
-                .slice(0, 6);
+                .filter(function(l) { return l.dom > 60; });
 
-            if (staleDeals.length === 0) {
+            if (sortBy === 'dom') staleDeals.sort(function(a, b) { return b.dom - a.dom; });
+            else if (sortBy === 'price') staleDeals.sort(function(a, b) { return a.price - b.price; });
+            else if (sortBy === 'motivation') staleDeals.sort(function(a, b) { return b.motivation - a.motivation; });
+            else staleDeals.sort(function(a, b) { return b.score - a.score; });
+
+            var showCount = _staleShowAll ? 12 : 6;
+            var visibleDeals = staleDeals.slice(0, showCount);
+
+            // Show/hide "Show More" button
+            var showMoreWrap = document.getElementById('staleShowMoreWrap');
+            if (showMoreWrap) {
+                if (staleDeals.length > 6) {
+                    showMoreWrap.style.display = 'block';
+                    var btn = document.getElementById('staleShowMoreBtn');
+                    if (btn) btn.textContent = _staleShowAll ? 'Show Less' : 'Show More (' + Math.min(staleDeals.length - 6, 6) + ' more)';
+                } else {
+                    showMoreWrap.style.display = 'none';
+                }
+            }
+
+            if (visibleDeals.length === 0) {
                 container.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:#999;">No stale listings found (60+ DOM)</div>';
                 return;
             }
 
             var html = '';
-            staleDeals.forEach(function(l) {
+            visibleDeals.forEach(function(l) {
                 var trend = marketTrends[l.neighborhood] || {};
                 var motBadge = getMotivationBadge(l.motivation);
-                html += '<div class="stale-deal-card" onclick="showDetailModal(' + l.idx + ')">';
+                var detailed = calculateScoreDetailed(l);
+                var bd = detailed.breakdown;
+                html += '<div class="stale-deal-card">';
                 html += '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;">';
-                html += '<div style="font-weight:700;color:var(--primary);font-size:13px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + l.addr + '</div>';
-                html += '<span class="score-badge ' + getScoreClass(l.score) + '" style="margin-left:8px;">' + l.score + '</span>';
+                html += '<div style="font-weight:700;color:var(--primary);font-size:13px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer;" onclick="showDetailModal(' + l.idx + ')">' + l.addr + '</div>';
+                html += '<span class="score-badge ' + getScoreClass(l.score) + '" style="margin-left:8px;cursor:pointer;" onclick="toggleStaleBreakdown(this)">' + l.score + '</span>';
                 html += '</div>';
                 html += '<div style="font-size:18px;font-weight:700;color:var(--primary);margin-bottom:4px;">' + formatPrice(l.price) + '</div>';
                 html += '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px;">';
@@ -3501,10 +3579,28 @@ Competitive: ${formatPrice(offers.competitive)}`;
                 html += motBadge;
                 if (trend.avgSaleToList) html += '<span style="font-size:11px;color:#888;">' + (trend.avgSaleToList * 100).toFixed(1) + '% sale/list</span>';
                 html += '</div>';
-                html += '<div style="font-size:11px;color:#888;">' + l.neighborhood + ' &middot; ' + l.beds + ' bed &middot; ' + l.baths + ' bath' + (l.sqft ? ' &middot; ' + l.sqft.toLocaleString() + ' sqft' : '') + '</div>';
+                html += '<div style="font-size:11px;color:#888;margin-bottom:8px;">' + l.neighborhood + ' &middot; ' + l.beds + ' bed &middot; ' + l.baths + ' bath' + (l.sqft ? ' &middot; ' + l.sqft.toLocaleString() + ' sqft' : '') + '</div>';
+                // Score breakdown (hidden by default)
+                html += '<div class="stale-breakdown" style="display:none;font-size:11px;background:var(--light-gray);padding:8px;border-radius:6px;margin-bottom:8px;">';
+                html += '<div style="font-weight:600;margin-bottom:4px;color:var(--primary);">Score Breakdown</div>';
+                html += '<div>DOM: +' + bd.dom.weighted + ' (' + bd.dom.label + ')</div>';
+                html += '<div>Benchmark: +' + bd.benchmark.weighted + ' (' + bd.benchmark.label + ')</div>';
+                html += '<div>$/sqft: +' + bd.ppsf.weighted + ' (' + bd.ppsf.label + ')</div>';
+                html += '<div>Trend: +' + bd.trend.points + ' (' + bd.trend.label + ')</div>';
+                html += '<div>Motivation: ' + l.motivation + '/100</div>';
+                html += '</div>';
+                // Draft Offer button
+                html += '<button onclick="event.stopPropagation();openOfferBuilder(' + l.idx + ')" style="width:100%;padding:5px 0;background:var(--secondary);color:white;border:none;border-radius:4px;font-size:11px;font-weight:600;cursor:pointer;">Draft Offer</button>';
                 html += '</div>';
             });
             container.innerHTML = html;
+        }
+
+        function toggleStaleBreakdown(el) {
+            event.stopPropagation();
+            var card = el.closest('.stale-deal-card');
+            var breakdown = card.querySelector('.stale-breakdown');
+            if (breakdown) breakdown.style.display = breakdown.style.display === 'none' ? 'block' : 'none';
         }
 
         // ===== PHASE 2.2: Seller Motivation Score =====
@@ -3799,8 +3895,8 @@ Competitive: ${formatPrice(offers.competitive)}`;
             showGenericModal(html);
         }
 
-        // ===== PHASE 3.3: Post-Offer Checklist =====
-        function showPostSubmissionChecklist(listing) {
+        // ===== PHASE 3.3: Post-Offer Timeline =====
+        function showPostOfferTimeline(listing) {
             var steps = [
                 { title: 'Offer Sent', desc: 'Your offer has been emailed to the listing agent.', done: true },
                 { title: 'Wait for Response', desc: 'The seller typically responds within 24-72 hours. The offer is irrevocable until the date you specified.', done: false },
@@ -4014,7 +4110,7 @@ Competitive: ${formatPrice(offers.competitive)}`;
                         </div>
                         <div class="offer-input-group">
                             <label>Deposit Held By</label>
-                            <input type="text" id="offerDepositTrustee" value="Buyer's solicitor in trust">
+                            <input type="text" id="offerDepositTrustee" value="Buyer's lawyer/notary in trust">
                         </div>
                     </div>
                     <div class="offer-input-row">
@@ -4023,7 +4119,7 @@ Competitive: ${formatPrice(offers.competitive)}`;
                             <input type="date" id="offerDepositDate" value="${fmtDate(depositDate)}">
                         </div>
                         <div class="offer-input-group" style="display:flex;align-items:flex-end;">
-                            <span style="font-size:11px;color:#666;padding-bottom:8px;">Date by which deposit must be delivered to trustee</span>
+                            <span style="font-size:11px;color:#666;padding-bottom:8px;">Within 24 hours of subject removal. As an unrepresented buyer, your deposit should be held by your own lawyer or notary.</span>
                         </div>
                     </div>
                     <div class="offer-input-row">
@@ -4052,12 +4148,10 @@ Competitive: ${formatPrice(offers.competitive)}`;
                     <h4>Subject Conditions</h4>
                     <div class="subject-checks">
                         <label><input type="checkbox" class="subject-cb" value="Subject to satisfactory home inspection by a qualified inspector at Buyer's expense, to be completed within the subject removal period." checked> Home Inspection</label>
-                        <label><input type="checkbox" class="subject-cb" value="Subject to Buyer arranging satisfactory financing within the subject removal period."> Financing</label>
-                        <label><input type="checkbox" class="subject-cb" value="Subject to Buyer's solicitor approval of title search within the subject removal period." checked> Title Review</label>
-                        <label><input type="checkbox" class="subject-cb" value="Subject to Buyer's lawyer reviewing and approving the Contract of Purchase and Sale within the subject removal period."> Lawyer Review</label>
+                        <label><input type="checkbox" class="subject-cb" value="Subject to Buyer obtaining satisfactory financing within the subject removal period." checked> Financing</label>
+                        <label><input type="checkbox" class="subject-cb" value="Subject to Buyer's lawyer or notary reviewing and approving title, property disclosure statement, and the Contract of Purchase and Sale within the subject removal period." checked> Lawyer/Notary Review (Title &amp; Disclosure)</label>
                         ${listing.type === 'Apt/Condo' || listing.type === 'Townhouse' ? `
-                        <label><input type="checkbox" class="subject-cb" value="Subject to Buyer's review and approval of strata documents including minutes, bylaws, financials, depreciation report, and Form B within the subject removal period." checked> Strata Docs Review</label>
-                        <label><input type="checkbox" class="subject-cb" value="Subject to Buyer's review and approval of the strata corporation's current insurance and coverage."> Strata Insurance</label>
+                        <label><input type="checkbox" class="subject-cb" value="Subject to Buyer reviewing and approving strata documents (Form B information certificate, meeting minutes, bylaws, financial statements, depreciation report, and current insurance certificate) within the subject removal period." checked> Strata Documents Review</label>
                         ` : ''}
                         <label><input type="checkbox" class="subject-cb" value="Subject to Buyer's review and approval of a current property appraisal."> Property Appraisal</label>
                         <label><input type="checkbox" class="subject-cb" value="Subject to satisfactory environmental assessment at Buyer's expense."> Environmental Assessment</label>
@@ -4121,6 +4215,9 @@ Competitive: ${formatPrice(offers.competitive)}`;
                     </div>
                 </div>
 
+                <div style="background:#fff3cd;border:1px solid #ffc107;border-radius:6px;padding:10px 14px;margin-bottom:12px;font-size:12px;color:#856404;">
+                    <strong>Disclaimer:</strong> This offer template is for informational purposes only. It is not legal advice. Have a BC lawyer or notary review any offer before submission.
+                </div>
                 <div class="offer-actions">
                     <button class="btn-generate-pdf" onclick="generateOfferPDF()">Generate PDF Offer</button>
                     <button class="btn-email-agent" id="emailAgentBtn" onclick="emailOfferToAgent()" ${offerPdfGenerated ? '' : 'disabled'} title="${offerPdfGenerated ? '' : 'Generate PDF first'}">Email to Agent</button>
@@ -4168,6 +4265,12 @@ Competitive: ${formatPrice(offers.competitive)}`;
         }
 
         function generateOfferPDF() {
+          if (!window.jspdf) {
+            var statusEl = document.getElementById('offerStatus');
+            if (statusEl) { statusEl.textContent = 'Loading PDF library...'; statusEl.style.color = '#888'; }
+            loadJsPdf().then(function() { generateOfferPDF(); });
+            return;
+          }
           try {
             const listing = rawListings[currentOfferListingIndex];
             const city = getCityForListing(listing);
@@ -4281,7 +4384,7 @@ Competitive: ${formatPrice(offers.competitive)}`;
             doc.setFont('helvetica', 'normal');
             doc.setFontSize(6.5);
             doc.setTextColor(120, 60, 10);
-            var disclaimerText = 'This document is generated by an automated tool for informational purposes only and does not constitute legal advice. It is not a standard BCREA Contract of Purchase and Sale. The Buyer is strongly advised to retain a qualified BC lawyer or notary to review this offer before submission. Use at your own risk.';
+            var disclaimerText = 'This offer template is for informational purposes only. It is not legal advice. It is not a standard BCREA Contract of Purchase and Sale (Form B). Have a BC lawyer or notary review any offer before submission. The buyer accepts all responsibility for reliance on this document.';
             var disclaimerLines = doc.splitTextToSize(disclaimerText, contentW - 6);
             doc.text(disclaimerLines, margin + 3, y + 7);
             y += 16;
@@ -4337,7 +4440,7 @@ Competitive: ${formatPrice(offers.competitive)}`;
                 body: [
                     ['Offer Price', fmtCur(offerPrice)],
                     ['Deposit Amount', fmtCur(deposit)],
-                    ['Deposit Delivery', (depositDeliveryDate ? 'On or before ' + fmtDt(depositDeliveryDate) : 'Within 24 hours of acceptance') + ', to be held by ' + depositTrustee],
+                    ['Deposit Delivery', (depositDeliveryDate ? 'On or before ' + fmtDt(depositDeliveryDate) : 'Within 24 hours of subject removal') + ', held in trust by ' + depositTrustee],
                     ['Balance of Purchase Price', fmtCur(offerPrice - deposit) + ' due on Completion Date'],
                     ['Property Transfer Tax', 'Buyer acknowledges responsibility for BC Property Transfer Tax payable on completion'],
                     ['GST', 'If applicable, included in or in addition to the Purchase Price as required by law'],
@@ -4432,7 +4535,7 @@ Competitive: ${formatPrice(offers.competitive)}`;
             // ===== SECTION 7: FINANCING =====
             const secNum7 = secNum6 + 1;
             y = addSectionHeading(secNum7 + '. FINANCING AND ABILITY TO CLOSE', y);
-            y = addText('The Buyer confirms financial capacity to complete this purchase and is prepared to provide proof of funds or a mortgage pre-approval letter upon request. The deposit of ' + fmtCur(deposit) + ' will be delivered to ' + depositTrustee + (depositDeliveryDate ? ' on or before ' + fmtDt(depositDeliveryDate) + '.' : ' within 24 hours of acceptance by all parties.'), margin, y, {fontSize: 9.5});
+            y = addText('The Buyer confirms financial capacity to complete this purchase and is prepared to provide proof of funds or a mortgage pre-approval letter upon request. The deposit of ' + fmtCur(deposit) + ' shall be held in trust by ' + depositTrustee + ' and delivered' + (depositDeliveryDate ? ' on or before ' + fmtDt(depositDeliveryDate) + '.' : ' within 24 hours of subject removal.'), margin, y, {fontSize: 9.5});
             y += 4;
 
             // ===== SECTION 8: BUYER ACKNOWLEDGMENTS =====
@@ -5206,7 +5309,7 @@ Competitive: ${formatPrice(offers.competitive)}`;
             localStorage.setItem('offerHistory', JSON.stringify(history));
             if (offerData && offerData.property) {
                 var matchedListing = rawListings.find(function(l) { return l.addr === offerData.property; });
-                if (matchedListing) setTimeout(function() { showPostSubmissionChecklist(matchedListing); }, 500);
+                if (matchedListing) setTimeout(function() { showPostOfferTimeline(matchedListing); }, 500);
             }
         }
 
@@ -6643,6 +6746,16 @@ Competitive: ${formatPrice(offers.competitive)}`;
         function initializeDataFreshness() {
             checkApiConnection();
 
+            // Update data source description
+            var descEl = document.getElementById('dataSourceDesc');
+            if (descEl) {
+                if (window._usingFallbackData) {
+                    descEl.textContent = 'Currently showing sample data. Listings are illustrative and may not reflect current market conditions. Run the scraper pipeline to populate with real listings.';
+                } else {
+                    descEl.textContent = 'Listings loaded from data/listings.json. Data was last updated ' + (window._dataAsOf || 'unknown') + '. Run the scraper pipeline regularly to keep data current.';
+                }
+            }
+
             // Compute freshness based on data metadata
             var now = new Date();
             var dataAge = Math.floor((now - new Date('2026-02-28')) / (1000 * 60 * 60 * 24));
@@ -6982,25 +7095,37 @@ Competitive: ${formatPrice(offers.competitive)}`;
             else ptt = 2000 + 36000 + 30000 + (price - 3000000) * 0.05;
 
             var savings = 0;
-            // April 2024+ FTHB thresholds
-            if (isFTHB && !isNewBuild) {
-                // Existing homes: full exemption up to $835K, partial $835K-$860K
-                if (price <= 835000) { savings = ptt; ptt = 0; }
-                else if (price <= 860000) {
-                    var ratio = (860000 - price) / 25000;
+
+            if (isFTHB && isNewBuild) {
+                // Newly Built Home Exemption: full exemption up to $1.1M, partial $1.1M-$1.15M
+                if (price <= 1100000) {
+                    savings = ptt;
+                    ptt = 0;
+                } else if (price <= 1150000) {
+                    var ratio = (1150000 - price) / 50000;
                     savings = ptt * ratio;
                     ptt = ptt - savings;
                 }
-            }
-            if (isFTHB && isNewBuild) {
-                // New builds: full exemption up to $1.1M, partial $1.1M-$1.15M
-                if (price <= 1100000) { savings = ptt; ptt = 0; }
-                else if (price <= 1150000) {
-                    var ratio2 = (1150000 - price) / 50000;
-                    savings = ptt * ratio2;
-                    ptt = ptt - savings;
+            } else if (isFTHB && !isNewBuild) {
+                // FTHB Existing Home Exemption (April 2024+ rules from gov.bc.ca):
+                // - Under $500K: full exemption (PTT = $0)
+                // - $500K to $835K: fixed $8,000 exemption (PTT on first $500K is waived)
+                // - $835K to $860K: $8,000 exemption proportionally reduced
+                // - Over $860K: no exemption
+                if (price <= 500000) {
+                    savings = ptt;
+                    ptt = 0;
+                } else if (price <= 835000) {
+                    savings = 8000;
+                    ptt = ptt - 8000;
+                } else if (price < 860000) {
+                    var exemption = 8000 * ((860000 - price) / 25000);
+                    savings = Math.round(exemption);
+                    ptt = ptt - exemption;
                 }
+                // else: price >= 860000, no exemption
             }
+
             return { ptt: Math.round(ptt), savings: Math.round(savings) };
         }
 
