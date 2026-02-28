@@ -2519,48 +2519,51 @@
             renderCurrentTab();
         }
         
+        // 13B: Sort with address tiebreaker for stable ordering
+        function stableSort(a, b, primary) {
+            return primary || a.addr.localeCompare(b.addr);
+        }
+
         function sortListings(sortBy) {
             switch(sortBy) {
                 case 'score-desc':
-                    filteredListings.sort((a, b) => b.score - a.score);
+                    filteredListings.sort((a, b) => stableSort(a, b, b.score - a.score));
                     break;
                 case 'dom-desc':
-                    filteredListings.sort((a, b) => b.dom - a.dom);
+                    filteredListings.sort((a, b) => stableSort(a, b, b.dom - a.dom));
                     break;
                 case 'price-asc':
-                    filteredListings.sort((a, b) => a.price - b.price);
+                    filteredListings.sort((a, b) => stableSort(a, b, a.price - b.price));
                     break;
                 case 'price-desc':
-                    filteredListings.sort((a, b) => b.price - a.price);
+                    filteredListings.sort((a, b) => stableSort(a, b, b.price - a.price));
                     break;
                 case 'ppsf-asc':
                     filteredListings.sort((a, b) => {
                         const ppsfA = a.sqft > 0 ? a.price / a.sqft : Infinity;
                         const ppsfB = b.sqft > 0 ? b.price / b.sqft : Infinity;
-                        return ppsfA - ppsfB;
+                        return stableSort(a, b, ppsfA - ppsfB);
                     });
                     break;
                 case 'gap-desc':
                     filteredListings.sort((a, b) => {
                         const benchmarkA = neighborhoodBenchmarks[a.neighborhood]?.[a.type] || 1500000;
                         const benchmarkB = neighborhoodBenchmarks[b.neighborhood]?.[b.type] || 1500000;
-                        const gapA = benchmarkA - a.price;
-                        const gapB = benchmarkB - b.price;
-                        return gapB - gapA;
+                        return stableSort(a, b, (benchmarkB - b.price) - (benchmarkA - a.price));
                     });
                     break;
                 case 'caprate-desc':
                     filteredListings.sort((a, b) => {
                         const mA = a._investorMetrics || estimateInvestorMetrics(a);
                         const mB = b._investorMetrics || estimateInvestorMetrics(b);
-                        return mB.capRate - mA.capRate;
+                        return stableSort(a, b, mB.capRate - mA.capRate);
                     });
                     break;
                 case 'cashflow-desc':
                     filteredListings.sort((a, b) => {
                         const mA = a._investorMetrics || estimateInvestorMetrics(a);
                         const mB = b._investorMetrics || estimateInvestorMetrics(b);
-                        return mB.cashFlow - mA.cashFlow;
+                        return stableSort(a, b, mB.cashFlow - mA.cashFlow);
                     });
                     break;
             }
@@ -2596,12 +2599,22 @@
             const avgDOM = totalProps > 0 ? filteredListings.reduce((sum, l) => sum + l.dom, 0) / totalProps : 0;
             const avgScore = totalProps > 0 ? filteredListings.reduce((sum, l) => sum + l.score, 0) / totalProps : 0;
             const hotDeals = filteredListings.filter(l => l.score >= 70).length;
-            
+
             document.getElementById('totalProperties').textContent = totalProps;
             document.getElementById('avgPrice').textContent = formatPrice(avgPrice);
             document.getElementById('avgDOM').textContent = Math.round(avgDOM);
             document.getElementById('avgScore').textContent = Math.round(avgScore);
             document.getElementById('hotDeals').textContent = hotDeals;
+
+            // 13C: Show data freshness in stats bar
+            var tsEl = document.getElementById('dataTimestamp');
+            if (tsEl && window._dataAsOf) {
+                var d = new Date(window._dataAsOf);
+                var daysAgo = Math.floor((new Date() - d) / (1000*60*60*24));
+                tsEl.textContent = d.toLocaleDateString('en-CA');
+                if (daysAgo > 7) tsEl.style.color = 'var(--danger)';
+                else tsEl.style.color = '';
+            }
         }
         
         function switchTab(tabName) {
@@ -2738,11 +2751,11 @@
                         <td>${listing.neighborhood}</td>
                         <td>${listing.type}</td>
                         <td>${formatPrice(listing.price)}</td>
-                        <td>${listing.beds}/${listing.baths}</td>
-                        <td>${listing.sqft.toLocaleString()}</td>
-                        <td>${ppsf.toLocaleString()}</td>
+                        <td>${fmtVal(listing.beds)}/${fmtVal(listing.baths)}</td>
+                        <td>${fmtSqft(listing.sqft)}</td>
+                        <td>${ppsf > 0 ? ppsf.toLocaleString() : '—'}</td>
                         <td>${listing.dom}</td>
-                        <td>${listing.yearBuilt}</td>
+                        <td>${fmtVal(listing.yearBuilt)}</td>
                         <td><span class="score-badge ${scoreClass}">${Math.round(listing.score)}</span></td>
                         ${investorCols}
                         <td>${formatPrice(offers.aggressive)}</td>
@@ -3061,11 +3074,11 @@
                 if (tagBadges) html += '<div style="padding:0 12px 4px;line-height:1.6;">' + tagBadges + '</div>';
                 html += '<div class="property-card-nbr">' + listing.neighborhood + ' &middot; ' + listing.region + '</div>';
                 html += '<div class="property-card-details">';
-                html += '<span><strong>' + listing.beds + '</strong> Beds</span>';
-                html += '<span><strong>' + listing.baths + '</strong> Baths</span>';
+                html += '<span><strong>' + fmtVal(listing.beds) + '</strong> Beds</span>';
+                html += '<span><strong>' + fmtVal(listing.baths) + '</strong> Baths</span>';
                 if (listing.sqft > 0) html += '<span><strong>' + listing.sqft.toLocaleString() + '</strong> sqft</span>';
                 if (ppsf > 0) html += '<span><strong>$' + ppsf.toLocaleString() + '</strong>/sqft</span>';
-                if (listing.yearBuilt) html += '<span>Built <strong>' + listing.yearBuilt + '</strong></span>';
+                if (listing.yearBuilt > 0) html += '<span>Built <strong>' + listing.yearBuilt + '</strong></span>';
                 html += '</div>';
                 html += '</div>';
                 if (investorModeActive) {
@@ -4135,6 +4148,10 @@ Competitive: ${formatPrice(offers.competitive)}`;
             });
         }
         
+        // 13A: Format missing data as "—" instead of 0
+        function fmtVal(v) { return (v && v > 0) ? v : '—'; }
+        function fmtSqft(v) { return (v && v > 0) ? v.toLocaleString() : '—'; }
+
         function formatPrice(price) {
             return new Intl.NumberFormat('en-US', {
                 style: 'currency',
