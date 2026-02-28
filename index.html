@@ -743,6 +743,16 @@
                             <label>Vacancy Rate (%)</label>
                             <input type="number" id="roiVacancy" value="5" step="1" oninput="calcROI()">
                         </div>
+
+                        <h3 style="color: var(--secondary); margin: 20px 0 12px;">Projections</h3>
+                        <div class="form-group">
+                            <label>Annual Appreciation (%) <span style="font-weight:normal;color:#888;">BC avg ~3-5%</span></label>
+                            <input type="number" id="roiAppreciation" value="3" step="0.5" oninput="calcROI()">
+                        </div>
+                        <div class="form-group">
+                            <label>Annual Rent Increase (%) <span style="font-weight:normal;color:#888;">BC cap varies</span></label>
+                            <input type="number" id="roiRentIncrease" value="2" step="0.5" oninput="calcROI()">
+                        </div>
                         <button class="btn-primary" onclick="calcROI()" style="width: auto; margin-top: 8px;">Calculate ROI</button>
                     </div>
                     <div>
@@ -770,6 +780,10 @@
                             <tr><td style="padding:8px;border-bottom:1px solid #eee;">Net Operating Income (annual)</td><td id="roiNOI" style="padding:8px;text-align:right;border-bottom:1px solid #eee;font-weight:600;">$0</td></tr>
                             <tr><td style="padding:8px;border-bottom:1px solid #eee;">Annual Cash Flow</td><td id="roiAnnualCF" style="padding:8px;text-align:right;border-bottom:1px solid #eee;font-weight:600;">$0</td></tr>
                             <tr><td style="padding:8px;border-bottom:1px solid #eee;">Gross Rent Multiplier (GRM)</td><td id="roiGRM" style="padding:8px;text-align:right;border-bottom:1px solid #eee;font-weight:600;">--</td></tr>
+                            <tr><td style="padding:8px;border-bottom:1px solid #eee;">DSCR (Debt Service Coverage)</td><td id="roiDSCR" style="padding:8px;text-align:right;border-bottom:1px solid #eee;font-weight:600;">--</td></tr>
+                            <tr><td style="padding:8px;border-bottom:1px solid #eee;">Price-to-Rent Ratio</td><td id="roiPriceToRent" style="padding:8px;text-align:right;border-bottom:1px solid #eee;font-weight:600;">--</td></tr>
+                            <tr><td style="padding:8px;border-bottom:1px solid #eee;">1% Rule Check</td><td id="roi1PctRule" style="padding:8px;text-align:right;border-bottom:1px solid #eee;font-weight:600;">--</td></tr>
+                            <tr><td style="padding:8px;border-bottom:1px solid #eee;">Break-Even Point</td><td id="roiBreakEven" style="padding:8px;text-align:right;border-bottom:1px solid #eee;font-weight:600;">--</td></tr>
                         </table>
 
                         <h3 style="color: var(--secondary); margin: 24px 0 12px;">Investment Verdict</h3>
@@ -779,9 +793,12 @@
 
                         <h3 style="color: var(--secondary); margin: 24px 0 12px;">5-Year Projection</h3>
                         <table style="width:100%;border-collapse:collapse;font-size:12px;">
-                            <thead><tr style="background:var(--light-gray);"><th style="padding:8px;text-align:left;">Year</th><th style="padding:8px;text-align:right;">Annual Cash Flow</th><th style="padding:8px;text-align:right;">Equity Built</th><th style="padding:8px;text-align:right;">Total Return</th></tr></thead>
+                            <thead><tr style="background:var(--light-gray);"><th style="padding:8px;text-align:left;">Year</th><th style="padding:8px;text-align:right;">Cash Flow</th><th style="padding:8px;text-align:right;">Est. Value</th><th style="padding:8px;text-align:right;">Equity Built</th><th style="padding:8px;text-align:right;">Total Return</th></tr></thead>
                             <tbody id="roiProjectionBody"></tbody>
                         </table>
+
+                        <h3 style="color: var(--secondary); margin: 24px 0 12px;">Scenario Comparison</h3>
+                        <div id="roiScenarios" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;font-size:12px;"></div>
                     </div>
                 </div>
             </div>
@@ -5532,6 +5549,8 @@ Competitive: ${formatPrice(offers.competitive)}`;
             var mgmtPct = parseFloat(document.getElementById('roiMgmt').value) || 0;
             var strata = parseFloat(document.getElementById('roiStrata').value) || 0;
             var vacancyPct = parseFloat(document.getElementById('roiVacancy').value) || 0;
+            var appreciationPct = parseFloat(document.getElementById('roiAppreciation').value) || 0;
+            var rentIncreasePct = parseFloat(document.getElementById('roiRentIncrease').value) || 0;
 
             var downPayment = price * downPct / 100;
             var mortgageAmount = price - downPayment;
@@ -5556,6 +5575,13 @@ Competitive: ${formatPrice(offers.competitive)}`;
             var cashOnCash = totalInvestment > 0 ? (annualCashFlow / totalInvestment) * 100 : 0;
             var grm = grossIncome > 0 ? (price / (grossIncome * 12)).toFixed(1) : '--';
 
+            // New metrics: DSCR, Price-to-Rent, 1% Rule, Break-Even
+            var annualDebtService = mortPayment * 12;
+            var dscr = annualDebtService > 0 ? (noi / annualDebtService) : 0;
+            var priceToRent = rent > 0 ? (price / (rent * 12)) : 0;
+            var onePercentRatio = price > 0 ? (rent / price * 100) : 0;
+            var breakEvenMonths = monthlyCashFlow > 0 ? Math.ceil(totalInvestment / monthlyCashFlow) : 0;
+
             document.getElementById('roiCashFlow').textContent = (monthlyCashFlow >= 0 ? '' : '-') + '$' + Math.abs(Math.round(monthlyCashFlow)).toLocaleString();
             document.getElementById('roiCashFlow').parentElement.style.background = monthlyCashFlow >= 0 ? 'linear-gradient(135deg, #28a745 0%, #20c997 100%)' : 'linear-gradient(135deg, #dc3545 0%, #e83e8c 100%)';
             document.getElementById('roiCapRate').textContent = capRate.toFixed(2) + '%';
@@ -5569,6 +5595,33 @@ Competitive: ${formatPrice(offers.competitive)}`;
             document.getElementById('roiAnnualCF').textContent = (annualCashFlow >= 0 ? '' : '-') + '$' + Math.abs(Math.round(annualCashFlow)).toLocaleString();
             document.getElementById('roiGRM').textContent = grm;
 
+            // New metric displays
+            var dscrEl = document.getElementById('roiDSCR');
+            if (annualDebtService > 0) {
+                dscrEl.textContent = dscr.toFixed(2) + 'x';
+                dscrEl.style.color = dscr >= 1.25 ? 'var(--success)' : dscr >= 1.0 ? '#856404' : 'var(--danger)';
+            } else { dscrEl.textContent = 'N/A (no debt)'; dscrEl.style.color = ''; }
+
+            var ptrEl = document.getElementById('roiPriceToRent');
+            if (rent > 0) {
+                ptrEl.textContent = priceToRent.toFixed(1) + 'x';
+                ptrEl.style.color = priceToRent <= 15 ? 'var(--success)' : priceToRent <= 20 ? '#856404' : 'var(--danger)';
+            } else { ptrEl.textContent = '--'; ptrEl.style.color = ''; }
+
+            var oneEl = document.getElementById('roi1PctRule');
+            if (price > 0 && rent > 0) {
+                oneEl.textContent = onePercentRatio.toFixed(2) + '%';
+                oneEl.style.color = onePercentRatio >= 1.0 ? 'var(--success)' : onePercentRatio >= 0.7 ? '#856404' : 'var(--danger)';
+            } else { oneEl.textContent = '--'; oneEl.style.color = ''; }
+
+            var beEl = document.getElementById('roiBreakEven');
+            if (monthlyCashFlow > 0) {
+                var beYrs = Math.floor(breakEvenMonths / 12);
+                var beMos = breakEvenMonths % 12;
+                beEl.textContent = (beYrs > 0 ? beYrs + 'y ' : '') + beMos + 'mo';
+                beEl.style.color = breakEvenMonths <= 60 ? 'var(--success)' : breakEvenMonths <= 120 ? '#856404' : 'var(--danger)';
+            } else { beEl.textContent = monthlyCashFlow < 0 ? 'Never (negative CF)' : '--'; beEl.style.color = monthlyCashFlow < 0 ? 'var(--danger)' : ''; }
+
             // Verdict
             var verdict = '';
             if (capRate >= 6) verdict = '<div style="color:#155724;font-weight:700;">Excellent Investment</div><p>Cap rate of ' + capRate.toFixed(1) + '% is well above average for BC.</p>';
@@ -5578,29 +5631,92 @@ Competitive: ${formatPrice(offers.competitive)}`;
 
             if (monthlyCashFlow < 0) verdict += '<p style="background:#f8d7da;padding:8px 12px;border-radius:4px;margin-top:8px;"><strong>Warning:</strong> Negative cash flow of $' + Math.abs(Math.round(monthlyCashFlow)).toLocaleString() + '/month.</p>';
             else if (monthlyCashFlow > 0) verdict += '<p style="background:#d4edda;padding:8px 12px;border-radius:4px;margin-top:8px;"><strong>Positive cash flow</strong> of $' + Math.round(monthlyCashFlow).toLocaleString() + '/month.</p>';
+
+            // Additional verdict insights
+            if (dscr > 0 && dscr < 1.0) verdict += '<p style="background:#f8d7da;padding:8px 12px;border-radius:4px;margin-top:8px;"><strong>DSCR below 1.0:</strong> Income does not cover debt service. Lenders typically require DSCR &ge; 1.25.</p>';
+            else if (dscr >= 1.25) verdict += '<p style="background:#d4edda;padding:8px 12px;border-radius:4px;margin-top:8px;"><strong>DSCR ' + dscr.toFixed(2) + 'x:</strong> Meets most lender requirements (&ge; 1.25x).</p>';
+
+            if (onePercentRatio >= 1.0) verdict += '<p style="background:#d4edda;padding:8px 12px;border-radius:4px;margin-top:8px;"><strong>Passes 1% Rule:</strong> Monthly rent is ' + onePercentRatio.toFixed(2) + '% of purchase price.</p>';
+            else if (price > 0 && rent > 0) verdict += '<p style="background:#fff3cd;padding:8px 12px;border-radius:4px;margin-top:8px;"><strong>Below 1% Rule:</strong> Monthly rent is only ' + onePercentRatio.toFixed(2) + '% of purchase price (target &ge; 1%).</p>';
+
             document.getElementById('roiVerdict').innerHTML = verdict;
 
-            // 5-year projection
+            // 5-year projection with appreciation and rent increases
             var projHtml = '';
             var cumCF = 0;
             var remainingMort = mortgageAmount;
+            var projRent = rent;
+            var projOther = otherIncome;
+            var projValue = price;
             for (var yr = 1; yr <= 5; yr++) {
-                cumCF += annualCashFlow;
-                var principalPaid = 0;
+                projValue = price * Math.pow(1 + appreciationPct / 100, yr);
+                projRent = rent * Math.pow(1 + rentIncreasePct / 100, yr);
+                projOther = otherIncome * Math.pow(1 + rentIncreasePct / 100, yr);
+                var projGross = projRent + projOther;
+                var projEff = projGross * (1 - vacancyPct / 100);
+                var projMgmt = projRent * mgmtPct / 100;
+                var projOpEx = tax + insurance + maintenance + projMgmt + strata;
+                var projAnnualCF = (projEff - projOpEx - mortPayment) * 12;
+                cumCF += projAnnualCF;
                 var tempBal = remainingMort;
                 for (var m = 0; m < 12; m++) {
                     var intPmt = tempBal * monthlyRate;
                     var prinPmt = mortPayment - intPmt;
-                    if (prinPmt > 0) { principalPaid += prinPmt; tempBal -= prinPmt; }
+                    if (prinPmt > 0) { tempBal -= prinPmt; }
                 }
                 remainingMort = tempBal;
-                var totalReturn = cumCF + (mortgageAmount - remainingMort);
+                var equityBuilt = projValue - Math.max(remainingMort, 0);
+                var totalReturn = cumCF + (projValue - price) + (mortgageAmount - remainingMort);
                 projHtml += '<tr><td style="padding:6px 8px;border-bottom:1px solid #eee;">Year ' + yr + '</td>';
-                projHtml += '<td style="padding:6px 8px;text-align:right;border-bottom:1px solid #eee;color:' + (annualCashFlow >= 0 ? 'var(--success)' : 'var(--danger)') + ';font-weight:600;">' + (annualCashFlow >= 0 ? '' : '-') + '$' + Math.abs(Math.round(annualCashFlow)).toLocaleString() + '</td>';
-                projHtml += '<td style="padding:6px 8px;text-align:right;border-bottom:1px solid #eee;font-weight:600;">$' + Math.round(mortgageAmount - remainingMort).toLocaleString() + '</td>';
+                projHtml += '<td style="padding:6px 8px;text-align:right;border-bottom:1px solid #eee;color:' + (projAnnualCF >= 0 ? 'var(--success)' : 'var(--danger)') + ';font-weight:600;">' + (projAnnualCF >= 0 ? '' : '-') + '$' + Math.abs(Math.round(projAnnualCF)).toLocaleString() + '</td>';
+                projHtml += '<td style="padding:6px 8px;text-align:right;border-bottom:1px solid #eee;font-weight:600;">$' + Math.round(projValue).toLocaleString() + '</td>';
+                projHtml += '<td style="padding:6px 8px;text-align:right;border-bottom:1px solid #eee;font-weight:600;">$' + Math.round(equityBuilt).toLocaleString() + '</td>';
                 projHtml += '<td style="padding:6px 8px;text-align:right;border-bottom:1px solid #eee;font-weight:600;">$' + Math.round(totalReturn).toLocaleString() + '</td></tr>';
             }
             document.getElementById('roiProjectionBody').innerHTML = projHtml;
+
+            // Scenario comparison: Conservative / Base / Optimistic
+            var scenarios = [
+                { name: 'Conservative', appreciation: Math.max(appreciationPct - 2, 0), rentInc: Math.max(rentIncreasePct - 1, 0), vacancy: Math.min(vacancyPct + 3, 15), color: '#dc3545', bg: '#f8d7da' },
+                { name: 'Base Case', appreciation: appreciationPct, rentInc: rentIncreasePct, vacancy: vacancyPct, color: '#004085', bg: '#e7f3ff' },
+                { name: 'Optimistic', appreciation: appreciationPct + 2, rentInc: rentIncreasePct + 1, vacancy: Math.max(vacancyPct - 2, 0), color: '#155724', bg: '#d4edda' }
+            ];
+            var scenHtml = '';
+            scenarios.forEach(function(sc) {
+                var scValue5 = price * Math.pow(1 + sc.appreciation / 100, 5);
+                var scRent5 = rent * Math.pow(1 + sc.rentInc / 100, 5);
+                var scGross5 = (scRent5 + otherIncome) * (1 - sc.vacancy / 100);
+                var scMgmt5 = scRent5 * mgmtPct / 100;
+                var scOpEx5 = tax + insurance + maintenance + scMgmt5 + strata;
+                var scMonthlyCF5 = scGross5 - scOpEx5 - mortPayment;
+                var scCumCF = 0;
+                var scBal = mortgageAmount;
+                for (var y = 1; y <= 5; y++) {
+                    var yRent = rent * Math.pow(1 + sc.rentInc / 100, y);
+                    var yGross = (yRent + otherIncome) * (1 - sc.vacancy / 100);
+                    var yMgmt = yRent * mgmtPct / 100;
+                    var yOpEx = tax + insurance + maintenance + yMgmt + strata;
+                    scCumCF += (yGross - yOpEx - mortPayment) * 12;
+                    for (var mm = 0; mm < 12; mm++) {
+                        var ii = scBal * monthlyRate;
+                        var pp = mortPayment - ii;
+                        if (pp > 0) scBal -= pp;
+                    }
+                }
+                var scAppreciation = scValue5 - price;
+                var scEquityPaid = mortgageAmount - scBal;
+                var scTotalReturn = scCumCF + scAppreciation + scEquityPaid;
+                var scROI = totalInvestment > 0 ? (scTotalReturn / totalInvestment * 100) : 0;
+                scenHtml += '<div style="background:' + sc.bg + ';padding:14px;border-radius:8px;border:1px solid ' + sc.color + '30;">';
+                scenHtml += '<div style="font-weight:700;color:' + sc.color + ';margin-bottom:8px;font-size:13px;">' + sc.name + '</div>';
+                scenHtml += '<div style="font-size:11px;color:#666;margin-bottom:6px;">Appr: ' + sc.appreciation.toFixed(1) + '% | Rent+: ' + sc.rentInc.toFixed(1) + '% | Vac: ' + sc.vacancy + '%</div>';
+                scenHtml += '<div style="margin-bottom:4px;font-size:12px;">5yr Value: <strong>$' + Math.round(scValue5).toLocaleString() + '</strong></div>';
+                scenHtml += '<div style="margin-bottom:4px;font-size:12px;">5yr Cash Flow: <strong style="color:' + (scCumCF >= 0 ? 'var(--success)' : 'var(--danger)') + ';">' + (scCumCF >= 0 ? '' : '-') + '$' + Math.abs(Math.round(scCumCF)).toLocaleString() + '</strong></div>';
+                scenHtml += '<div style="margin-bottom:4px;font-size:12px;">Yr5 Monthly CF: <strong style="color:' + (scMonthlyCF5 >= 0 ? 'var(--success)' : 'var(--danger)') + ';">' + (scMonthlyCF5 >= 0 ? '' : '-') + '$' + Math.abs(Math.round(scMonthlyCF5)).toLocaleString() + '</strong></div>';
+                scenHtml += '<div style="font-size:12px;">Total 5yr ROI: <strong style="color:' + sc.color + ';">' + scROI.toFixed(1) + '%</strong></div>';
+                scenHtml += '</div>';
+            });
+            document.getElementById('roiScenarios').innerHTML = scenHtml;
         }
 
         // ===== LENDER DIRECTORY =====
