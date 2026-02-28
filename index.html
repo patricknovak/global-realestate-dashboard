@@ -3615,8 +3615,12 @@
                     <span style="background: #f0f0f0; padding: 4px 12px; border-radius: 4px; font-size: 12px; font-weight: 600;">${listing.neighborhood}</span>
                 </div>
                 ${getMarketBanner(listing)}
-                <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">
+                <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap;">
                     ${getMotivationBadge(calculateMotivationScore(listing))}
+                    <button onclick="toggleComparison(${listingIndex});this.textContent=comparisonSet.has(${listingIndex})?'Remove from Compare':'Add to Compare';this.style.background=comparisonSet.has(${listingIndex})?'var(--secondary)':'white';this.style.color=comparisonSet.has(${listingIndex})?'white':'var(--secondary)';updateComparisonBar();" style="padding:4px 10px;border:1px solid var(--secondary);background:${comparisonSet.has(listingIndex) ? 'var(--secondary)' : 'white'};color:${comparisonSet.has(listingIndex) ? 'white' : 'var(--secondary)'};border-radius:4px;cursor:pointer;font-size:11px;font-weight:600;">
+                        ${comparisonSet.has(listingIndex) ? 'Remove from Compare' : 'Add to Compare'}
+                    </button>
+                    <span style="background:#e7f3ff;color:#004085;padding:4px 10px;border-radius:4px;font-size:11px;font-weight:600;">Est. Rent: $${estimateMonthlyRent(listing).toLocaleString()}/mo</span>
                 </div>
                 
                 <div class="property-detail-grid">
@@ -3711,6 +3715,20 @@
                     <span style="margin-left: 8px; opacity: 0.7;">|</span>
                     <a href="#" onclick="event.preventDefault();switchTab('mortgage');document.getElementById('mortPrice').value=${listing.price};calcMortgage();closeDetailModal();" style="color: var(--primary); margin-left: 8px;">Open in Calculator</a>
                 </div>
+
+                ${(function(){
+                    var trend = marketTrends[listing.neighborhood] || {};
+                    if (!trend.yoyChange && trend.yoyChange !== 0) return '';
+                    var h = '<div style="background:#f0f0f0;padding:14px 16px;border-radius:4px;margin:16px 0;">';
+                    h += '<div style="font-weight:700;color:var(--primary);margin-bottom:10px;">Neighborhood Summary: ' + listing.neighborhood + '</div>';
+                    h += '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;font-size:12px;">';
+                    h += '<div><span style="color:#888;">YoY Change</span><br><strong style="color:' + (trend.yoyChange >= 0 ? 'var(--success)' : 'var(--danger)') + ';">' + (trend.yoyChange > 0 ? '+' : '') + trend.yoyChange + '%</strong></div>';
+                    h += '<div><span style="color:#888;">Median DOM</span><br><strong>' + (trend.medianDOM || 'N/A') + ' days</strong></div>';
+                    h += '<div><span style="color:#888;">Inventory</span><br><strong>' + (trend.inventory || 'N/A') + '</strong></div>';
+                    h += '<div><span style="color:#888;">Sale/List</span><br><strong>' + (trend.avgSaleToList ? (trend.avgSaleToList * 100).toFixed(1) + '%' : 'N/A') + '</strong></div>';
+                    h += '</div></div>';
+                    return h;
+                })()}
 
                 ${(function(){
                     var comps = findComparables(listing);
