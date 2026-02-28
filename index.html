@@ -98,6 +98,8 @@
         /* Sidebar */
         .sidebar {
             width: 300px;
+            min-width: 300px;
+            flex-shrink: 0;
             background: white;
             padding: 20px;
             border-radius: 8px;
@@ -209,60 +211,65 @@
         .btn-primary {
             background: var(--secondary);
             color: white;
-            flex: 1;
-            min-width: 100px;
         }
-        
+
         .btn-primary:hover {
             background: #1e5fa3;
             transform: translateY(-2px);
             box-shadow: 0 4px 8px rgba(0,0,0,0.15);
         }
-        
+
         .btn-secondary {
             background: #6c757d;
             color: white;
-            flex: 1;
-            min-width: 100px;
         }
-        
+
         .btn-secondary:hover {
             background: #5a6268;
         }
-        
+
         .btn-success {
             background: var(--success);
             color: white;
-            flex: 1;
-            min-width: 100px;
         }
-        
+
         .btn-success:hover {
             background: #218838;
+        }
+
+        .button-group .btn-primary,
+        .button-group .btn-secondary,
+        .button-group .btn-success {
+            flex: 1;
+            min-width: 100px;
         }
         
         /* Main Content */
         .main-content {
             flex: 1;
+            min-width: 0;
             background: white;
             border-radius: 8px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
             display: flex;
             flex-direction: column;
+            overflow: hidden;
         }
         
         /* Tabs */
         .tabs {
             display: flex;
+            flex-wrap: wrap;
             border-bottom: 2px solid var(--border-gray);
             background: var(--light-gray);
+            gap: 0;
         }
-        
+
         .tab-button {
-            padding: 16px 24px;
+            padding: 10px 16px;
             background: none;
             border: none;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 600;
             color: #666;
             cursor: pointer;
@@ -270,6 +277,7 @@
             transition: all 0.3s ease;
             margin: 0;
             text-transform: none;
+            white-space: nowrap;
         }
         
         .tab-button:hover {
@@ -281,6 +289,13 @@
             color: var(--secondary);
             border-bottom-color: var(--secondary);
             background: white;
+        }
+
+        .tab-group-divider {
+            width: 1px;
+            background: var(--border-gray);
+            margin: 6px 2px;
+            align-self: stretch;
         }
         
         .tab-content {
@@ -1223,7 +1238,7 @@
             .stats-bar { padding: 15px; gap: 10px; }
             .stat-value { font-size: 20px; }
             .tab-button { padding: 12px 14px; font-size: 12px; }
-            .sidebar { width: 260px; }
+            .sidebar { width: 260px; min-width: 260px; }
         }
 
         /* Responsive: Mobile */
@@ -2845,9 +2860,10 @@
             </div>
 
             <!-- Tab: Contact Log -->
+            <div id="contactlog" class="tab-content" style="overflow: auto; padding: 20px;">
                 <h2 style="margin-bottom: 8px; color: var(--primary);">Agent Contact Log</h2>
                 <p style="color: #666; margin-bottom: 16px;">Track all your communications with listing agents. Add notes after viewings, calls, and emails.</p>
-                <button class="btn-primary" onclick="addContactLogEntry()" style="margin-bottom: 16px;">+ Add Contact Entry</button>
+                <button class="btn-primary" onclick="addContactLogEntry()" style="margin-bottom: 16px; align-self: flex-start; padding: 10px 20px;">+ Add Contact Entry</button>
                 <div id="contactLogList"></div>
                 <div id="emptyContactLog" class="empty-state">
                     <div class="empty-state-title">No Contacts Logged</div>
@@ -3717,6 +3733,7 @@
             if (tabName === 'roi') initializeROI();
             if (tabName === 'lenders') initializeLenders();
             if (tabName === 'buyerprofile') loadBuyerProfile();
+            if (tabName === 'contactlog') initializeContactLog();
             if (tabName === 'viewings') initializeViewings();
             if (tabName === 'documents') initializeDocuments();
             if (tabName === 'pricehistory') renderPriceHistory();
@@ -6887,7 +6904,7 @@ Competitive: ${formatPrice(offers.competitive)}`;
                 });
                 html += '</select>';
                 html += '</div>';
-                html += '<button onclick="deleteContactLogEntry(' + entry.id + ')" style="padding:4px 8px;border:1px solid var(--border-gray);border-radius:4px;background:white;cursor:pointer;font-size:11px;color:var(--danger);">Delete</button>';
+                html += '<button onclick="if(confirm(\'Delete this contact log entry?\'))deleteContactLogEntry(' + entry.id + ')" style="padding:6px 12px;border:1px solid var(--danger);border-radius:4px;background:#fff5f5;cursor:pointer;font-size:11px;color:var(--danger);font-weight:600;transition:all 0.2s;" onmouseover="this.style.background=\'var(--danger)\';this.style.color=\'white\'" onmouseout="this.style.background=\'#fff5f5\';this.style.color=\'var(--danger)\'">Delete</button>';
                 html += '</div>';
                 html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">';
                 html += '<input type="text" placeholder="Agent Name" value="' + (entry.agentName || '').replace(/"/g, '&quot;') + '" onchange="updateContactLogEntry(' + entry.id + ',\'agentName\',this.value)" style="padding:6px 10px;border:1px solid var(--border-gray);border-radius:4px;font-size:13px;">';
