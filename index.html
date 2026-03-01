@@ -284,6 +284,9 @@
                         <option value="neighborhooddata">Area Intel</option>
                         <option value="datafreshness">Data Health</option>
                     </optgroup>
+                    <optgroup label="Research">
+                        <option value="bcassessment">BC Assessment</option>
+                    </optgroup>
                     <optgroup label="Resources">
                         <option value="norealtorguide">No-Realtor Guide</option>
                         <option value="help">Help &amp; Settings</option>
@@ -317,6 +320,7 @@
                 <span class="tab-group-divider"></span>
                 <button class="tab-button" onclick="switchTab('norealtorguide')">No-Realtor Guide</button>
                 <button class="tab-button" onclick="switchTab('privateoffers')">Private Offers</button>
+                <button class="tab-button" onclick="switchTab('bcassessment')">BC Assessment</button>
                 <button class="tab-button" onclick="switchTab('help')">Help</button>
             </nav>
             
@@ -1824,6 +1828,45 @@
                 </div>
             </div>
 
+            <!-- Tab: BC Assessment Enrichment -->
+            <div id="bcassessment" class="tab-content">
+                <h2 style="margin-bottom: 8px; color: var(--primary);">BC Assessment Enrichment</h2>
+                <p style="color: #666; margin-bottom: 16px;">View, enter, and analyze BC Assessment data alongside your listings. Copy addresses to look up on bcassessment.ca, then enter assessed values to identify properties priced below assessed value.</p>
+
+                <div id="bcaProgressBar" style="margin-bottom: 16px;"></div>
+
+                <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;align-items:center;">
+                    <select id="bcaRegionFilter" onchange="renderBcaWorklist()" style="padding:6px 10px;border:1px solid var(--border-gray);border-radius:4px;font-size:12px;">
+                        <option value="all">All Regions</option>
+                        <option value="SSWR">SSWR</option>
+                        <option value="Vancouver Island">Vancouver Island</option>
+                    </select>
+                    <select id="bcaStatusFilter" onchange="renderBcaWorklist()" style="padding:6px 10px;border:1px solid var(--border-gray);border-radius:4px;font-size:12px;">
+                        <option value="all">All Status</option>
+                        <option value="enriched">Enriched</option>
+                        <option value="pending">Not Enriched</option>
+                    </select>
+                    <select id="bcaNeighborhoodFilter" onchange="renderBcaWorklist()" style="padding:6px 10px;border:1px solid var(--border-gray);border-radius:4px;font-size:12px;">
+                        <option value="all">All Neighborhoods</option>
+                    </select>
+                    <select id="bcaSortOrder" onchange="renderBcaWorklist()" style="padding:6px 10px;border:1px solid var(--border-gray);border-radius:4px;font-size:12px;">
+                        <option value="neighborhood">Neighborhood (A-Z)</option>
+                        <option value="price-desc">Price High-Low</option>
+                        <option value="price-asc">Price Low-High</option>
+                        <option value="ratio-asc">Best Ratio</option>
+                        <option value="ratio-desc">Worst Ratio</option>
+                    </select>
+                    <button onclick="exportBcaCsv()" style="padding:6px 12px;border:1px solid var(--secondary);color:var(--secondary);border-radius:4px;background:white;cursor:pointer;font-size:12px;font-weight:600;">Export CSV</button>
+                    <label style="padding:6px 12px;border:1px solid var(--success);color:var(--success);border-radius:4px;background:white;cursor:pointer;font-size:12px;font-weight:600;">
+                        Import CSV
+                        <input type="file" accept=".csv" onchange="importBcaCsv(event)" style="display:none;">
+                    </label>
+                </div>
+
+                <div id="bcaQuickStats" style="margin-bottom:16px;"></div>
+                <div id="bcaWorklist"></div>
+            </div>
+
             <!-- Tab 8: Help -->
             <div id="help" class="tab-content">
                 <h2 style="margin-bottom: 8px; color: var(--primary);">Help &amp; Getting Started</h2>
@@ -2394,9 +2437,19 @@
                 score += agePts * w.age;
             }
 
+            // BC Assessment ratio bonus/penalty
+            var _bcaScore = getAssessment(listing.listingIndex);
+            if (_bcaScore && _bcaScore.assessedTotal) {
+                var _ratio = listing.price / _bcaScore.assessedTotal;
+                if (_ratio < 0.90) score += 3;
+                else if (_ratio < 0.95) score += 2;
+                else if (_ratio < 1.00) score += 1;
+                else if (_ratio > 1.15) score -= 1;
+            }
+
             return Math.min(100, Math.max(0, Math.round(score)));
         }
-        
+
         function getNeighborhoodAvgPpsf(neighborhood, type) {
             const nbrListings = rawListings.filter(l => l.neighborhood === neighborhood && l.type === type && l.sqft > 0);
             if (nbrListings.length === 0) return 0;
@@ -2650,6 +2703,7 @@
                 if (tabName === 'pricehistory') renderPriceHistory();
                 if (tabName === 'neighborhooddata') renderAreaIntel();
                 if (tabName === 'datafreshness') initializeDataFreshness();
+                if (tabName === 'bcassessment') renderBcaWorklist();
             }
         }
 
@@ -2686,6 +2740,7 @@
             if (tabName === 'neighborhooddata') renderAreaIntel();
             if (tabName === 'datafreshness') initializeDataFreshness();
             if (tabName === 'privateoffers') renderPrivateTargets();
+            if (tabName === 'bcassessment') renderBcaWorklist();
             if (tabName === 'norealtorguide' || tabName === 'help') { /* static tabs */ }
         }
         
@@ -2747,7 +2802,7 @@
                 html += `
                     <tr onclick="showDetailModal(${listing.listingIndex})">
                         <td><span class="star-toggle ${starClass}" onclick="event.stopPropagation(); toggleShortlist(${listing.listingIndex})" role="button" aria-label="${isShortlisted ? 'Remove from shortlist' : 'Add to shortlist'}" tabindex="0">★</span></td>
-                        <td><span class="water-view-icon">${listing.waterView ? '🌊' : ''}</span>${listing.addr}${getListingBadge(listing)}${getListingTagBadges(listing.listingIndex)}</td>
+                        <td><span class="water-view-icon">${listing.waterView ? '🌊' : ''}</span>${listing.addr}${getListingBadge(listing)}${(function(){var _a=getAssessment(listing.listingIndex);return _a&&_a.assessedTotal?getRatioBadgeHtml(askingToAssessedRatio(listing.price,_a.assessedTotal)):''})()}${getListingTagBadges(listing.listingIndex)}</td>
                         <td>${listing.neighborhood}</td>
                         <td>${listing.type}</td>
                         <td>${formatPrice(listing.price)}</td>
@@ -3069,7 +3124,10 @@
                 html += '</div>';
                 html += '<div class="property-card-body">';
                 html += '<div class="property-card-price">' + formatPrice(listing.price) + '</div>';
-                html += '<div class="property-card-addr">' + listing.addr + getListingBadge(listing) + '</div>';
+                html += '<div class="property-card-addr">' + listing.addr + getListingBadge(listing);
+                var _bcaCard = getAssessment(listing.listingIndex);
+                if (_bcaCard && _bcaCard.assessedTotal) { html += getRatioBadgeHtml(askingToAssessedRatio(listing.price, _bcaCard.assessedTotal)); }
+                html += '</div>';
                 var tagBadges = getListingTagBadges(listing.listingIndex);
                 if (tagBadges) html += '<div style="padding:0 12px 4px;line-height:1.6;">' + tagBadges + '</div>';
                 html += '<div class="property-card-nbr">' + listing.neighborhood + ' &middot; ' + listing.region + '</div>';
@@ -4067,6 +4125,25 @@
                 </div>
 
                 ${(function() {
+                    var bcaData = getAssessment(listingIndex);
+                    if (!bcaData || !bcaData.assessedTotal) return '';
+                    var ratio = askingToAssessedRatio(listing.price, bcaData.assessedTotal);
+                    var ratioColor = ratio < 0.95 ? '#198754' : ratio <= 1.10 ? '#fd7e14' : '#dc3545';
+                    var h = '<div style="background:#f3e8ff;border:1px solid #d4b5ff;border-left:4px solid #6f42c1;border-radius:4px;padding:14px 16px;margin:0 0 16px 0;">';
+                    h += '<div style="font-weight:700;color:#6f42c1;margin-bottom:10px;font-size:13px;">BC Assessment Data</div>';
+                    h += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;font-size:12px;">';
+                    h += '<div><span style="color:#888;">Assessed Total:</span><br><strong>' + formatPrice(bcaData.assessedTotal) + '</strong></div>';
+                    h += '<div><span style="color:#888;">Asking/Assessed:</span><br><strong style="color:' + ratioColor + ';">' + ratio.toFixed(2) + '</strong> ' + formatRatioText(ratio) + '</div>';
+                    if (bcaData.assessedLand) h += '<div><span style="color:#888;">Land Value:</span><br><strong>' + formatPrice(bcaData.assessedLand) + '</strong></div>';
+                    if (bcaData.assessedImprovement) h += '<div><span style="color:#888;">Improvement:</span><br><strong>' + formatPrice(bcaData.assessedImprovement) + '</strong></div>';
+                    if (bcaData.pid) h += '<div><span style="color:#888;">PID:</span><br><strong>' + formatPID(bcaData.pid) + '</strong></div>';
+                    if (bcaData.rollNumber) h += '<div><span style="color:#888;">Roll #:</span><br><strong>' + bcaData.rollNumber + '</strong></div>';
+                    if (bcaData.assessmentYear) h += '<div><span style="color:#888;">Assessment Year:</span><br><strong>' + bcaData.assessmentYear + '</strong></div>';
+                    h += '</div></div>';
+                    return h;
+                })()}
+
+                ${(function() {
                     var nbr = listing.neighborhood;
                     var trend = marketTrends[nbr];
                     if (!trend) return '';
@@ -4536,6 +4613,20 @@ Competitive: ${formatPrice(offers.competitive)}`;
             var wv = listing.waterView ? 5 : 0;
             var score = ((domPts * w.dom + benchPts * w.bench + ppsfPts * w.ppsf + lotPts * w.lot + agePts * w.age) / totalWeight) * 8 + tb + wv;
 
+            // BC Assessment ratio bonus
+            var assessPts = 0;
+            var assessLabel = 'No assessment data';
+            var _bcaDetailed = getAssessment(listing.listingIndex);
+            if (_bcaDetailed && _bcaDetailed.assessedTotal) {
+                var _ratioD = listing.price / _bcaDetailed.assessedTotal;
+                if (_ratioD < 0.90) { assessPts = 3; assessLabel = 'Ratio ' + _ratioD.toFixed(2) + ' (strong deal)'; }
+                else if (_ratioD < 0.95) { assessPts = 2; assessLabel = 'Ratio ' + _ratioD.toFixed(2) + ' (below assessed)'; }
+                else if (_ratioD < 1.00) { assessPts = 1; assessLabel = 'Ratio ' + _ratioD.toFixed(2) + ' (near assessed)'; }
+                else if (_ratioD > 1.15) { assessPts = -1; assessLabel = 'Ratio ' + _ratioD.toFixed(2) + ' (above assessed)'; }
+                else { assessPts = 0; assessLabel = 'Ratio ' + _ratioD.toFixed(2); }
+            }
+            score += assessPts;
+
             return {
                 total: Math.min(100, Math.max(0, Math.round(score))),
                 breakdown: {
@@ -4545,14 +4636,15 @@ Competitive: ${formatPrice(offers.competitive)}`;
                     lot: { points: lotPts, weight: w.lot, weighted: Math.round(lotPts * w.lot / totalWeight * 8), label: listing.lot || 'N/A', color: '#f39c12' },
                     age: { points: agePts, weight: w.age, weighted: Math.round(agePts * w.age / totalWeight * 8), label: listing.yearBuilt ? (2026 - listing.yearBuilt) + ' years old' : 'Unknown', color: '#9b59b6' },
                     trend: { points: tb, label: listing.neighborhood + ' trend', color: '#1abc9c' },
-                    waterView: { points: wv, label: listing.waterView ? 'Water view' : 'No water view', color: '#34495e' }
+                    waterView: { points: wv, label: listing.waterView ? 'Water view' : 'No water view', color: '#34495e' },
+                    assessment: { points: assessPts, label: assessLabel, color: '#6f42c1' }
                 }
             };
         }
 
         function renderScoreBreakdown(listing) {
             var detail = calculateScoreDetailed(listing);
-            var parts = ['dom', 'benchmark', 'ppsf', 'lot', 'age', 'trend', 'waterView'];
+            var parts = ['dom', 'benchmark', 'ppsf', 'lot', 'age', 'trend', 'waterView', 'assessment'];
             var total = detail.total || 1;
             var html = '<div class="score-breakdown">';
             html += '<div class="score-breakdown-title">Deal Score Breakdown: ' + detail.total + '/100</div>';
@@ -8514,6 +8606,512 @@ Competitive: ${formatPrice(offers.competitive)}`;
         };
 
         // ===================================================================
+        // BC ASSESSMENT ENRICHMENT TOOL
+        // ===================================================================
+
+        // Storage
+        function loadBcAssessmentData() {
+            return JSON.parse(localStorage.getItem('bcAssessmentData') || '{}');
+        }
+        function saveBcAssessmentData(data) {
+            localStorage.setItem('bcAssessmentData', JSON.stringify(data));
+        }
+        function getAssessment(idx) {
+            return loadBcAssessmentData()[String(idx)] || null;
+        }
+        function saveAssessment(idx, entry) {
+            var data = loadBcAssessmentData();
+            data[String(idx)] = entry;
+            saveBcAssessmentData(data);
+        }
+
+        // Analysis
+        function askingToAssessedRatio(price, assessed) {
+            if (!assessed || assessed <= 0) return null;
+            return price / assessed;
+        }
+        function formatRatioText(ratio) {
+            if (ratio === null) return '';
+            var pct = Math.abs(Math.round((ratio - 1) * 100));
+            if (ratio < 0.95) return '<span style="color:#198754;font-weight:600;">' + pct + '% below assessed</span>';
+            if (ratio <= 1.10) return '<span style="color:#fd7e14;font-weight:600;">&asymp; assessed</span>';
+            return '<span style="color:#dc3545;font-weight:600;">' + pct + '% above assessed</span>';
+        }
+        function getRatioBadgeHtml(ratio) {
+            if (ratio === null) return '';
+            var pct = Math.abs(Math.round((ratio - 1) * 100));
+            if (ratio < 0.95) return '<span style="display:inline-block;background:#d4edda;color:#155724;padding:1px 6px;border-radius:8px;font-size:10px;font-weight:600;margin-left:4px;">' + pct + '% below assessed</span>';
+            if (ratio <= 1.10) return '<span style="display:inline-block;background:#fff3cd;color:#856404;padding:1px 6px;border-radius:8px;font-size:10px;font-weight:600;margin-left:4px;">&asymp; assessed</span>';
+            return '<span style="display:inline-block;background:#f8d7da;color:#721c24;padding:1px 6px;border-radius:8px;font-size:10px;font-weight:600;margin-left:4px;">' + pct + '% above assessed</span>';
+        }
+
+        // Neighborhood → City mapping for BC Assessment search
+        var bcaCityMap = {
+            'White Rock': 'White Rock',
+            'Crescent Beach': 'Surrey',
+            'Ocean Park': 'Surrey',
+            'Sunnyside Park': 'Surrey',
+            'Grandview Heights': 'Surrey',
+            'King George Corridor': 'Surrey',
+            'Morgan Creek': 'Surrey',
+            'Pacific Douglas': 'Surrey',
+            'Elgin Chantrell': 'Surrey',
+            'Hazelmere': 'Surrey',
+            'Campbell River': 'Campbell River',
+            'Comox': 'Comox',
+            'Courtenay': 'Courtenay',
+            'Cumberland': 'Cumberland',
+            'Parksville': 'Parksville',
+            'Qualicum Beach': 'Qualicum Beach',
+            'Nanoose Bay': 'Nanoose Bay',
+            'Lantzville': 'Lantzville',
+            'Nanaimo': 'Nanaimo'
+        };
+
+        function buildBcaSearchString(listing) {
+            var addr = listing.addr || '';
+            // Strip unit prefix: "PH2-1501 Foster St" → "1501 Foster St"
+            addr = addr.replace(/^[A-Za-z]*\d+[-–]\s*/, '');
+            // Also strip leading # unit: "#302-1234 Main St" → "1234 Main St"
+            addr = addr.replace(/^#?\d+[-–]\s*/, '');
+            var city = bcaCityMap[listing.neighborhood] || listing.neighborhood || '';
+            return addr + ', ' + city;
+        }
+
+        function formatPID(pid) {
+            if (!pid) return '';
+            var digits = pid.replace(/\D/g, '');
+            if (digits.length === 9) return digits.substr(0,3) + '-' + digits.substr(3,3) + '-' + digits.substr(6,3);
+            return pid;
+        }
+
+        // Main render function
+        function renderBcaWorklist() {
+            var data = loadBcAssessmentData();
+            var regionFilter = (document.getElementById('bcaRegionFilter') || {}).value || 'all';
+            var statusFilter = (document.getElementById('bcaStatusFilter') || {}).value || 'all';
+            var nbrFilter = (document.getElementById('bcaNeighborhoodFilter') || {}).value || 'all';
+            var sortOrder = (document.getElementById('bcaSortOrder') || {}).value || 'neighborhood';
+
+            // Build filtered list
+            var items = [];
+            rawListings.forEach(function(listing, idx) {
+                var hasData = !!data[String(idx)];
+                // Region filter
+                if (regionFilter !== 'all') {
+                    var regionMatch = (regionFilter === 'SSWR' && listing.region && listing.region.indexOf('South Surrey') >= 0) ||
+                                     (regionFilter === 'SSWR' && listing.region && listing.region.indexOf('White Rock') >= 0) ||
+                                     (regionFilter === 'Vancouver Island' && listing.region && listing.region.indexOf('Vancouver Island') >= 0);
+                    if (!regionMatch) return;
+                }
+                // Status filter
+                if (statusFilter === 'enriched' && !hasData) return;
+                if (statusFilter === 'pending' && hasData) return;
+                // Neighborhood filter
+                if (nbrFilter !== 'all' && listing.neighborhood !== nbrFilter) return;
+
+                var ratio = hasData && data[String(idx)].assessedTotal ? askingToAssessedRatio(listing.price, data[String(idx)].assessedTotal) : null;
+                items.push({ listing: listing, idx: idx, hasData: hasData, assessment: data[String(idx)] || null, ratio: ratio });
+            });
+
+            // Populate neighborhood filter dropdown
+            var nbrSelect = document.getElementById('bcaNeighborhoodFilter');
+            if (nbrSelect) {
+                var nbrs = {};
+                rawListings.forEach(function(l) { nbrs[l.neighborhood] = true; });
+                var nbrList = Object.keys(nbrs).sort();
+                var currentVal = nbrSelect.value;
+                nbrSelect.innerHTML = '<option value="all">All Neighborhoods</option>';
+                nbrList.forEach(function(n) {
+                    nbrSelect.innerHTML += '<option value="' + n + '"' + (n === currentVal ? ' selected' : '') + '>' + n + '</option>';
+                });
+            }
+
+            // Sort
+            if (sortOrder === 'price-desc') items.sort(function(a,b) { return b.listing.price - a.listing.price; });
+            else if (sortOrder === 'price-asc') items.sort(function(a,b) { return a.listing.price - b.listing.price; });
+            else if (sortOrder === 'ratio-asc') items.sort(function(a,b) { return (a.ratio || 999) - (b.ratio || 999); });
+            else if (sortOrder === 'ratio-desc') items.sort(function(a,b) { return (b.ratio || 0) - (a.ratio || 0); });
+            else items.sort(function(a,b) { return a.listing.neighborhood.localeCompare(b.listing.neighborhood) || a.listing.addr.localeCompare(b.listing.addr); });
+
+            // Progress bar
+            var totalCount = rawListings.length;
+            var enrichedCount = Object.keys(data).length;
+            var sswr = 0, sswrEnriched = 0, vi = 0, viEnriched = 0;
+            rawListings.forEach(function(l, idx) {
+                var isSSWR = l.region && (l.region.indexOf('South Surrey') >= 0 || l.region.indexOf('White Rock') >= 0);
+                if (isSSWR) { sswr++; if (data[String(idx)]) sswrEnriched++; }
+                else { vi++; if (data[String(idx)]) viEnriched++; }
+            });
+            var pct = totalCount > 0 ? Math.round(enrichedCount / totalCount * 100) : 0;
+            var progressEl = document.getElementById('bcaProgressBar');
+            if (progressEl) {
+                progressEl.innerHTML = '<div style="font-weight:600;color:var(--primary);margin-bottom:6px;">Progress: ' + enrichedCount + '/' + totalCount + ' (' + pct + '%)</div>' +
+                    '<div style="background:#e9ecef;border-radius:6px;height:12px;overflow:hidden;margin-bottom:6px;">' +
+                    '<div style="background:var(--secondary);height:100%;width:' + pct + '%;border-radius:6px;transition:width 0.3s;"></div></div>' +
+                    '<div style="font-size:11px;color:#888;">SSWR: ' + sswrEnriched + '/' + sswr + '  &middot;  VI: ' + viEnriched + '/' + vi + '</div>';
+            }
+
+            // Quick stats
+            renderBcaQuickStats(data);
+
+            // Render cards
+            var html = '';
+            var lastNeighborhood = '';
+            items.forEach(function(item) {
+                // Group header for neighborhood sort
+                if (sortOrder === 'neighborhood' && item.listing.neighborhood !== lastNeighborhood) {
+                    var nbrCount = items.filter(function(i) { return i.listing.neighborhood === item.listing.neighborhood; }).length;
+                    html += '<div style="font-weight:700;color:var(--primary);font-size:14px;margin:20px 0 8px;padding-bottom:4px;border-bottom:2px solid var(--secondary);">' + item.listing.neighborhood + ' (' + nbrCount + ' properties)</div>';
+                    lastNeighborhood = item.listing.neighborhood;
+                }
+
+                if (item.hasData) {
+                    html += renderBcaEnrichedCard(item);
+                } else {
+                    html += renderBcaEmptyCard(item);
+                }
+            });
+
+            if (items.length === 0) {
+                html = '<div style="text-align:center;padding:40px;color:#999;">No properties match the selected filters.</div>';
+            }
+
+            var worklist = document.getElementById('bcaWorklist');
+            if (worklist) worklist.innerHTML = html;
+        }
+
+        function renderBcaEmptyCard(item) {
+            var l = item.listing;
+            var idx = item.idx;
+            var html = '<div style="background:white;border:1px solid #e0e0e0;border-radius:8px;padding:14px 16px;margin-bottom:8px;" id="bcaCard_' + idx + '">';
+            html += '<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;margin-bottom:10px;">';
+            html += '<div><div style="font-weight:700;color:var(--primary);font-size:13px;">' + l.addr + '</div>';
+            html += '<div style="font-size:11px;color:#888;">' + l.neighborhood + ' &middot; DOM: ' + l.dom + '</div></div>';
+            html += '<div style="display:flex;align-items:center;gap:8px;">';
+            html += '<span style="font-weight:700;color:var(--primary);">' + l.type + ' ' + formatPrice(l.price) + '</span>';
+            html += '<button onclick="copyBcaAddress(' + idx + ', this)" style="padding:3px 8px;border:1px solid var(--secondary);color:var(--secondary);border-radius:4px;background:white;cursor:pointer;font-size:11px;" title="Copy address for BC Assessment lookup">Copy</button>';
+            html += '<a href="https://www.bcassessment.ca/Property/AssessmentSearch" target="_blank" style="padding:3px 8px;border:1px solid #6f42c1;color:#6f42c1;border-radius:4px;background:white;text-decoration:none;font-size:11px;cursor:pointer;" title="Open BC Assessment search">Lookup</a>';
+            html += '</div></div>';
+            // Inline entry form
+            html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px;">';
+            html += '<div><label style="font-size:10px;color:#888;display:block;">Total Assessed *</label><input type="number" id="bcaTotal_' + idx + '" placeholder="e.g. 1450000" style="width:100%;padding:4px 6px;border:1px solid #ccc;border-radius:4px;font-size:12px;box-sizing:border-box;" onkeydown="if(event.ctrlKey&&event.key===\'Enter\')saveBcaEntry(' + idx + ')"></div>';
+            html += '<div><label style="font-size:10px;color:#888;display:block;">Land Value</label><input type="number" id="bcaLand_' + idx + '" style="width:100%;padding:4px 6px;border:1px solid #ccc;border-radius:4px;font-size:12px;box-sizing:border-box;" onkeydown="if(event.ctrlKey&&event.key===\'Enter\')saveBcaEntry(' + idx + ')"></div>';
+            html += '<div><label style="font-size:10px;color:#888;display:block;">Improvement</label><input type="number" id="bcaImprov_' + idx + '" style="width:100%;padding:4px 6px;border:1px solid #ccc;border-radius:4px;font-size:12px;box-sizing:border-box;" onkeydown="if(event.ctrlKey&&event.key===\'Enter\')saveBcaEntry(' + idx + ')"></div>';
+            html += '</div>';
+            html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px;">';
+            html += '<div><label style="font-size:10px;color:#888;display:block;">PID</label><input type="text" id="bcaPid_' + idx + '" placeholder="012-345-678" style="width:100%;padding:4px 6px;border:1px solid #ccc;border-radius:4px;font-size:12px;box-sizing:border-box;" onkeydown="if(event.ctrlKey&&event.key===\'Enter\')saveBcaEntry(' + idx + ')"></div>';
+            html += '<div><label style="font-size:10px;color:#888;display:block;">Roll Number</label><input type="text" id="bcaRoll_' + idx + '" style="width:100%;padding:4px 6px;border:1px solid #ccc;border-radius:4px;font-size:12px;box-sizing:border-box;" onkeydown="if(event.ctrlKey&&event.key===\'Enter\')saveBcaEntry(' + idx + ')"></div>';
+            html += '<div><label style="font-size:10px;color:#888;display:block;">Jurisdiction</label><select id="bcaJuris_' + idx + '" style="width:100%;padding:4px 6px;border:1px solid #ccc;border-radius:4px;font-size:12px;box-sizing:border-box;">';
+            html += '<option value="">--</option><option value="219">219 (Surrey)</option><option value="228">228 (White Rock)</option><option value="other">Other</option>';
+            html += '</select></div>';
+            html += '</div>';
+            html += '<div style="text-align:right;"><button onclick="saveBcaEntry(' + idx + ')" style="padding:4px 14px;background:var(--secondary);color:white;border:none;border-radius:4px;cursor:pointer;font-size:12px;font-weight:600;">Save</button></div>';
+            html += '</div>';
+            return html;
+        }
+
+        function renderBcaEnrichedCard(item) {
+            var l = item.listing;
+            var idx = item.idx;
+            var a = item.assessment;
+            var ratio = item.ratio;
+            var ratioText = formatRatioText(ratio);
+            var borderColor = ratio !== null ? (ratio < 0.95 ? '#198754' : ratio <= 1.10 ? '#fd7e14' : '#dc3545') : '#198754';
+
+            var html = '<div style="background:white;border:1px solid ' + borderColor + ';border-left:4px solid ' + borderColor + ';border-radius:8px;padding:14px 16px;margin-bottom:8px;" id="bcaCard_' + idx + '">';
+            html += '<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;margin-bottom:8px;">';
+            html += '<div><div style="font-weight:700;color:var(--primary);font-size:13px;">' + l.addr + ' <span style="background:' + borderColor + '22;color:' + borderColor + ';padding:1px 6px;border-radius:8px;font-size:10px;font-weight:600;margin-left:4px;">Enriched</span></div>';
+            html += '<div style="font-size:11px;color:#888;">' + l.neighborhood + ' &middot; DOM: ' + l.dom + '</div></div>';
+            html += '<span style="font-weight:700;color:var(--primary);">' + l.type + ' ' + formatPrice(l.price) + '</span>';
+            html += '</div>';
+            html += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;font-size:12px;">';
+            html += '<div><span style="color:#888;">Assessed:</span> <strong>' + formatPrice(a.assessedTotal || 0) + '</strong></div>';
+            if (ratio !== null) html += '<div><span style="color:#888;">Ratio:</span> ' + ratio.toFixed(2) + ' ' + ratioText + '</div>';
+            if (a.assessedLand) html += '<div><span style="color:#888;">Land:</span> ' + formatPrice(a.assessedLand) + '</div>';
+            if (a.assessedImprovement) html += '<div><span style="color:#888;">Improvement:</span> ' + formatPrice(a.assessedImprovement) + '</div>';
+            if (a.pid) html += '<div><span style="color:#888;">PID:</span> ' + formatPID(a.pid) + '</div>';
+            if (a.rollNumber) html += '<div><span style="color:#888;">Roll:</span> ' + a.rollNumber + '</div>';
+            if (a.assessmentYear) html += '<div><span style="color:#888;">Year:</span> ' + a.assessmentYear + '</div>';
+            html += '</div>';
+            html += '<div style="display:flex;gap:8px;margin-top:8px;">';
+            html += '<button onclick="editBcaEntry(' + idx + ')" style="padding:3px 10px;border:1px solid #ccc;border-radius:4px;background:white;cursor:pointer;font-size:11px;">Edit</button>';
+            html += '<button onclick="clearBcaEntry(' + idx + ')" style="padding:3px 10px;border:1px solid #dc3545;color:#dc3545;border-radius:4px;background:white;cursor:pointer;font-size:11px;">Clear</button>';
+            html += '</div></div>';
+            return html;
+        }
+
+        function renderBcaQuickStats(data) {
+            var el = document.getElementById('bcaQuickStats');
+            if (!el) return;
+            var entries = Object.keys(data);
+            if (entries.length < 3) { el.innerHTML = ''; return; }
+
+            var ratios = [];
+            var below = 0, near = 0, above = 0;
+            var bestDeal = null, bestRatio = Infinity;
+            var worstDeal = null, worstRatio = 0;
+
+            entries.forEach(function(idxStr) {
+                var a = data[idxStr];
+                if (!a || !a.assessedTotal) return;
+                var listing = rawListings[parseInt(idxStr)];
+                if (!listing) return;
+                var r = listing.price / a.assessedTotal;
+                ratios.push(r);
+                if (r < 0.95) below++;
+                else if (r <= 1.10) near++;
+                else above++;
+                if (r < bestRatio) { bestRatio = r; bestDeal = listing.addr + ' (' + r.toFixed(2) + ')'; }
+                if (r > worstRatio) { worstRatio = r; worstDeal = listing.addr + ' (' + r.toFixed(2) + ')'; }
+            });
+
+            if (ratios.length < 3) { el.innerHTML = ''; return; }
+            var avgRatio = ratios.reduce(function(a,b) { return a+b; }, 0) / ratios.length;
+
+            var html = '<div style="background:#f0f7ff;border:1px solid #b8daff;border-radius:8px;padding:14px 16px;">';
+            html += '<div style="font-weight:700;color:var(--primary);margin-bottom:8px;">Quick Stats (' + ratios.length + ' enriched with assessed values)</div>';
+            html += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;font-size:12px;">';
+            html += '<div style="text-align:center;"><div style="font-size:20px;font-weight:700;color:var(--primary);">' + avgRatio.toFixed(2) + '</div><div style="color:#888;font-size:10px;">Avg Ratio</div></div>';
+            html += '<div style="text-align:center;"><div style="font-size:20px;font-weight:700;color:#198754;">' + below + '</div><div style="color:#888;font-size:10px;">Below Assessed</div></div>';
+            html += '<div style="text-align:center;"><div style="font-size:20px;font-weight:700;color:#fd7e14;">' + near + '</div><div style="color:#888;font-size:10px;">Near Assessed</div></div>';
+            html += '<div style="text-align:center;"><div style="font-size:20px;font-weight:700;color:#dc3545;">' + above + '</div><div style="color:#888;font-size:10px;">Above Assessed</div></div>';
+            html += '</div>';
+            if (bestDeal) html += '<div style="font-size:11px;color:#198754;margin-top:8px;">Best Deal: ' + bestDeal + '</div>';
+            if (worstDeal) html += '<div style="font-size:11px;color:#dc3545;">Worst: ' + worstDeal + '</div>';
+            html += '</div>';
+            el.innerHTML = html;
+        }
+
+        function copyBcaAddress(idx, btn) {
+            var listing = rawListings[idx];
+            if (!listing) return;
+            var text = buildBcaSearchString(listing);
+            navigator.clipboard.writeText(text).then(function() {
+                var orig = btn.textContent;
+                btn.textContent = 'Copied!';
+                btn.style.background = '#d4edda';
+                btn.style.color = '#155724';
+                btn.style.borderColor = '#155724';
+                setTimeout(function() {
+                    btn.textContent = orig;
+                    btn.style.background = 'white';
+                    btn.style.color = 'var(--secondary)';
+                    btn.style.borderColor = 'var(--secondary)';
+                }, 1500);
+            });
+        }
+
+        function saveBcaEntry(idx) {
+            var totalEl = document.getElementById('bcaTotal_' + idx);
+            var total = totalEl ? parseFloat(totalEl.value) : 0;
+            if (!total || total <= 0) { alert('Total Assessed value is required.'); return; }
+
+            var entry = {
+                assessedTotal: total,
+                assessedLand: parseFloat((document.getElementById('bcaLand_' + idx) || {}).value) || null,
+                assessedImprovement: parseFloat((document.getElementById('bcaImprov_' + idx) || {}).value) || null,
+                pid: ((document.getElementById('bcaPid_' + idx) || {}).value || '').trim() || null,
+                rollNumber: ((document.getElementById('bcaRoll_' + idx) || {}).value || '').trim() || null,
+                jurisdiction: ((document.getElementById('bcaJuris_' + idx) || {}).value || '').trim() || null,
+                propertyClass: '01',
+                assessmentYear: 2026,
+                enrichedDate: new Date().toISOString().split('T')[0],
+                notes: ''
+            };
+            saveAssessment(idx, entry);
+            renderBcaWorklist();
+        }
+
+        function editBcaEntry(idx) {
+            var a = getAssessment(idx);
+            if (!a) return;
+            var listing = rawListings[idx];
+            var html = '<div style="max-height:80vh;overflow:auto;">';
+            html += '<h3 style="color:var(--primary);margin-bottom:4px;">Edit Assessment: ' + listing.addr + '</h3>';
+            html += '<div style="color:#888;font-size:12px;margin-bottom:16px;">' + listing.neighborhood + ' &middot; ' + listing.type + ' &middot; ' + formatPrice(listing.price) + '</div>';
+            html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">';
+            html += '<div class="offer-input-group"><label>Total Assessed *</label><input type="number" id="bcaEditTotal" value="' + (a.assessedTotal||'') + '"></div>';
+            html += '<div class="offer-input-group"><label>Land Value</label><input type="number" id="bcaEditLand" value="' + (a.assessedLand||'') + '"></div>';
+            html += '<div class="offer-input-group"><label>Improvement Value</label><input type="number" id="bcaEditImprov" value="' + (a.assessedImprovement||'') + '"></div>';
+            html += '<div class="offer-input-group"><label>PID</label><input type="text" id="bcaEditPid" value="' + (a.pid||'') + '"></div>';
+            html += '<div class="offer-input-group"><label>Roll Number</label><input type="text" id="bcaEditRoll" value="' + (a.rollNumber||'') + '"></div>';
+            html += '<div class="offer-input-group"><label>Jurisdiction</label><select id="bcaEditJuris"><option value="">--</option><option value="219"' + (a.jurisdiction==='219'?' selected':'') + '>219 (Surrey)</option><option value="228"' + (a.jurisdiction==='228'?' selected':'') + '>228 (White Rock)</option><option value="other"' + (a.jurisdiction==='other'?' selected':'') + '>Other</option></select></div>';
+            html += '<div class="offer-input-group"><label>Assessment Year</label><input type="number" id="bcaEditYear" value="' + (a.assessmentYear||2026) + '"></div>';
+            html += '</div>';
+            html += '<div class="offer-input-group" style="margin-top:12px;"><label>Notes</label><textarea id="bcaEditNotes" rows="2" style="width:100%;padding:8px;border:1px solid #ccc;border-radius:4px;font-size:13px;">' + (a.notes||'') + '</textarea></div>';
+            html += '<div style="display:flex;gap:12px;margin-top:16px;">';
+            html += '<button class="btn-primary" onclick="saveBcaEditEntry(' + idx + ')" style="padding:10px 24px;">Save</button>';
+            html += '<button onclick="document.getElementById(\'genericModal\').classList.remove(\'active\')" style="padding:10px 24px;border:1px solid #ccc;border-radius:6px;background:white;cursor:pointer;">Cancel</button>';
+            html += '</div></div>';
+            showGenericModal(html);
+        }
+
+        function saveBcaEditEntry(idx) {
+            var total = parseFloat(document.getElementById('bcaEditTotal').value);
+            if (!total || total <= 0) { alert('Total Assessed value is required.'); return; }
+            var entry = {
+                assessedTotal: total,
+                assessedLand: parseFloat(document.getElementById('bcaEditLand').value) || null,
+                assessedImprovement: parseFloat(document.getElementById('bcaEditImprov').value) || null,
+                pid: (document.getElementById('bcaEditPid').value || '').trim() || null,
+                rollNumber: (document.getElementById('bcaEditRoll').value || '').trim() || null,
+                jurisdiction: document.getElementById('bcaEditJuris').value || null,
+                propertyClass: '01',
+                assessmentYear: parseInt(document.getElementById('bcaEditYear').value) || 2026,
+                enrichedDate: new Date().toISOString().split('T')[0],
+                notes: (document.getElementById('bcaEditNotes').value || '').trim()
+            };
+            saveAssessment(idx, entry);
+            document.getElementById('genericModal').classList.remove('active');
+            renderBcaWorklist();
+        }
+
+        function clearBcaEntry(idx) {
+            if (!confirm('Clear assessment data for this property?')) return;
+            var data = loadBcAssessmentData();
+            delete data[String(idx)];
+            saveBcAssessmentData(data);
+            renderBcaWorklist();
+        }
+
+        // CSV Export
+        function exportBcaCsv() {
+            var data = loadBcAssessmentData();
+            var rows = [['Index','Address','Neighborhood','Region','Price','Type','AssessedTotal','AssessedLand','AssessedImprovement','PID','RollNumber','Jurisdiction','AssessmentYear','Ratio']];
+            rawListings.forEach(function(l, idx) {
+                var a = data[String(idx)];
+                var ratio = a && a.assessedTotal ? (l.price / a.assessedTotal).toFixed(3) : '';
+                rows.push([
+                    idx, '"' + l.addr + '"', '"' + l.neighborhood + '"', '"' + (l.region||'') + '"',
+                    l.price, '"' + l.type + '"',
+                    a ? (a.assessedTotal||'') : '', a ? (a.assessedLand||'') : '', a ? (a.assessedImprovement||'') : '',
+                    a ? (a.pid||'') : '', a ? (a.rollNumber||'') : '', a ? (a.jurisdiction||'') : '',
+                    a ? (a.assessmentYear||'') : '', ratio
+                ]);
+            });
+            var csv = rows.map(function(r) { return r.join(','); }).join('\n');
+            var blob = new Blob([csv], { type: 'text/csv' });
+            var url = URL.createObjectURL(blob);
+            var a = document.createElement('a');
+            a.href = url;
+            a.download = 'bc-assessment-data.csv';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // CSV Import
+        function importBcaCsv(event) {
+            var file = event.target.files[0];
+            if (!file) return;
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                var lines = e.target.result.split('\n');
+                if (lines.length < 2) { alert('CSV file is empty or invalid.'); return; }
+                var header = parseCsvLine(lines[0]);
+                var idxCol = header.indexOf('Index');
+                var addrCol = header.indexOf('Address');
+                var totalCol = findColumn(header, ['AssessedTotal', 'Total Assessed', 'TOTAL VALUE', 'ASSESSED VALUE', 'assessed_total']);
+                var landCol = findColumn(header, ['AssessedLand', 'Land Value', 'LAND VALUE', 'assessed_land']);
+                var improvCol = findColumn(header, ['AssessedImprovement', 'Improvement', 'IMPROVEMENT VALUE', 'assessed_improvement']);
+                var pidCol = findColumn(header, ['PID', 'pid', 'Pid']);
+                var rollCol = findColumn(header, ['RollNumber', 'Roll Number', 'ROLL NUMBER', 'roll_number']);
+                var jurisCol = findColumn(header, ['Jurisdiction', 'JURISDICTION', 'jurisdiction']);
+                var yearCol = findColumn(header, ['AssessmentYear', 'Assessment Year', 'ASSESSMENT YEAR']);
+
+                if (totalCol < 0) { alert('Could not find an assessed value column. Expected "AssessedTotal" or similar.'); return; }
+
+                var data = loadBcAssessmentData();
+                var imported = 0;
+
+                for (var i = 1; i < lines.length; i++) {
+                    if (!lines[i].trim()) continue;
+                    var cols = parseCsvLine(lines[i]);
+                    var assessedTotal = parseFloat(cols[totalCol]);
+                    if (!assessedTotal || assessedTotal <= 0) continue;
+
+                    var matchIdx = -1;
+                    // Try matching by Index
+                    if (idxCol >= 0 && cols[idxCol] !== undefined) {
+                        var tryIdx = parseInt(cols[idxCol]);
+                        if (tryIdx >= 0 && tryIdx < rawListings.length) matchIdx = tryIdx;
+                    }
+                    // Fuzzy address matching fallback
+                    if (matchIdx < 0 && addrCol >= 0 && cols[addrCol]) {
+                        matchIdx = fuzzyMatchAddress(cols[addrCol]);
+                    }
+                    if (matchIdx < 0) continue;
+
+                    data[String(matchIdx)] = {
+                        assessedTotal: assessedTotal,
+                        assessedLand: landCol >= 0 ? (parseFloat(cols[landCol]) || null) : null,
+                        assessedImprovement: improvCol >= 0 ? (parseFloat(cols[improvCol]) || null) : null,
+                        pid: pidCol >= 0 ? (cols[pidCol] || '').trim() || null : null,
+                        rollNumber: rollCol >= 0 ? (cols[rollCol] || '').trim() || null : null,
+                        jurisdiction: jurisCol >= 0 ? (cols[jurisCol] || '').trim() || null : null,
+                        propertyClass: '01',
+                        assessmentYear: yearCol >= 0 ? (parseInt(cols[yearCol]) || 2026) : 2026,
+                        enrichedDate: new Date().toISOString().split('T')[0],
+                        notes: ''
+                    };
+                    imported++;
+                }
+
+                saveBcAssessmentData(data);
+                alert('Imported assessment data for ' + imported + ' properties.');
+                renderBcaWorklist();
+                event.target.value = '';
+            };
+            reader.readAsText(file);
+        }
+
+        function parseCsvLine(line) {
+            var result = [];
+            var current = '';
+            var inQuotes = false;
+            for (var i = 0; i < line.length; i++) {
+                var c = line[i];
+                if (c === '"') { inQuotes = !inQuotes; }
+                else if (c === ',' && !inQuotes) { result.push(current.trim()); current = ''; }
+                else { current += c; }
+            }
+            result.push(current.trim());
+            return result;
+        }
+
+        function findColumn(header, names) {
+            for (var i = 0; i < names.length; i++) {
+                var idx = header.findIndex(function(h) { return h.toLowerCase().replace(/[^a-z]/g,'') === names[i].toLowerCase().replace(/[^a-z]/g,''); });
+                if (idx >= 0) return idx;
+            }
+            return -1;
+        }
+
+        function fuzzyMatchAddress(csvAddr) {
+            var norm = normalizeAddress(csvAddr);
+            for (var i = 0; i < rawListings.length; i++) {
+                if (normalizeAddress(rawListings[i].addr) === norm) return i;
+            }
+            // Partial match: try without unit prefix
+            var normStripped = norm.replace(/^[a-z]*\d+\s*/, '');
+            for (var j = 0; j < rawListings.length; j++) {
+                var listNorm = normalizeAddress(rawListings[j].addr).replace(/^[a-z]*\d+\s*/, '');
+                if (listNorm === normStripped && normStripped.length > 5) return j;
+            }
+            return -1;
+        }
+
+        function normalizeAddress(addr) {
+            return (addr || '').toLowerCase().trim()
+                .replace(/\s+/g, ' ')
+                .replace(/avenue/g, 'ave').replace(/street/g, 'st').replace(/drive/g, 'dr')
+                .replace(/boulevard/g, 'blvd').replace(/crescent/g, 'cres').replace(/road/g, 'rd')
+                .replace(/place/g, 'pl').replace(/court/g, 'ct').replace(/terrace/g, 'ter')
+                .replace(/lane/g, 'ln').replace(/circle/g, 'cir').replace(/highway/g, 'hwy')
+                .replace(/[.,#\-–]/g, ' ').replace(/\s+/g, ' ').trim();
+        }
+
+        // ===================================================================
         // PRIVATE OFFERS — TARGET PROPERTY MANAGER
         // ===================================================================
         function loadPrivateTargets() {
@@ -8616,7 +9214,20 @@ Competitive: ${formatPrice(offers.competitive)}`;
             });
             html += '</select></div>';
             html += '<div class="offer-input-group"><label>Estimated Value *</label><input type="number" id="ptValue" value="' + (t.estimatedValue||'') + '"></div>';
-            html += '<div class="offer-input-group"><label>BC Assessment Value</label><input type="number" id="ptAssessment" value="' + (t.assessmentValue||'') + '"></div>';
+            // Auto-populate from BC Assessment enrichment data if available
+            var _ptAssessVal = t.assessmentValue || '';
+            var _ptPidVal = t.pid || '';
+            if (t.address) {
+                var _ptMatch = fuzzyMatchAddress(t.address);
+                if (_ptMatch >= 0) {
+                    var _ptBca = getAssessment(_ptMatch);
+                    if (_ptBca) {
+                        if (!_ptAssessVal && _ptBca.assessedTotal) _ptAssessVal = _ptBca.assessedTotal;
+                        if (!_ptPidVal && _ptBca.pid) _ptPidVal = _ptBca.pid;
+                    }
+                }
+            }
+            html += '<div class="offer-input-group"><label>BC Assessment Value</label><input type="number" id="ptAssessment" value="' + _ptAssessVal + '"></div>';
             html += '<div class="offer-input-group"><label>Lot Size</label><input type="text" id="ptLot" value="' + (t.lotSize||'') + '"></div>';
             html += '<div class="offer-input-group"><label>Year Built</label><input type="number" id="ptYear" value="' + (t.yearBuilt||'') + '"></div>';
             html += '<div class="offer-input-group"><label>Bedrooms</label><input type="number" id="ptBeds" value="' + (t.beds||'') + '"></div>';
@@ -8624,7 +9235,7 @@ Competitive: ${formatPrice(offers.competitive)}`;
             html += '<div class="offer-input-group"><label>Square Footage</label><input type="number" id="ptSqft" value="' + (t.sqft||'') + '"></div>';
             html += '<div class="offer-input-group"><label>Owner Name(s)</label><input type="text" id="ptOwner" value="' + (t.ownerName||'') + '"></div>';
             html += '<div class="offer-input-group"><label>Owner Contact</label><input type="text" id="ptOwnerContact" value="' + (t.ownerContact||'') + '"></div>';
-            html += '<div class="offer-input-group"><label>PID (Parcel ID)</label><input type="text" id="ptPID" value="' + (t.pid||'') + '"></div>';
+            html += '<div class="offer-input-group"><label>PID (Parcel ID)</label><input type="text" id="ptPID" value="' + _ptPidVal + '"></div>';
             html += '<div class="offer-input-group"><label>Zoning</label><input type="text" id="ptZoning" value="' + (t.zoning||'') + '"></div>';
             html += '<div class="offer-input-group"><label>Status *</label><select id="ptStatus">';
             _privateTargetStatuses.forEach(function(s) {
@@ -9165,7 +9776,7 @@ Competitive: ${formatPrice(offers.competitive)}`;
             roi: 'ROI Calculator', lenders: 'Lender Directory', buyerprofile: 'My Profile',
             contactlog: 'Contact Log', viewings: 'Viewings', documents: 'Documents',
             pricehistory: 'Price History', neighborhooddata: 'Area Intel',
-            datafreshness: 'Data Health', norealtorguide: 'No-Realtor Guide', privateoffers: 'Private Offers', help: 'Help'
+            datafreshness: 'Data Health', norealtorguide: 'No-Realtor Guide', privateoffers: 'Private Offers', bcassessment: 'BC Assessment', help: 'Help'
         };
 
         // ===== PHASE 7.3: FTHB PTT Exemption =====
