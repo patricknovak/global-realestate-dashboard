@@ -3,15 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Free BC real estate dashboard for unrepresented buyers. Browse 400+ listings, generate offers, compare mortgages, and buy property without a realtor in British Columbia.">
-    <meta name="keywords" content="buy house without realtor BC, unrepresented buyer British Columbia, real estate no agent, FSBO BC, property investment dashboard">
-    <meta property="og:title" content="BC Real Estate Buyer's Dashboard — Buy Without a Realtor">
-    <meta property="og:description" content="Free tools for unrepresented buyers: 400+ listings, offer generator, mortgage calculator, deal scoring, and negotiation coaching.">
+    <meta name="description" content="Free global real estate dashboard for unrepresented buyers. Browse listings across BC, Alberta, Ontario, and California. Generate offers, compare mortgages, and buy property without a realtor.">
+    <meta name="keywords" content="buy house without realtor, unrepresented buyer, real estate no agent, FSBO, property investment dashboard, BC, Alberta, Ontario, California">
+    <meta property="og:title" content="Global Real Estate Dashboard — Buy Without a Realtor">
+    <meta property="og:description" content="Free tools for unrepresented buyers: listings across multiple jurisdictions, offer generator, mortgage calculator, deal scoring, and negotiation coaching.">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://patricknovak.github.io/global-realestate-dashboard/">
     <meta name="twitter:card" content="summary_large_image">
     <link rel="canonical" href="https://patricknovak.github.io/global-realestate-dashboard/">
-    <title>BC Real Estate Dashboard — Buy Property Without a Realtor | Free Tools</title>
+    <title>Global Real Estate Dashboard — Buy Property Without a Realtor | Free Tools</title>
     
     <!-- External Libraries -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
@@ -3767,7 +3767,8 @@
             const savedCompany = getBuyerField('company');
             const notes = document.getElementById('offerNotes').value;
             const city = getCityForListing(listing);
-            const fullAddr = listing.addr + ', ' + city + ', BC';
+            const loc = getLocationForListing(listing);
+            const fullAddr = loc.fullAddress;
 
             currentOfferListingIndex = selectedIdx;
             offerPdfGenerated = false;
@@ -4240,7 +4241,8 @@ Competitive: ${formatPrice(offers.competitive)}`;
 
         // Build working external listing links
         function getRewUrl(listing) {
-            // REW.ca direct property page: lowercase, hyphenated slug
+            var jur = getJurisdictionForListing(listing);
+            if (jur !== 'CA-BC') return null; // REW.ca is BC only
             const slug = listing.addr.toLowerCase()
                 .replace(/[#,\.]/g, '')
                 .replace(/\s+/g, '-')
@@ -4249,18 +4251,95 @@ Competitive: ${formatPrice(offers.competitive)}`;
             return 'https://www.rew.ca/properties/' + slug + '-' + city + '-bc';
         }
         function getCityForListing(listing) {
-            const viCities = ['Parksville', 'Qualicum Beach', 'Nanoose Bay', 'Lantzville', 'Nanaimo', 'Courtenay', 'Comox', 'Cumberland', 'Campbell River'];
-            if (viCities.includes(listing.neighborhood)) return listing.neighborhood;
-            if (listing.neighborhood === 'White Rock' || listing.neighborhood === 'Crescent Beach') return 'White Rock';
-            return 'Surrey';
+            // Neighborhood-to-city mapping for regions where neighborhood != city
+            var cityMap = {
+                // South Surrey / White Rock
+                'White Rock': 'White Rock', 'Crescent Beach': 'White Rock',
+                'Morgan Creek': 'Surrey', 'Grandview Heights': 'Surrey',
+                'King George Corridor': 'Surrey', 'Pacific Douglas': 'Surrey',
+                'Elgin Chantrell': 'Surrey', 'Sunnyside Park': 'Surrey',
+                'Ocean Park': 'Surrey', 'Hazelmere': 'Surrey',
+                // Vancouver
+                'Downtown': 'Vancouver', 'West End': 'Vancouver', 'Kitsilano': 'Vancouver',
+                'Mount Pleasant': 'Vancouver', 'Commercial Drive': 'Vancouver',
+                'Kerrisdale': 'Vancouver', 'Dunbar': 'Vancouver', 'Point Grey': 'Vancouver',
+                'Marpole': 'Vancouver', 'Hastings-Sunrise': 'Vancouver', 'Renfrew-Collingwood': 'Vancouver',
+                // Burnaby / New Westminster
+                'Metrotown': 'Burnaby', 'Brentwood': 'Burnaby', 'Edmonds': 'Burnaby', 'Lougheed': 'Burnaby',
+                'Downtown NW': 'New Westminster', 'Sapperton': 'New Westminster', 'Queensborough': 'New Westminster',
+                // North Shore
+                'Lower Lonsdale': 'North Vancouver', 'Lynn Valley': 'North Vancouver', 'Deep Cove': 'North Vancouver',
+                'Ambleside': 'West Vancouver', 'Dundarave': 'West Vancouver', 'British Properties': 'West Vancouver',
+                // Tri-Cities
+                'Town Centre': 'Coquitlam', 'Burke Mountain': 'Coquitlam', 'Westwood Plateau': 'Coquitlam',
+                'Port Coquitlam': 'Port Coquitlam', 'Inlet Centre': 'Port Moody', 'Heritage Mountain': 'Port Moody',
+                // Ridge Meadows
+                'Maple Ridge Town Centre': 'Maple Ridge', 'Silver Valley': 'Maple Ridge', 'Albion': 'Maple Ridge',
+                'Pitt Meadows': 'Pitt Meadows',
+                // Langley / Delta
+                'Langley City': 'Langley', 'Willoughby': 'Langley', 'Walnut Grove': 'Langley', 'Fort Langley': 'Langley',
+                'Tsawwassen': 'Delta', 'Ladner': 'Delta', 'North Delta': 'Delta',
+                // Richmond
+                'Richmond Centre': 'Richmond', 'Steveston': 'Richmond', 'Brighouse': 'Richmond',
+                'Ironwood': 'Richmond', 'Terra Nova': 'Richmond',
+                // Surrey (Expanded)
+                'Fleetwood': 'Surrey', 'Guildford': 'Surrey', 'Cloverdale': 'Surrey',
+                'Newton': 'Surrey', 'Panorama Ridge': 'Surrey', 'Fraser Heights': 'Surrey',
+                // Edmonton
+                'Downtown Edmonton': 'Edmonton', 'Oliver District': 'Edmonton', 'Strathcona': 'Edmonton',
+                'Whyte Ave': 'Edmonton', 'Windermere': 'Edmonton', 'Terwillegar': 'Edmonton',
+                'Riverbend': 'Edmonton', 'Mill Woods': 'Edmonton',
+                'St. Albert': 'St. Albert', 'Sherwood Park': 'Sherwood Park',
+                // Toronto
+                'Downtown Core': 'Toronto', 'Yorkville': 'Toronto', 'The Annex': 'Toronto',
+                'Liberty Village': 'Toronto', 'King West': 'Toronto', 'Leslieville': 'Toronto',
+                'The Beaches': 'Toronto', 'North York': 'Toronto', 'Scarborough': 'Toronto',
+                'Etobicoke': 'Toronto', 'Mississauga': 'Mississauga', 'Markham': 'Markham'
+            };
+            if (cityMap[listing.neighborhood]) return cityMap[listing.neighborhood];
+            // For most neighborhoods, the neighborhood name IS the city
+            return listing.neighborhood || 'Unknown';
         }
         
         function getRewSearchUrl(listing) {
-            // Fallback: REW.ca search results page
+            var jur = getJurisdictionForListing(listing);
+            if (jur !== 'CA-BC') return null;
             const city = getCityForListing(listing);
             return 'https://www.rew.ca/properties/search/results?query=' + encodeURIComponent(listing.addr + ' ' + city + ' BC');
         }
+        function getGoogleMapsUrl(listing) {
+            if (listing.latitude && listing.longitude) {
+                return 'https://www.google.com/maps/@' + listing.latitude + ',' + listing.longitude + ',18z';
+            }
+            var loc = getLocationForListing(listing);
+            return 'https://www.google.com/maps/search/' + encodeURIComponent(loc.fullAddress);
+        }
+        function getAssessmentUrl(listing) {
+            var jur = getJurisdictionForListing(listing);
+            switch (jur) {
+                case 'CA-BC': return 'https://www.bcassessment.ca/Property/AssessmentSearch';
+                case 'CA-AB': return 'https://www.alberta.ca/property-assessment';
+                case 'CA-ON': return 'https://www.mpac.ca/en/FindYourAssessment';
+                case 'US-CA': return 'https://www.ocgov.com/assessor';
+                default: return null;
+            }
+        }
+        function getBcAssessUrl(listing) { return getAssessmentUrl(listing); }
+        function getZillowUrl(listing) {
+            var jur = getJurisdictionForListing(listing);
+            if (jur !== 'US-CA') return null;
+            var loc = getLocationForListing(listing);
+            return 'https://www.zillow.com/homes/' + encodeURIComponent(loc.fullAddress);
+        }
+        function getRedfinUrl(listing) {
+            var jur = getJurisdictionForListing(listing);
+            if (jur !== 'US-CA') return null;
+            var loc = getLocationForListing(listing);
+            return 'https://www.redfin.com/search#query=' + encodeURIComponent(loc.fullAddress);
+        }
         function getRealtorUrl(listing) {
+            var jur = getJurisdictionForListing(listing);
+            if (jur && jur.startsWith('US')) return null; // Realtor.ca is Canada only
             const city = getCityForListing(listing);
             return 'https://www.realtor.ca/map#ZoomLevel=17&Center=' +
                 listing.latitude + '%2C' + listing.longitude +
@@ -4269,16 +4348,6 @@ Competitive: ${formatPrice(offers.competitive)}`;
                 '&LatitudeMin=' + (listing.latitude - 0.003) +
                 '&LongitudeMin=' + (listing.longitude - 0.003) +
                 '&Sort=6-D&PropertySearchTypeId=1&TransactionTypeId=2';
-        }
-        function getGoogleMapsUrl(listing) {
-            if (listing.latitude && listing.longitude) {
-                return 'https://www.google.com/maps/@' + listing.latitude + ',' + listing.longitude + ',18z';
-            }
-            const city = getCityForListing(listing);
-            return 'https://www.google.com/maps/search/' + encodeURIComponent(listing.addr + ', ' + city + ', BC');
-        }
-        function getBcAssessUrl(listing) {
-            return 'https://www.bcassessment.ca/Property/AssessmentSearch';
         }
         
         function getListingBadge(listing) {
@@ -4888,7 +4957,8 @@ Competitive: ${formatPrice(offers.competitive)}`;
             const listing = rawListings[listingIndex];
             const offers = calculateOffers(listing);
             const city = getCityForListing(listing);
-            const fullAddr = listing.addr + ', ' + city + ', BC';
+            const loc = getLocationForListing(listing);
+            const fullAddr = loc.fullAddress;
 
             // Default dates
             const today = new Date();
@@ -5122,7 +5192,9 @@ Competitive: ${formatPrice(offers.competitive)}`;
           try {
             const listing = rawListings[currentOfferListingIndex];
             const city = getCityForListing(listing);
-            const fullAddr = listing.addr + ', ' + city + ', BC';
+            const loc = getLocationForListing(listing);
+            const jurConfig = getJurisdictionConfig(loc.jurisdictionCode);
+            const fullAddr = loc.fullAddress;
             const offerPrice = parseFloat(document.getElementById('offerPrice').value);
             const deposit = parseFloat(document.getElementById('offerDeposit').value);
             const depositTrustee = document.getElementById('offerDepositTrustee').value;
@@ -5216,7 +5288,7 @@ Competitive: ${formatPrice(offers.competitive)}`;
             doc.text('OFFER TO PURCHASE REAL PROPERTY', margin, 11);
             doc.setFontSize(8);
             doc.setFont('helvetica', 'normal');
-            doc.text('Province of British Columbia', margin, 17);
+            doc.text(jurConfig.governingLaw, margin, 17);
             var headerContactParts = [buyerName, buyerEmail, buyerPhone].filter(function(v) { return v; });
             if (headerContactParts.length > 0) doc.text(headerContactParts.join('  |  '), pageW - margin, 14, {align: 'right'});
             y = 32;
@@ -5232,7 +5304,7 @@ Competitive: ${formatPrice(offers.competitive)}`;
             doc.setFont('helvetica', 'normal');
             doc.setFontSize(6.5);
             doc.setTextColor(120, 60, 10);
-            var disclaimerText = 'This offer template is for informational purposes only. It is not legal advice. It is not a standard BCREA Contract of Purchase and Sale (Form B). Have a BC lawyer or notary review any offer before submission. The buyer accepts all responsibility for reliance on this document.';
+            var disclaimerText = jurConfig.legalDisclaimer;
             var disclaimerLines = doc.splitTextToSize(disclaimerText, contentW - 6);
             doc.text(disclaimerLines, margin + 3, y + 7);
             y += 16;
@@ -5290,7 +5362,7 @@ Competitive: ${formatPrice(offers.competitive)}`;
                     ['Deposit Amount', fmtCur(deposit)],
                     ['Deposit Delivery', (depositDeliveryDate ? 'On or before ' + fmtDt(depositDeliveryDate) : 'Within 24 hours of subject removal') + ', held in trust by ' + depositTrustee],
                     ['Balance of Purchase Price', fmtCur(offerPrice - deposit) + ' due on Completion Date'],
-                    ['Property Transfer Tax', 'Buyer acknowledges responsibility for BC Property Transfer Tax payable on completion'],
+                    [jurConfig.transferTaxName, 'Buyer acknowledges responsibility for ' + jurConfig.transferTaxName + ' payable on completion'],
                     ['GST', 'If applicable, included in or in addition to the Purchase Price as required by law'],
                 ],
                 styles: { fontSize: 9, cellPadding: 2.5 },
@@ -5339,17 +5411,17 @@ Competitive: ${formatPrice(offers.competitive)}`;
 
             const generalTerms = [
                 ['TIME IS OF THE ESSENCE:', 'Time shall be of the essence of this contract and of every provision hereof.'],
-                ['ADJUSTMENTS:', 'All adjustments to be made as of the Adjustment Date, including but not limited to: property taxes, utility charges, strata/maintenance fees, rental income (if applicable), fuel, and other items typically adjusted in a BC real estate transaction. Any prepaid amounts by the Seller beyond the Adjustment Date shall be credited to the Seller; any amounts owing shall be the responsibility of the Seller up to and including the Adjustment Date.'],
+                ['ADJUSTMENTS:', 'All adjustments to be made as of the Adjustment Date, including but not limited to: property taxes, utility charges, strata/maintenance/HOA fees, rental income (if applicable), fuel, and other items typically adjusted in a real estate transaction in ' + jurConfig.governingLaw + '. Any prepaid amounts by the Seller beyond the Adjustment Date shall be credited to the Seller; any amounts owing shall be the responsibility of the Seller up to and including the Adjustment Date.'],
                 ['RISK AND INSURANCE:', 'The property shall be and remain at the risk of the Seller until the Completion Date. If the property is materially damaged before completion, the Buyer may at the Buyer\'s option either complete the purchase and receive all insurance proceeds or terminate this agreement and receive a full refund of the deposit. The Seller shall maintain all existing insurance policies in full force and effect until completion.'],
-                ['TITLE:', 'Good and marketable title shall be conveyed to the Buyer free and clear of all liens, charges, encumbrances, and defects, except: (a) conditions, provisos, restrictions, and reservations in the original grant from the Crown; (b) subsisting conditions and reservations in the Land Title Act; and (c) any registered easements or covenants disclosed to and accepted by the Buyer prior to subject removal.'],
+                ['TITLE:', 'Good and marketable title shall be conveyed to the Buyer free and clear of all liens, charges, encumbrances, and defects, except: (a) conditions, provisos, restrictions, and reservations in the original grant from the Crown or government; (b) subsisting conditions and reservations under applicable land title legislation; and (c) any registered easements or covenants disclosed to and accepted by the Buyer prior to subject removal.'],
                 ['PROPERTY CONDITION:', 'The property is sold on an "as-is, where-is" basis as of the date of acceptance, subject to the Seller\'s obligations under the Property Disclosure Statement. The Seller represents that the Seller has not received notice of any building code violations, zoning non-compliance, or bylaw infractions affecting the property. The property shall be delivered in substantially the same condition as on the date of acceptance, reasonable wear and tear excepted.'],
-                ['PROPERTY DISCLOSURE:', 'The Seller shall provide to the Buyer a completed Property Disclosure Statement (BC Form) within 3 business days of acceptance. Any material misrepresentation or omission in the Property Disclosure Statement shall entitle the Buyer to terminate this agreement and receive a full refund of the deposit.'],
+                ['PROPERTY DISCLOSURE:', 'The Seller shall provide to the Buyer a completed Property Disclosure Statement (or equivalent disclosure form as required by the ' + jurConfig.governingLaw + ') within 3 business days of acceptance. Any material misrepresentation or omission in the Property Disclosure Statement shall entitle the Buyer to terminate this agreement and receive a full refund of the deposit.'],
                 ['INCLUDED ITEMS:', 'All fixtures, improvements, and appurtenances attached to the property are included in the purchase price unless specifically excluded in writing. This includes but is not limited to: built-in appliances, light fixtures, window coverings, attached floor coverings, garage door openers with remotes, and all landscaping.'],
                 ['BUYER ACCESS:', 'The Seller shall provide the Buyer and the Buyer\'s agents (inspectors, appraisers, contractors) reasonable access to the property for inspections and assessments during the subject removal period, and for one final walk-through within 48 hours prior to the Completion Date.'],
                 ['VACANT POSSESSION:', 'The Seller shall deliver vacant possession of the property on the Possession Date, with all personal belongings and debris removed and the property in a clean, broom-swept condition.'],
                 ['REPRESENTATIONS AND WARRANTIES:', 'The Seller represents and warrants that: (a) the Seller has the legal authority and capacity to sell the property; (b) the property is not subject to any undisclosed litigation, claims, or disputes; (c) all information provided to the Buyer is true and accurate to the best of the Seller\'s knowledge. These representations and warranties shall survive and not merge on completion.'],
                 ['REMEDIES:', 'If the Seller fails to complete this transaction after all conditions have been fulfilled or waived, the Buyer shall be entitled to pursue all remedies available at law or in equity. If the Buyer fails to complete after all conditions have been fulfilled or waived, the Seller\'s remedies shall include forfeiture of the deposit as liquidated damages, without prejudice to any other remedies available at law.'],
-                ['GOVERNING LAW:', 'This agreement shall be governed by and construed in accordance with the laws of the Province of British Columbia and the federal laws of Canada applicable therein. Any disputes shall be resolved in the courts of British Columbia.'],
+                ['GOVERNING LAW:', 'This agreement shall be governed by and construed in accordance with the laws of the ' + jurConfig.governingLaw + (jurConfig.country === 'CA' ? ' and the federal laws of Canada applicable therein' : '') + '. Any disputes shall be resolved in the courts of ' + jurConfig.governingLaw + '.'],
                 ['ENTIRE AGREEMENT:', 'This offer, when accepted, shall constitute the entire agreement between the Buyer and Seller. There are no representations, warranties, guarantees, promises, or agreements other than those set out herein. Any amendment shall be made in writing and signed by all parties.'],
                 ['TENDER:', 'Any tender of documents or money may be made on or upon the parties or their respective lawyers.'],
                 ['ASSIGNMENT:', 'The Buyer may assign this agreement or direct title to a nominee prior to or on the Completion Date, provided the Seller\'s written consent is obtained, which consent shall not be unreasonably withheld.'],
@@ -5534,7 +5606,7 @@ Competitive: ${formatPrice(offers.competitive)}`;
                 doc.setFontSize(7);
                 doc.setFont('helvetica', 'normal');
                 doc.setTextColor(150, 150, 150);
-                doc.text('OFFER TO PURCHASE - ' + listing.addr + ', ' + city + ', BC  |  Page ' + p + ' of ' + totalPages + '  |  This document is not a substitute for legal advice.', pageW / 2, pageH - 8, {align: 'center'});
+                doc.text('OFFER TO PURCHASE - ' + fullAddr + '  |  Page ' + p + ' of ' + totalPages + '  |  This document is not a substitute for legal advice.', pageW / 2, pageH - 8, {align: 'center'});
             }
 
             // Save with blob download for Safari compatibility
@@ -5595,7 +5667,8 @@ Competitive: ${formatPrice(offers.competitive)}`;
         function emailOfferToAgent() {
             const listing = rawListings[currentOfferListingIndex];
             const city = getCityForListing(listing);
-            const fullAddr = listing.addr + ', ' + city + ', BC';
+            const loc = getLocationForListing(listing);
+            const fullAddr = loc.fullAddress;
             const agentEmail = document.getElementById('offerAgentEmail').value.trim();
             const agentName = document.getElementById('offerAgentName').value.trim();
             const offerPrice = parseFloat(document.getElementById('offerPrice').value);
@@ -5902,6 +5975,23 @@ Competitive: ${formatPrice(offers.competitive)}`;
         function calcRescission() {
             var dateStr = document.getElementById('rescissionDate').value;
             var price = parseFloat(document.getElementById('rescissionPrice').value) || 0;
+
+            // Determine jurisdiction from selected property or default
+            var jurisdiction = 'CA-BC';
+            var rescissionJurEl = document.getElementById('rescissionJurisdiction');
+            if (rescissionJurEl) jurisdiction = rescissionJurEl.value || 'CA-BC';
+            var jurConfig = getJurisdictionConfig(jurisdiction);
+
+            if (!jurConfig.hasRescission) {
+                document.getElementById('rescissionResult').innerHTML = '<div style="background:#f8f9fa;padding:16px;border-radius:8px;text-align:center;"><div style="font-size:16px;font-weight:600;color:#666;margin-bottom:8px;">No Statutory Rescission Period</div><p style="color:#888;font-size:13px;">' + jurConfig.rescissionNotes + '</p></div>';
+                return;
+            }
+
+            if (jurisdiction === 'CA-ON') {
+                document.getElementById('rescissionResult').innerHTML = '<div style="background:#fff3cd;padding:16px;border-radius:8px;"><div style="font-size:14px;font-weight:600;color:#856404;margin-bottom:8px;">Ontario: Limited Rescission</div><p style="font-size:13px;color:#856404;">' + jurConfig.rescissionNotes + '</p><p style="font-size:12px;color:#856404;">For pre-construction condos: 10-day cooling-off period from date of signing Agreement of Purchase and Sale. No fee charged. Does not apply to resale properties.</p></div>';
+                return;
+            }
+
             if (!dateStr) {
                 document.getElementById('rescissionResult').innerHTML = '<p style="color:#888;">Enter the acceptance date to see your rescission deadline and fee.</p>';
                 return;
@@ -6597,11 +6687,12 @@ Competitive: ${formatPrice(offers.competitive)}`;
             var buyerPhone = profile.phone || '';
             var city = getCityForListing(listing);
 
-            var subject = encodeURIComponent('Inquiry: ' + listing.addr + ', ' + city + ', BC - ' + formatPrice(listing.price));
+            var loc = getLocationForListing(listing);
+            var subject = encodeURIComponent('Inquiry: ' + loc.fullAddress + ' - ' + formatPrice(listing.price));
             var body = encodeURIComponent(
                 'Dear ' + listing.agent.split(',')[0] + ',\n\n' +
                 'I am writing to inquire about the property listed at:\n\n' +
-                listing.addr + ', ' + city + ', BC\n' +
+                loc.fullAddress + '\n' +
                 'Listed at: ' + formatPrice(listing.price) + '\n' +
                 'MLS Type: ' + listing.type + '\n\n' +
                 'I am an unrepresented buyer and would like to:\n' +
@@ -9612,7 +9703,7 @@ Competitive: ${formatPrice(offers.competitive)}`;
                 head: [['Field', 'Details']],
                 headStyles: { fillColor: [55, 90, 127], fontSize: 9, fontStyle: 'bold', textColor: [255,255,255] },
                 body: [
-                    ['Property Address', t.address + ', ' + t.city + (t.postalCode ? ', ' + t.postalCode : '') + ', BC'],
+                    ['Property Address', t.address + ', ' + t.city + (t.postalCode ? ', ' + t.postalCode : '') + (t.provinceState ? ', ' + t.provinceState : '')],
                     ['Property Type', t.propertyType || 'N/A'],
                     ['PID', t.pid || 'To be confirmed via title search'],
                     ['Buyer', buyerName + (buyerEmail ? ' (' + buyerEmail + ')' : '')],
@@ -9776,10 +9867,163 @@ Competitive: ${formatPrice(offers.competitive)}`;
             roi: 'ROI Calculator', lenders: 'Lender Directory', buyerprofile: 'My Profile',
             contactlog: 'Contact Log', viewings: 'Viewings', documents: 'Documents',
             pricehistory: 'Price History', neighborhooddata: 'Area Intel',
-            datafreshness: 'Data Health', norealtorguide: 'No-Realtor Guide', privateoffers: 'Private Offers', bcassessment: 'BC Assessment', help: 'Help'
+            datafreshness: 'Data Health', norealtorguide: 'No-Realtor Guide', privateoffers: 'Private Offers', bcassessment: 'Assessment', help: 'Help'
         };
 
-        // ===== PHASE 7.3: FTHB PTT Exemption =====
+        // ===== JURISDICTION TAX ENGINE =====
+        // Maps region -> jurisdiction code
+        var REGION_JURISDICTION_MAP = {
+            'South Surrey / White Rock': 'CA-BC', 'Vancouver Island': 'CA-BC',
+            'Vancouver': 'CA-BC', 'Burnaby / New Westminster': 'CA-BC', 'North Shore': 'CA-BC',
+            'Tri-Cities': 'CA-BC', 'Ridge Meadows': 'CA-BC', 'Langley / Delta': 'CA-BC',
+            'Richmond': 'CA-BC', 'Surrey (Expanded)': 'CA-BC', 'Sunshine Coast': 'CA-BC',
+            'Okanagan': 'CA-BC', 'Sea to Sky': 'CA-BC', 'Gulf Islands': 'CA-BC',
+            'Edmonton': 'CA-AB', 'Hinton': 'CA-AB',
+            'Toronto': 'CA-ON',
+            'Laguna Beach': 'US-CA'
+        };
+
+        var JURISDICTION_CONFIG = {
+            'CA-BC': {
+                country: 'CA', provinceState: 'BC', currency: 'CAD',
+                displayName: 'British Columbia', transferTaxName: 'BC Property Transfer Tax',
+                hasRescission: true, rescissionDays: 3, rescissionFeePct: 0.25,
+                rescissionNotes: '3 business days, 0.25% fee per Home Buyer Rescission Period (HBRP)',
+                governingLaw: 'Province of British Columbia',
+                legalDisclaimer: 'This offer template is for informational purposes only. It is not legal advice. It is not a standard BCREA Contract of Purchase and Sale (Form B). Have a BC lawyer or notary review any offer before submission. The buyer accepts all responsibility for reliance on this document.',
+                offerTemplateType: 'bc',
+                hasCMHC: true, hasStressTest: true, minDownPct: 5,
+                foreignBuyerTax: 0.20, foreignBuyerTaxName: 'Additional Property Transfer Tax (20%)'
+            },
+            'CA-AB': {
+                country: 'CA', provinceState: 'AB', currency: 'CAD',
+                displayName: 'Alberta', transferTaxName: 'Land Title Registration Fee',
+                hasRescission: false, rescissionDays: 0, rescissionFeePct: 0,
+                rescissionNotes: 'No statutory rescission period in Alberta',
+                governingLaw: 'Province of Alberta',
+                legalDisclaimer: 'This offer template is for informational purposes only. It is not legal advice. Have an Alberta lawyer review any offer before submission. The buyer accepts all responsibility for reliance on this document.',
+                offerTemplateType: 'ab',
+                hasCMHC: true, hasStressTest: true, minDownPct: 5,
+                foreignBuyerTax: 0, foreignBuyerTaxName: null
+            },
+            'CA-ON': {
+                country: 'CA', provinceState: 'ON', currency: 'CAD',
+                displayName: 'Ontario', transferTaxName: 'Ontario Land Transfer Tax',
+                hasRescission: true, rescissionDays: 10, rescissionFeePct: 0,
+                rescissionNotes: '10-day cooling-off period for pre-construction condos only (Condominium Act)',
+                governingLaw: 'Province of Ontario',
+                legalDisclaimer: 'This offer template is for informational purposes only. It is not legal advice. It is not a standard OREA Agreement of Purchase and Sale. Have an Ontario lawyer review any offer before submission. The buyer accepts all responsibility for reliance on this document.',
+                offerTemplateType: 'on',
+                hasCMHC: true, hasStressTest: true, minDownPct: 5,
+                foreignBuyerTax: 0.25, foreignBuyerTaxName: 'Non-Resident Speculation Tax (25%)'
+            },
+            'US-CA': {
+                country: 'US', provinceState: 'CA', currency: 'USD',
+                displayName: 'California', transferTaxName: 'County Transfer Tax',
+                hasRescission: false, rescissionDays: 0, rescissionFeePct: 0,
+                rescissionNotes: 'No statutory rescission period in California',
+                governingLaw: 'State of California',
+                legalDisclaimer: 'This offer template is for informational purposes only. It is not legal advice. It is not a standard CAR Residential Purchase Agreement. Have a California attorney review any offer before submission. The buyer accepts all responsibility for reliance on this document.',
+                offerTemplateType: 'us-ca',
+                hasCMHC: false, hasStressTest: false, minDownPct: 3,
+                foreignBuyerTax: 0, foreignBuyerTaxName: null
+            }
+        };
+
+        function getJurisdictionForListing(listing) {
+            if (listing && listing.jurisdiction) return listing.jurisdiction;
+            if (listing && listing.region && REGION_JURISDICTION_MAP[listing.region]) {
+                return REGION_JURISDICTION_MAP[listing.region];
+            }
+            return 'CA-BC';
+        }
+
+        function getJurisdictionConfig(jurisdictionCode) {
+            return JURISDICTION_CONFIG[jurisdictionCode] || JURISDICTION_CONFIG['CA-BC'];
+        }
+
+        function getLocationForListing(listing) {
+            var jur = getJurisdictionForListing(listing);
+            var config = getJurisdictionConfig(jur);
+            var city = getCityForListing(listing);
+            var suffix = config.provinceState;
+            return {
+                city: city,
+                provinceState: config.provinceState,
+                country: config.country,
+                fullSuffix: city + ', ' + suffix,
+                fullAddress: listing.addr + ', ' + city + ', ' + suffix,
+                jurisdictionCode: jur
+            };
+        }
+
+        function formatPriceWithCurrency(price, currency) {
+            if (!currency || currency === 'CAD') {
+                return '$' + Number(price).toLocaleString('en-CA', {maximumFractionDigits: 0});
+            } else if (currency === 'USD') {
+                return 'US$' + Number(price).toLocaleString('en-US', {maximumFractionDigits: 0});
+            }
+            return '$' + Number(price).toLocaleString('en-US', {maximumFractionDigits: 0});
+        }
+
+        // ===== JURISDICTION-SPECIFIC TRANSFER TAX CALCULATORS =====
+        function calculateTransferTax(price, jurisdiction, isFTHB, isNewBuild, isToronto) {
+            var jur = jurisdiction || 'CA-BC';
+            switch (jur) {
+                case 'CA-BC': return calculatePTTWithFTHB(price, isFTHB, isNewBuild);
+                case 'CA-AB': return calculateABRegistrationFee(price);
+                case 'CA-ON': return calculateONLTT(price, isFTHB, isToronto);
+                case 'US-CA': return calculateCATransferTax(price);
+                default: return calculatePTTWithFTHB(price, isFTHB, isNewBuild);
+            }
+        }
+
+        function calculateABRegistrationFee(price) {
+            // Alberta: $50 base + $2 per $5,000 of property value
+            var fee = 50 + Math.ceil(price / 5000) * 2;
+            return { ptt: fee, savings: 0, label: 'Land Title Registration Fee' };
+        }
+
+        function calculateONLTT(price, isFTHB, isToronto) {
+            // Ontario Provincial LTT
+            var provLTT = 0;
+            if (price <= 55000) provLTT = price * 0.005;
+            else if (price <= 250000) provLTT = 275 + (price - 55000) * 0.01;
+            else if (price <= 400000) provLTT = 275 + 1950 + (price - 250000) * 0.015;
+            else if (price <= 2000000) provLTT = 275 + 1950 + 2250 + (price - 400000) * 0.02;
+            else provLTT = 275 + 1950 + 2250 + 32000 + (price - 2000000) * 0.025;
+
+            // Toronto Municipal LTT (if applicable)
+            var muniLTT = 0;
+            if (isToronto) {
+                if (price <= 55000) muniLTT = price * 0.005;
+                else if (price <= 250000) muniLTT = 275 + (price - 55000) * 0.01;
+                else if (price <= 400000) muniLTT = 275 + 1950 + (price - 250000) * 0.015;
+                else if (price <= 2000000) muniLTT = 275 + 1950 + 2250 + (price - 400000) * 0.02;
+                else muniLTT = 275 + 1950 + 2250 + 32000 + (price - 2000000) * 0.025;
+            }
+
+            var totalLTT = provLTT + muniLTT;
+            var savings = 0;
+
+            // FTHB rebates
+            if (isFTHB) {
+                var provRebate = Math.min(provLTT, 4000);
+                var muniRebate = isToronto ? Math.min(muniLTT, 4475) : 0;
+                savings = provRebate + muniRebate;
+                totalLTT -= savings;
+            }
+
+            return { ptt: Math.round(totalLTT), savings: Math.round(savings), provLTT: Math.round(provLTT), muniLTT: Math.round(muniLTT), label: 'Ontario Land Transfer Tax' + (isToronto ? ' + Toronto Municipal LTT' : '') };
+        }
+
+        function calculateCATransferTax(price) {
+            // California: County transfer tax $1.10 per $1,000
+            var tax = Math.round(price / 1000 * 1.10);
+            return { ptt: tax, savings: 0, label: 'County Transfer Tax' };
+        }
+
+        // ===== PHASE 7.3: FTHB PTT Exemption (BC) =====
         function calculatePTTWithFTHB(price, isFTHB, isNewBuild) {
             var ptt = 0;
             // Standard BC PTT rates
@@ -9791,7 +10035,6 @@ Competitive: ${formatPrice(offers.competitive)}`;
             var savings = 0;
 
             if (isFTHB && isNewBuild) {
-                // Newly Built Home Exemption: full exemption up to $1.1M, partial $1.1M-$1.15M
                 if (price <= 1100000) {
                     savings = ptt;
                     ptt = 0;
@@ -9801,11 +10044,6 @@ Competitive: ${formatPrice(offers.competitive)}`;
                     ptt = ptt - savings;
                 }
             } else if (isFTHB && !isNewBuild) {
-                // FTHB Existing Home Exemption (April 2024+ rules from gov.bc.ca):
-                // - Under $500K: full exemption (PTT = $0)
-                // - $500K to $835K: fixed $8,000 exemption (PTT on first $500K is waived)
-                // - $835K to $860K: $8,000 exemption proportionally reduced
-                // - Over $860K: no exemption
                 if (price <= 500000) {
                     savings = ptt;
                     ptt = 0;
@@ -9817,10 +10055,26 @@ Competitive: ${formatPrice(offers.competitive)}`;
                     savings = Math.round(exemption);
                     ptt = ptt - exemption;
                 }
-                // else: price >= 860000, no exemption
             }
 
-            return { ptt: Math.round(ptt), savings: Math.round(savings) };
+            return { ptt: Math.round(ptt), savings: Math.round(savings), label: 'BC Property Transfer Tax' };
+        }
+
+        // ===== MORTGAGE INSURANCE CALCULATOR (jurisdiction-aware) =====
+        function calculateMortgageInsurance(principal, price, downPct, jurisdiction) {
+            var jur = getJurisdictionConfig(jurisdiction || 'CA-BC');
+            if (jur.hasCMHC) {
+                // Canadian CMHC insurance
+                if (downPct >= 20 || price > 1500000) return { premium: 0, label: 'N/A (20%+ down)', type: 'CMHC' };
+                var cmhcRate = downPct >= 15 ? 0.028 : downPct >= 10 ? 0.031 : downPct >= 5 ? 0.04 : 0;
+                return { premium: Math.round(principal * cmhcRate), label: 'CMHC Insurance', type: 'CMHC' };
+            } else {
+                // US PMI (Private Mortgage Insurance)
+                if (downPct >= 20) return { premium: 0, label: 'N/A (20%+ down)', type: 'PMI' };
+                // PMI typically 0.5-1% of loan annually; we estimate ~0.7% annual
+                var annualPMI = Math.round(principal * 0.007);
+                return { premium: 0, annualPMI: annualPMI, monthlyPMI: Math.round(annualPMI / 12), label: 'PMI ~$' + Math.round(annualPMI / 12) + '/mo', type: 'PMI' };
+            }
         }
 
         // ===== PHASE 9.1: Staleness Warning =====

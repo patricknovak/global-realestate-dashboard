@@ -1,38 +1,127 @@
 {
+  "jurisdictions": {
+    "CA-BC": { "country": "CA", "provinceState": "BC", "currency": "CAD", "displayName": "British Columbia" },
+    "CA-AB": { "country": "CA", "provinceState": "AB", "currency": "CAD", "displayName": "Alberta" },
+    "CA-ON": { "country": "CA", "provinceState": "ON", "currency": "CAD", "displayName": "Ontario" },
+    "US-CA": { "country": "US", "provinceState": "CA", "currency": "USD", "displayName": "California" }
+  },
   "sources": [
     {
       "name": "rew",
       "displayName": "REW.ca",
       "baseUrl": "https://www.rew.ca",
       "type": "web",
+      "jurisdiction": "CA-BC",
       "regions": {
         "south-surrey-white-rock": {
+          "displayName": "South Surrey / White Rock",
           "searchUrl": "/properties/search/south-surrey-white-rock?type=all&status=active",
           "neighborhoods": [
-            "White Rock",
-            "Crescent Beach",
-            "Morgan Creek",
-            "Grandview Heights",
-            "King George Corridor",
-            "Pacific Douglas",
-            "Elgin Chantrell",
-            "Sunnyside Park",
-            "Ocean Park",
-            "Hazelmere"
+            "White Rock", "Crescent Beach", "Morgan Creek", "Grandview Heights",
+            "King George Corridor", "Pacific Douglas", "Elgin Chantrell",
+            "Sunnyside Park", "Ocean Park", "Hazelmere"
           ]
         },
         "vancouver-island": {
+          "displayName": "Vancouver Island",
           "searchUrl": "/properties/search/vancouver-island?type=all&status=active",
           "neighborhoods": [
-            "Parksville",
-            "Qualicum Beach",
-            "Nanoose Bay",
-            "Lantzville",
-            "Nanaimo",
-            "Courtenay",
-            "Comox",
-            "Cumberland",
-            "Campbell River"
+            "Parksville", "Qualicum Beach", "Nanoose Bay", "Lantzville",
+            "Nanaimo", "Courtenay", "Comox", "Cumberland", "Campbell River"
+          ]
+        },
+        "vancouver": {
+          "displayName": "Vancouver",
+          "searchUrl": "/properties/search/vancouver?type=all&status=active",
+          "neighborhoods": [
+            "Downtown", "West End", "Kitsilano", "Mount Pleasant",
+            "Commercial Drive", "Kerrisdale", "Dunbar", "Point Grey",
+            "Marpole", "Hastings-Sunrise", "Renfrew-Collingwood"
+          ]
+        },
+        "burnaby-new-westminster": {
+          "displayName": "Burnaby / New Westminster",
+          "searchUrl": "/properties/search/burnaby-new-westminster?type=all&status=active",
+          "neighborhoods": [
+            "Metrotown", "Brentwood", "Edmonds", "Lougheed",
+            "Downtown NW", "Sapperton", "Queensborough"
+          ]
+        },
+        "north-shore": {
+          "displayName": "North Shore",
+          "searchUrl": "/properties/search/north-vancouver-west-vancouver?type=all&status=active",
+          "neighborhoods": [
+            "Lower Lonsdale", "Lynn Valley", "Deep Cove",
+            "Ambleside", "Dundarave", "British Properties"
+          ]
+        },
+        "tri-cities": {
+          "displayName": "Tri-Cities",
+          "searchUrl": "/properties/search/coquitlam-port-coquitlam-port-moody?type=all&status=active",
+          "neighborhoods": [
+            "Town Centre", "Burke Mountain", "Westwood Plateau",
+            "Port Coquitlam", "Inlet Centre", "Heritage Mountain"
+          ]
+        },
+        "ridge-meadows": {
+          "displayName": "Ridge Meadows",
+          "searchUrl": "/properties/search/maple-ridge-pitt-meadows?type=all&status=active",
+          "neighborhoods": [
+            "Maple Ridge Town Centre", "Silver Valley", "Albion", "Pitt Meadows"
+          ]
+        },
+        "langley-delta": {
+          "displayName": "Langley / Delta",
+          "searchUrl": "/properties/search/langley-delta?type=all&status=active",
+          "neighborhoods": [
+            "Langley City", "Willoughby", "Walnut Grove", "Fort Langley",
+            "Tsawwassen", "Ladner", "North Delta"
+          ]
+        },
+        "richmond": {
+          "displayName": "Richmond",
+          "searchUrl": "/properties/search/richmond?type=all&status=active",
+          "neighborhoods": [
+            "Richmond Centre", "Steveston", "Brighouse", "Ironwood", "Terra Nova"
+          ]
+        },
+        "surrey-expanded": {
+          "displayName": "Surrey (Expanded)",
+          "searchUrl": "/properties/search/surrey?type=all&status=active",
+          "neighborhoods": [
+            "Fleetwood", "Guildford", "Cloverdale", "Newton",
+            "Panorama Ridge", "Fraser Heights"
+          ]
+        },
+        "sunshine-coast": {
+          "displayName": "Sunshine Coast",
+          "searchUrl": "/properties/search/sunshine-coast?type=all&status=active",
+          "neighborhoods": [
+            "Gibsons", "Sechelt", "Roberts Creek", "Halfmoon Bay",
+            "Pender Harbour", "Madeira Park"
+          ]
+        },
+        "okanagan": {
+          "displayName": "Okanagan",
+          "searchUrl": "/properties/search/okanagan?type=all&status=active",
+          "neighborhoods": [
+            "Kelowna", "West Kelowna", "Penticton", "Vernon",
+            "Lake Country", "Summerland", "Peachland", "Osoyoos", "Oliver"
+          ]
+        },
+        "sea-to-sky": {
+          "displayName": "Sea to Sky",
+          "searchUrl": "/properties/search/whistler-squamish?type=all&status=active",
+          "neighborhoods": [
+            "Whistler", "Pemberton", "Squamish"
+          ]
+        },
+        "gulf-islands": {
+          "displayName": "Gulf Islands",
+          "searchUrl": "/properties/search/gulf-islands?type=all&status=active",
+          "neighborhoods": [
+            "Salt Spring Island", "Galiano Island", "Mayne Island",
+            "Pender Island", "Saturna Island", "Gabriola Island"
           ]
         }
       },
@@ -57,23 +146,93 @@
       "displayName": "Realtor.ca",
       "baseUrl": "https://www.realtor.ca",
       "type": "api",
+      "jurisdiction": "CA",
       "apiEndpoint": "https://api.realtor.ca/Listing.svc/PropertySearch_Post",
       "regions": {
         "south-surrey-white-rock": {
-          "apiParams": {
-            "LatitudeMin": 49.0,
-            "LatitudeMax": 49.1,
-            "LongitudeMin": -122.9,
-            "LongitudeMax": -122.7
-          }
+          "displayName": "South Surrey / White Rock",
+          "jurisdiction": "CA-BC",
+          "apiParams": { "LatitudeMin": 49.0, "LatitudeMax": 49.1, "LongitudeMin": -122.9, "LongitudeMax": -122.7 }
         },
         "vancouver-island": {
-          "apiParams": {
-            "LatitudeMin": 48.7,
-            "LatitudeMax": 50.1,
-            "LongitudeMin": -126.0,
-            "LongitudeMax": -123.5
-          }
+          "displayName": "Vancouver Island",
+          "jurisdiction": "CA-BC",
+          "apiParams": { "LatitudeMin": 48.7, "LatitudeMax": 50.1, "LongitudeMin": -126.0, "LongitudeMax": -123.5 }
+        },
+        "vancouver": {
+          "displayName": "Vancouver",
+          "jurisdiction": "CA-BC",
+          "apiParams": { "LatitudeMin": 49.20, "LatitudeMax": 49.32, "LongitudeMin": -123.25, "LongitudeMax": -123.02 }
+        },
+        "burnaby-new-westminster": {
+          "displayName": "Burnaby / New Westminster",
+          "jurisdiction": "CA-BC",
+          "apiParams": { "LatitudeMin": 49.18, "LatitudeMax": 49.30, "LongitudeMin": -123.05, "LongitudeMax": -122.85 }
+        },
+        "north-shore": {
+          "displayName": "North Shore",
+          "jurisdiction": "CA-BC",
+          "apiParams": { "LatitudeMin": 49.30, "LatitudeMax": 49.40, "LongitudeMin": -123.30, "LongitudeMax": -123.00 }
+        },
+        "tri-cities": {
+          "displayName": "Tri-Cities",
+          "jurisdiction": "CA-BC",
+          "apiParams": { "LatitudeMin": 49.22, "LatitudeMax": 49.35, "LongitudeMin": -122.90, "LongitudeMax": -122.70 }
+        },
+        "ridge-meadows": {
+          "displayName": "Ridge Meadows",
+          "jurisdiction": "CA-BC",
+          "apiParams": { "LatitudeMin": 49.18, "LatitudeMax": 49.30, "LongitudeMin": -122.65, "LongitudeMax": -122.50 }
+        },
+        "langley-delta": {
+          "displayName": "Langley / Delta",
+          "jurisdiction": "CA-BC",
+          "apiParams": { "LatitudeMin": 49.00, "LatitudeMax": 49.18, "LongitudeMin": -123.05, "LongitudeMax": -122.50 }
+        },
+        "richmond": {
+          "displayName": "Richmond",
+          "jurisdiction": "CA-BC",
+          "apiParams": { "LatitudeMin": 49.10, "LatitudeMax": 49.22, "LongitudeMin": -123.25, "LongitudeMax": -123.05 }
+        },
+        "surrey-expanded": {
+          "displayName": "Surrey (Expanded)",
+          "jurisdiction": "CA-BC",
+          "apiParams": { "LatitudeMin": 49.05, "LatitudeMax": 49.22, "LongitudeMin": -122.90, "LongitudeMax": -122.65 }
+        },
+        "sunshine-coast": {
+          "displayName": "Sunshine Coast",
+          "jurisdiction": "CA-BC",
+          "apiParams": { "LatitudeMin": 49.30, "LatitudeMax": 49.70, "LongitudeMin": -124.10, "LongitudeMax": -123.40 }
+        },
+        "okanagan": {
+          "displayName": "Okanagan",
+          "jurisdiction": "CA-BC",
+          "apiParams": { "LatitudeMin": 49.00, "LatitudeMax": 50.50, "LongitudeMin": -120.00, "LongitudeMax": -119.00 }
+        },
+        "sea-to-sky": {
+          "displayName": "Sea to Sky",
+          "jurisdiction": "CA-BC",
+          "apiParams": { "LatitudeMin": 49.60, "LatitudeMax": 50.40, "LongitudeMin": -123.30, "LongitudeMax": -122.50 }
+        },
+        "gulf-islands": {
+          "displayName": "Gulf Islands",
+          "jurisdiction": "CA-BC",
+          "apiParams": { "LatitudeMin": 48.70, "LatitudeMax": 49.10, "LongitudeMin": -123.60, "LongitudeMax": -123.20 }
+        },
+        "edmonton": {
+          "displayName": "Edmonton",
+          "jurisdiction": "CA-AB",
+          "apiParams": { "LatitudeMin": 53.40, "LatitudeMax": 53.70, "LongitudeMin": -113.70, "LongitudeMax": -113.30 }
+        },
+        "hinton": {
+          "displayName": "Hinton",
+          "jurisdiction": "CA-AB",
+          "apiParams": { "LatitudeMin": 53.35, "LatitudeMax": 53.45, "LongitudeMin": -117.65, "LongitudeMax": -117.50 }
+        },
+        "toronto": {
+          "displayName": "Toronto",
+          "jurisdiction": "CA-ON",
+          "apiParams": { "LatitudeMin": 43.58, "LatitudeMax": 43.86, "LongitudeMin": -79.65, "LongitudeMax": -79.10 }
         }
       },
       "headers": {
@@ -93,8 +252,55 @@
       "displayName": "BC Assessment",
       "baseUrl": "https://www.bcassessment.ca",
       "type": "supplementary",
+      "jurisdiction": "CA-BC",
       "description": "Used to verify assessed values and property details, not for listing discovery",
       "enabled": false
+    },
+    {
+      "name": "zillow",
+      "displayName": "Zillow",
+      "baseUrl": "https://www.zillow.com",
+      "type": "web",
+      "jurisdiction": "US",
+      "regions": {
+        "laguna-beach": {
+          "displayName": "Laguna Beach",
+          "jurisdiction": "US-CA",
+          "searchUrl": "/laguna-beach-ca/",
+          "neighborhoods": [
+            "Laguna Beach", "Dana Point", "San Clemente",
+            "San Juan Capistrano", "Laguna Niguel", "Newport Beach"
+          ]
+        }
+      },
+      "rateLimit": {
+        "requestsPerMinute": 3,
+        "delayMs": 20000
+      },
+      "enabled": true
+    },
+    {
+      "name": "redfin",
+      "displayName": "Redfin",
+      "baseUrl": "https://www.redfin.com",
+      "type": "web",
+      "jurisdiction": "US",
+      "regions": {
+        "laguna-beach": {
+          "displayName": "Laguna Beach",
+          "jurisdiction": "US-CA",
+          "searchUrl": "/city/10145/CA/Laguna-Beach",
+          "neighborhoods": [
+            "Laguna Beach", "Dana Point", "San Clemente",
+            "San Juan Capistrano", "Laguna Niguel", "Newport Beach"
+          ]
+        }
+      },
+      "rateLimit": {
+        "requestsPerMinute": 3,
+        "delayMs": 20000
+      },
+      "enabled": true
     }
   ],
   "output": {
@@ -114,7 +320,13 @@
       "max": 50000000
     },
     "validTypes": ["House", "Apt/Condo", "Townhouse", "Land/Lot", "Duplex", "Mfd Home"],
-    "validRegions": ["South Surrey / White Rock", "Vancouver Island"]
+    "validRegions": [
+      "South Surrey / White Rock", "Vancouver Island",
+      "Vancouver", "Burnaby / New Westminster", "North Shore", "Tri-Cities",
+      "Ridge Meadows", "Langley / Delta", "Richmond", "Surrey (Expanded)",
+      "Sunshine Coast", "Okanagan", "Sea to Sky", "Gulf Islands",
+      "Edmonton", "Hinton", "Toronto", "Laguna Beach"
+    ]
   },
   "geocoding": {
     "provider": "nominatim",
@@ -124,21 +336,53 @@
       "delayMs": 1100
     },
     "defaultCountry": "Canada",
-    "defaultProvince": "British Columbia"
+    "defaultProvince": "British Columbia",
+    "jurisdictionDefaults": {
+      "CA-BC": { "province": "British Columbia", "country": "Canada" },
+      "CA-AB": { "province": "Alberta", "country": "Canada" },
+      "CA-ON": { "province": "Ontario", "country": "Canada" },
+      "US-CA": { "province": "California", "country": "United States" }
+    }
   },
   "regionBounds": {
-    "South Surrey / White Rock": {
-      "latMin": 48.95,
-      "latMax": 49.15,
-      "lngMin": -122.95,
-      "lngMax": -122.65
-    },
-    "Vancouver Island": {
-      "latMin": 48.3,
-      "latMax": 50.3,
-      "lngMin": -126.5,
-      "lngMax": -123.2
-    }
+    "South Surrey / White Rock": { "latMin": 48.95, "latMax": 49.15, "lngMin": -122.95, "lngMax": -122.65 },
+    "Vancouver Island": { "latMin": 48.3, "latMax": 50.3, "lngMin": -126.5, "lngMax": -123.2 },
+    "Vancouver": { "latMin": 49.20, "latMax": 49.32, "lngMin": -123.25, "lngMax": -123.02 },
+    "Burnaby / New Westminster": { "latMin": 49.18, "latMax": 49.30, "lngMin": -123.05, "lngMax": -122.85 },
+    "North Shore": { "latMin": 49.30, "latMax": 49.40, "lngMin": -123.30, "lngMax": -123.00 },
+    "Tri-Cities": { "latMin": 49.22, "latMax": 49.35, "lngMin": -122.90, "lngMax": -122.70 },
+    "Ridge Meadows": { "latMin": 49.18, "latMax": 49.30, "lngMin": -122.65, "lngMax": -122.50 },
+    "Langley / Delta": { "latMin": 49.00, "latMax": 49.18, "lngMin": -123.05, "lngMax": -122.50 },
+    "Richmond": { "latMin": 49.10, "latMax": 49.22, "lngMin": -123.25, "lngMax": -123.05 },
+    "Surrey (Expanded)": { "latMin": 49.05, "latMax": 49.22, "lngMin": -122.90, "lngMax": -122.65 },
+    "Sunshine Coast": { "latMin": 49.30, "latMax": 49.70, "lngMin": -124.10, "lngMax": -123.40 },
+    "Okanagan": { "latMin": 49.00, "latMax": 50.50, "lngMin": -120.00, "lngMax": -119.00 },
+    "Sea to Sky": { "latMin": 49.60, "latMax": 50.40, "lngMin": -123.30, "lngMax": -122.50 },
+    "Gulf Islands": { "latMin": 48.70, "latMax": 49.10, "lngMin": -123.60, "lngMax": -123.20 },
+    "Edmonton": { "latMin": 53.40, "latMax": 53.70, "lngMin": -113.70, "lngMax": -113.30 },
+    "Hinton": { "latMin": 53.35, "latMax": 53.45, "lngMin": -117.65, "lngMax": -117.50 },
+    "Toronto": { "latMin": 43.58, "latMax": 43.86, "lngMin": -79.65, "lngMax": -79.10 },
+    "Laguna Beach": { "latMin": 33.40, "latMax": 33.70, "lngMin": -117.90, "lngMax": -117.60 }
+  },
+  "regionJurisdictionMap": {
+    "South Surrey / White Rock": "CA-BC",
+    "Vancouver Island": "CA-BC",
+    "Vancouver": "CA-BC",
+    "Burnaby / New Westminster": "CA-BC",
+    "North Shore": "CA-BC",
+    "Tri-Cities": "CA-BC",
+    "Ridge Meadows": "CA-BC",
+    "Langley / Delta": "CA-BC",
+    "Richmond": "CA-BC",
+    "Surrey (Expanded)": "CA-BC",
+    "Sunshine Coast": "CA-BC",
+    "Okanagan": "CA-BC",
+    "Sea to Sky": "CA-BC",
+    "Gulf Islands": "CA-BC",
+    "Edmonton": "CA-AB",
+    "Hinton": "CA-AB",
+    "Toronto": "CA-ON",
+    "Laguna Beach": "US-CA"
   },
   "neighborhoodRegionMap": {
     "White Rock": "South Surrey / White Rock",
@@ -159,6 +403,113 @@
     "Courtenay": "Vancouver Island",
     "Comox": "Vancouver Island",
     "Cumberland": "Vancouver Island",
-    "Campbell River": "Vancouver Island"
+    "Campbell River": "Vancouver Island",
+    "Downtown": "Vancouver",
+    "West End": "Vancouver",
+    "Kitsilano": "Vancouver",
+    "Mount Pleasant": "Vancouver",
+    "Commercial Drive": "Vancouver",
+    "Kerrisdale": "Vancouver",
+    "Dunbar": "Vancouver",
+    "Point Grey": "Vancouver",
+    "Marpole": "Vancouver",
+    "Hastings-Sunrise": "Vancouver",
+    "Renfrew-Collingwood": "Vancouver",
+    "Metrotown": "Burnaby / New Westminster",
+    "Brentwood": "Burnaby / New Westminster",
+    "Edmonds": "Burnaby / New Westminster",
+    "Lougheed": "Burnaby / New Westminster",
+    "Downtown NW": "Burnaby / New Westminster",
+    "Sapperton": "Burnaby / New Westminster",
+    "Queensborough": "Burnaby / New Westminster",
+    "Lower Lonsdale": "North Shore",
+    "Lynn Valley": "North Shore",
+    "Deep Cove": "North Shore",
+    "Ambleside": "North Shore",
+    "Dundarave": "North Shore",
+    "British Properties": "North Shore",
+    "Town Centre": "Tri-Cities",
+    "Burke Mountain": "Tri-Cities",
+    "Westwood Plateau": "Tri-Cities",
+    "Port Coquitlam": "Tri-Cities",
+    "Inlet Centre": "Tri-Cities",
+    "Heritage Mountain": "Tri-Cities",
+    "Maple Ridge Town Centre": "Ridge Meadows",
+    "Silver Valley": "Ridge Meadows",
+    "Albion": "Ridge Meadows",
+    "Pitt Meadows": "Ridge Meadows",
+    "Langley City": "Langley / Delta",
+    "Willoughby": "Langley / Delta",
+    "Walnut Grove": "Langley / Delta",
+    "Fort Langley": "Langley / Delta",
+    "Tsawwassen": "Langley / Delta",
+    "Ladner": "Langley / Delta",
+    "North Delta": "Langley / Delta",
+    "Richmond Centre": "Richmond",
+    "Steveston": "Richmond",
+    "Brighouse": "Richmond",
+    "Ironwood": "Richmond",
+    "Terra Nova": "Richmond",
+    "Fleetwood": "Surrey (Expanded)",
+    "Guildford": "Surrey (Expanded)",
+    "Cloverdale": "Surrey (Expanded)",
+    "Newton": "Surrey (Expanded)",
+    "Panorama Ridge": "Surrey (Expanded)",
+    "Fraser Heights": "Surrey (Expanded)",
+    "Gibsons": "Sunshine Coast",
+    "Sechelt": "Sunshine Coast",
+    "Roberts Creek": "Sunshine Coast",
+    "Halfmoon Bay": "Sunshine Coast",
+    "Pender Harbour": "Sunshine Coast",
+    "Madeira Park": "Sunshine Coast",
+    "Kelowna": "Okanagan",
+    "West Kelowna": "Okanagan",
+    "Penticton": "Okanagan",
+    "Vernon": "Okanagan",
+    "Lake Country": "Okanagan",
+    "Summerland": "Okanagan",
+    "Peachland": "Okanagan",
+    "Osoyoos": "Okanagan",
+    "Oliver": "Okanagan",
+    "Whistler": "Sea to Sky",
+    "Pemberton": "Sea to Sky",
+    "Squamish": "Sea to Sky",
+    "Salt Spring Island": "Gulf Islands",
+    "Galiano Island": "Gulf Islands",
+    "Mayne Island": "Gulf Islands",
+    "Pender Island": "Gulf Islands",
+    "Saturna Island": "Gulf Islands",
+    "Gabriola Island": "Gulf Islands",
+    "Oliver": "Okanagan",
+    "Downtown Core": "Toronto",
+    "Yorkville": "Toronto",
+    "The Annex": "Toronto",
+    "Liberty Village": "Toronto",
+    "King West": "Toronto",
+    "Leslieville": "Toronto",
+    "The Beaches": "Toronto",
+    "North York": "Toronto",
+    "Scarborough": "Toronto",
+    "Etobicoke": "Toronto",
+    "Mississauga": "Toronto",
+    "Markham": "Toronto",
+    "Downtown Edmonton": "Edmonton",
+    "Oliver District": "Edmonton",
+    "Strathcona": "Edmonton",
+    "Whyte Ave": "Edmonton",
+    "Windermere": "Edmonton",
+    "Terwillegar": "Edmonton",
+    "Riverbend": "Edmonton",
+    "Mill Woods": "Edmonton",
+    "St. Albert": "Edmonton",
+    "Sherwood Park": "Edmonton",
+    "Hinton": "Hinton",
+    "Edson": "Hinton",
+    "Laguna Beach": "Laguna Beach",
+    "Dana Point": "Laguna Beach",
+    "San Clemente": "Laguna Beach",
+    "San Juan Capistrano": "Laguna Beach",
+    "Laguna Niguel": "Laguna Beach",
+    "Newport Beach": "Laguna Beach"
   }
 }

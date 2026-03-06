@@ -310,12 +310,7 @@ async function scrapeRew(source, config, opts) {
 
   for (const regionKey of regionKeys) {
     const regionConfig = source.regions[regionKey];
-    const regionLabel =
-      regionKey === 'south-surrey-white-rock'
-        ? 'South Surrey / White Rock'
-        : regionKey === 'vancouver-island'
-        ? 'Vancouver Island'
-        : regionKey;
+    const regionLabel = regionConfig.displayName || regionKey;
 
     // If a region filter is specified, skip non-matching regions
     if (opts.region && !regionLabel.toLowerCase().includes(opts.region.toLowerCase())) {
@@ -447,12 +442,7 @@ async function scrapeRealtor(source, config, opts) {
 
   for (const regionKey of regionKeys) {
     const regionConfig = source.regions[regionKey];
-    const regionLabel =
-      regionKey === 'south-surrey-white-rock'
-        ? 'South Surrey / White Rock'
-        : regionKey === 'vancouver-island'
-        ? 'Vancouver Island'
-        : regionKey;
+    const regionLabel = regionConfig.displayName || regionKey;
 
     if (opts.region && !regionLabel.toLowerCase().includes(opts.region.toLowerCase())) {
       verbose(`Skipping Realtor region: ${regionLabel} (filter: ${opts.region})`, opts);
@@ -650,6 +640,66 @@ function parseRealtorResult(result, region, neighborhoods) {
 }
 
 // ---------------------------------------------------------------------------
+// Source adapter: Zillow (stub)
+// ---------------------------------------------------------------------------
+
+async function scrapeZillow(source, config, opts) {
+  const listings = [];
+  const errors = [];
+  const regionKeys = Object.keys(source.regions || {});
+
+  for (const regionKey of regionKeys) {
+    const regionConfig = source.regions[regionKey];
+    const regionLabel = regionConfig.displayName || regionKey;
+    const jurisdictionCode = regionConfig.jurisdiction || source.jurisdiction || 'US-CA';
+
+    if (opts.region && !regionLabel.toLowerCase().includes(opts.region.toLowerCase())) {
+      verbose(`Skipping Zillow region: ${regionLabel} (filter: ${opts.region})`, opts);
+      continue;
+    }
+
+    log(`[Zillow] Region "${regionLabel}" - stub adapter (no live scraping yet)`);
+    log(`[Zillow] Jurisdiction: ${jurisdictionCode}`);
+    log(`[Zillow] To implement: parse ${source.baseUrl}${regionConfig.searchUrl}`);
+
+    // Stub: returns empty array, ready for implementation
+    // When implemented, each listing should include:
+    //   { addr, price, beds, baths, sqft, type, neighborhood, region: regionLabel,
+    //     jurisdiction: jurisdictionCode, country: 'US', province_state: 'CA', currency: 'USD',
+    //     source: 'zillow', scraped_at: new Date().toISOString() }
+  }
+
+  return { listings, errors };
+}
+
+// ---------------------------------------------------------------------------
+// Source adapter: Redfin (stub)
+// ---------------------------------------------------------------------------
+
+async function scrapeRedfin(source, config, opts) {
+  const listings = [];
+  const errors = [];
+  const regionKeys = Object.keys(source.regions || {});
+
+  for (const regionKey of regionKeys) {
+    const regionConfig = source.regions[regionKey];
+    const regionLabel = regionConfig.displayName || regionKey;
+    const jurisdictionCode = regionConfig.jurisdiction || source.jurisdiction || 'US-CA';
+
+    if (opts.region && !regionLabel.toLowerCase().includes(opts.region.toLowerCase())) {
+      verbose(`Skipping Redfin region: ${regionLabel} (filter: ${opts.region})`, opts);
+      continue;
+    }
+
+    log(`[Redfin] Region "${regionLabel}" - stub adapter (no live scraping yet)`);
+    log(`[Redfin] Jurisdiction: ${jurisdictionCode}`);
+    log(`[Redfin] To implement: parse ${source.baseUrl}${regionConfig.searchUrl}`);
+  }
+
+  return { listings, errors };
+}
+
+// ---------------------------------------------------------------------------
 // Normalization helpers
 // ---------------------------------------------------------------------------
 
@@ -825,11 +875,20 @@ async function geocodeListing(listing, config, opts) {
   const geoConfig = config.geocoding;
   if (!geoConfig) return listing;
 
+  // Determine jurisdiction-specific geocoding defaults
+  let geoProvince = geoConfig.defaultProvince;
+  let geoCountry = geoConfig.defaultCountry;
+  if (listing.jurisdiction && geoConfig.jurisdictionDefaults && geoConfig.jurisdictionDefaults[listing.jurisdiction]) {
+    const jurDefaults = geoConfig.jurisdictionDefaults[listing.jurisdiction];
+    geoProvince = jurDefaults.province || geoProvince;
+    geoCountry = jurDefaults.country || geoCountry;
+  }
+
   const query = [
     listing.addr,
     listing.neighborhood,
-    geoConfig.defaultProvince,
-    geoConfig.defaultCountry,
+    geoProvince,
+    geoCountry,
   ]
     .filter(Boolean)
     .join(', ');
@@ -1135,6 +1194,12 @@ async function main() {
           break;
         case 'realtor':
           result = await scrapeRealtor(source, config, opts);
+          break;
+        case 'zillow':
+          result = await scrapeZillow(source, config, opts);
+          break;
+        case 'redfin':
+          result = await scrapeRedfin(source, config, opts);
           break;
         default:
           verbose(`No adapter for source: ${source.name}`, opts);
