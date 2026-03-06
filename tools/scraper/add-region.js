@@ -3,12 +3,13 @@
  * add-region.js - Helper script to add a new region to the scraping pipeline
  *
  * Interactive CLI that prompts for region configuration and updates:
- *   - config.json (scraper sources, region bounds, neighborhood-region map)
+ *   - config.json (scraper sources, region bounds, neighborhood-region map, jurisdiction)
  *   - data/benchmarks.json (neighborhood benchmarks, trend bonuses, market trends)
  *
  * Usage:
  *   node tools/scraper/add-region.js
  *   node tools/scraper/add-region.js --non-interactive --name "Fraser Valley" --neighborhoods "Abbotsford,Chilliwack,Mission"
+ *   node tools/scraper/add-region.js --non-interactive --name "Hinton" --neighborhoods "Hinton,Edson" --country CA --province AB --currency CAD --source realtor
  *
  * Options:
  *   --non-interactive       Skip prompts, use command-line arguments
@@ -20,6 +21,10 @@
  *   --lng-min <n>           Minimum longitude
  *   --lng-max <n>           Maximum longitude
  *   --similar-to <region>   Base benchmark estimates on this existing region
+ *   --country <code>        Country code: CA or US (default: CA)
+ *   --province <code>       Province/state code: BC, AB, ON, CA (default: BC)
+ *   --currency <code>       Currency code: CAD or USD (default: CAD)
+ *   --source <names>        Comma-separated sources to register with (default: rew,realtor for BC; realtor for other CA; zillow,redfin for US)
  *   --dry-run               Show changes without writing files
  */
 
@@ -32,6 +37,22 @@ const readline = require('readline');
 const SCRIPT_DIR = __dirname;
 const CONFIG_PATH = path.join(SCRIPT_DIR, 'config.json');
 const BENCHMARKS_PATH = path.resolve(SCRIPT_DIR, '../../data/benchmarks.json');
+
+// Valid jurisdiction combinations
+const VALID_JURISDICTIONS = {
+  'CA-BC': { country: 'CA', provinceState: 'BC', currency: 'CAD' },
+  'CA-AB': { country: 'CA', provinceState: 'AB', currency: 'CAD' },
+  'CA-ON': { country: 'CA', provinceState: 'ON', currency: 'CAD' },
+  'US-CA': { country: 'US', provinceState: 'CA', currency: 'USD' },
+};
+
+// Default sources per jurisdiction
+const DEFAULT_SOURCES = {
+  'CA-BC': ['rew', 'realtor'],
+  'CA-AB': ['realtor'],
+  'CA-ON': ['realtor'],
+  'US-CA': ['zillow', 'redfin'],
+};
 
 // ---------------------------------------------------------------------------
 // CLI helpers
@@ -49,6 +70,10 @@ function parseArgs() {
     lngMin: null,
     lngMax: null,
     similarTo: null,
+    country: null,
+    province: null,
+    currency: null,
+    source: null,
     dryRun: false,
   };
   for (let i = 0; i < args.length; i++) {
@@ -79,6 +104,18 @@ function parseArgs() {
         break;
       case '--similar-to':
         opts.similarTo = args[++i];
+        break;
+      case '--country':
+        opts.country = args[++i];
+        break;
+      case '--province':
+        opts.province = args[++i];
+        break;
+      case '--currency':
+        opts.currency = args[++i];
+        break;
+      case '--source':
+        opts.source = args[++i];
         break;
       case '--dry-run':
         opts.dryRun = true;
@@ -122,15 +159,24 @@ function toSlug(name) {
 }
 
 // ---------------------------------------------------------------------------
+// Jurisdiction helpers
+// ---------------------------------------------------------------------------
+
+function getJurisdictionCode(country, province) {
+  const code = `${country}-${province}`;
+  if (VALID_JURISDICTIONS[code]) return code;
+  return null;
+}
+
+function getDefaultSources(jurisdictionCode) {
+  return DEFAULT_SOURCES[jurisdictionCode] || ['realtor'];
+}
+
+// ---------------------------------------------------------------------------
 // Benchmark estimation
 // ---------------------------------------------------------------------------
 
-/**
- * Generate benchmark estimates for a neighborhood based on a similar existing region.
- * Applies a small random variation to make values slightly different.
- */
 function estimateBenchmarks(existingBenchmarks, similarRegionNeighborhoods) {
-  // Find an existing neighborhood to use as a base
   let baseBenchmark = null;
   for (const hood of similarRegionNeighborhoods) {
     if (existingBenchmarks[hood]) {
@@ -140,7 +186,6 @@ function estimateBenchmarks(existingBenchmarks, similarRegionNeighborhoods) {
   }
 
   if (!baseBenchmark) {
-    // Use defaults if no similar region found
     return {
       House: 800000,
       Townhouse: 550000,
@@ -151,18 +196,14 @@ function estimateBenchmarks(existingBenchmarks, similarRegionNeighborhoods) {
     };
   }
 
-  // Apply a small random variation (+-10%)
   const result = {};
   for (const [type, price] of Object.entries(baseBenchmark)) {
-    const variation = 0.9 + Math.random() * 0.2; // 0.9 to 1.1
-    result[type] = Math.round(price * variation / 1000) * 1000; // Round to nearest thousand
+    const variation = 0.9 + Math.random() * 0.2;
+    result[type] = Math.round(price * variation / 1000) * 1000;
   }
   return result;
 }
 
-/**
- * Generate default market trend data for a new neighborhood.
- */
 function defaultMarketTrend() {
   return {
     yoyChange: 0.0,
@@ -173,9 +214,6 @@ function defaultMarketTrend() {
   };
 }
 
-/**
- * Generate default trend bonus (market score 1-10).
- */
 function defaultTrendBonus() {
   return 5;
 }
@@ -186,27 +224,39 @@ function defaultTrendBonus() {
 
 function updateConfig(config, regionData) {
   const slug = toSlug(regionData.name);
+  const jurisdictionCode = regionData.jurisdiction || 'CA-BC';
+  const applicableSources = regionData.sources || getDefaultSources(jurisdictionCode);
 
-  // Add to REW source
-  const rewSource = config.sources.find((s) => s.name === 'rew');
-  if (rewSource) {
-    rewSource.regions[slug] = {
-      searchUrl: regionData.rewUrl || `/properties/search/${slug}?type=all&status=active`,
-      neighborhoods: regionData.neighborhoods,
-    };
-  }
+  // Register region with applicable sources only
+  for (const sourceName of applicableSources) {
+    const source = config.sources.find((s) => s.name === sourceName);
+    if (!source) continue;
 
-  // Add to Realtor source
-  const realtorSource = config.sources.find((s) => s.name === 'realtor');
-  if (realtorSource) {
-    realtorSource.regions[slug] = {
-      apiParams: {
-        LatitudeMin: regionData.latMin,
-        LatitudeMax: regionData.latMax,
-        LongitudeMin: regionData.lngMin,
-        LongitudeMax: regionData.lngMax,
-      },
-    };
+    if (sourceName === 'rew') {
+      source.regions[slug] = {
+        displayName: regionData.name,
+        searchUrl: regionData.rewUrl || `/properties/search/${slug}?type=all&status=active`,
+        neighborhoods: regionData.neighborhoods,
+      };
+    } else if (sourceName === 'realtor') {
+      source.regions[slug] = {
+        displayName: regionData.name,
+        jurisdiction: jurisdictionCode,
+        apiParams: {
+          LatitudeMin: regionData.latMin,
+          LatitudeMax: regionData.latMax,
+          LongitudeMin: regionData.lngMin,
+          LongitudeMax: regionData.lngMax,
+        },
+      };
+    } else if (sourceName === 'zillow' || sourceName === 'redfin') {
+      source.regions[slug] = {
+        displayName: regionData.name,
+        jurisdiction: jurisdictionCode,
+        searchUrl: `/${slug}/`,
+        neighborhoods: regionData.neighborhoods,
+      };
+    }
   }
 
   // Add to validation.validRegions
@@ -222,6 +272,10 @@ function updateConfig(config, regionData) {
     lngMax: regionData.lngMax,
   };
 
+  // Add to regionJurisdictionMap
+  if (!config.regionJurisdictionMap) config.regionJurisdictionMap = {};
+  config.regionJurisdictionMap[regionData.name] = jurisdictionCode;
+
   // Add to neighborhoodRegionMap
   for (const hood of regionData.neighborhoods) {
     config.neighborhoodRegionMap[hood] = regionData.name;
@@ -231,7 +285,6 @@ function updateConfig(config, regionData) {
 }
 
 function updateBenchmarks(benchmarks, regionData, config) {
-  // Find similar region neighborhoods for estimation
   let similarNeighborhoods = [];
   if (regionData.similarTo) {
     for (const [hood, region] of Object.entries(config.neighborhoodRegionMap)) {
@@ -241,12 +294,10 @@ function updateBenchmarks(benchmarks, regionData, config) {
     }
   }
 
-  // If no similar region specified, use all existing neighborhoods
   if (similarNeighborhoods.length === 0) {
     similarNeighborhoods = Object.keys(benchmarks.neighborhoodBenchmarks);
   }
 
-  // Add benchmarks for each new neighborhood
   for (const hood of regionData.neighborhoods) {
     if (!benchmarks.neighborhoodBenchmarks[hood]) {
       if (regionData.benchmarkPrices && regionData.benchmarkPrices[hood]) {
@@ -268,7 +319,6 @@ function updateBenchmarks(benchmarks, regionData, config) {
     }
   }
 
-  // Update metadata
   benchmarks.metadata.lastUpdated = new Date().toISOString();
 
   return benchmarks;
@@ -289,13 +339,30 @@ async function interactivePrompt() {
   console.log('  It will update config.json and data/benchmarks.json.');
   console.log('');
 
-  // Load existing config to show current regions
   const config = JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf-8'));
   console.log('  Current regions:');
   for (const region of config.validation.validRegions) {
-    console.log(`    - ${region}`);
+    const jur = (config.regionJurisdictionMap || {})[region] || 'CA-BC';
+    console.log(`    - ${region} (${jur})`);
   }
   console.log('');
+
+  // Jurisdiction selection
+  console.log('  Available jurisdictions:');
+  for (const [code, info] of Object.entries(VALID_JURISDICTIONS)) {
+    console.log(`    ${code} - ${info.country}/${info.provinceState} (${info.currency})`);
+  }
+  const country = await ask(rl, 'Country code (CA or US)', 'CA');
+  const province = await ask(rl, 'Province/State code (BC, AB, ON, CA)', 'BC');
+  const jurisdictionCode = getJurisdictionCode(country.toUpperCase(), province.toUpperCase());
+  if (!jurisdictionCode) {
+    console.error(`  Invalid jurisdiction: ${country}-${province}`);
+    rl.close();
+    process.exit(1);
+  }
+  const jurInfo = VALID_JURISDICTIONS[jurisdictionCode];
+  const currency = jurInfo.currency;
+  console.log(`  Jurisdiction: ${jurisdictionCode} (${currency})`);
 
   const name = await ask(rl, 'Region display name (e.g., "Fraser Valley")');
   if (!name) {
@@ -304,7 +371,6 @@ async function interactivePrompt() {
     process.exit(1);
   }
 
-  // Check if region already exists
   if (config.validation.validRegions.includes(name)) {
     console.error(`  Region "${name}" already exists.`);
     rl.close();
@@ -328,13 +394,22 @@ async function interactivePrompt() {
 
   console.log(`\n  Neighborhoods: ${neighborhoods.join(', ')}`);
 
-  const rewUrl = await ask(
-    rl,
-    'REW.ca search URL path',
-    `/properties/search/${toSlug(name)}?type=all&status=active`
-  );
+  // Source selection
+  const defaultSources = getDefaultSources(jurisdictionCode);
+  console.log(`\n  Default sources for ${jurisdictionCode}: ${defaultSources.join(', ')}`);
+  const sourcesRaw = await ask(rl, 'Sources (comma-separated)', defaultSources.join(','));
+  const sources = sourcesRaw.split(',').map(s => s.trim()).filter(Boolean);
 
-  console.log('\n  Coordinate bounds for Realtor.ca API:');
+  let rewUrl = null;
+  if (sources.includes('rew')) {
+    rewUrl = await ask(
+      rl,
+      'REW.ca search URL path',
+      `/properties/search/${toSlug(name)}?type=all&status=active`
+    );
+  }
+
+  console.log('\n  Coordinate bounds:');
   console.log('  (Tip: Use Google Maps to find approximate lat/lng bounds)');
   const latMin = parseFloat(await ask(rl, 'Latitude Min', '49.0'));
   const latMax = parseFloat(await ask(rl, 'Latitude Max', '49.5'));
@@ -349,19 +424,17 @@ async function interactivePrompt() {
 
   // Similar region for benchmark estimation
   console.log('\n  Benchmark price estimation:');
-  console.log('  You can base estimates on an existing region, or leave blank for defaults.');
   const existingRegions = config.validation.validRegions;
   console.log(`  Available: ${existingRegions.join(', ')}`);
   const similarTo = await ask(rl, 'Base estimates on region (or press Enter for defaults)', '');
 
-  // Custom benchmark prices (optional)
+  let benchmarkPrices = null;
   const customBenchmarks = await ask(
     rl,
     'Enter custom benchmark prices per neighborhood? (y/n)',
     'n'
   );
 
-  let benchmarkPrices = null;
   if (customBenchmarks.toLowerCase() === 'y') {
     benchmarkPrices = {};
     for (const hood of neighborhoods) {
@@ -396,6 +469,11 @@ async function interactivePrompt() {
     lngMax,
     similarTo: similarTo || null,
     benchmarkPrices,
+    country: country.toUpperCase(),
+    province: province.toUpperCase(),
+    currency,
+    jurisdiction: jurisdictionCode,
+    sources,
   };
 }
 
@@ -413,16 +491,34 @@ function nonInteractiveArgs(cliOpts) {
     process.exit(1);
   }
 
+  const country = (cliOpts.country || 'CA').toUpperCase();
+  const province = (cliOpts.province || 'BC').toUpperCase();
+  const jurisdictionCode = getJurisdictionCode(country, province);
+  if (!jurisdictionCode) {
+    console.error(`Invalid jurisdiction: ${country}-${province}. Valid: ${Object.keys(VALID_JURISDICTIONS).join(', ')}`);
+    process.exit(1);
+  }
+  const jurInfo = VALID_JURISDICTIONS[jurisdictionCode];
+  const currency = (cliOpts.currency || jurInfo.currency).toUpperCase();
+  const sources = cliOpts.source
+    ? cliOpts.source.split(',').map(s => s.trim()).filter(Boolean)
+    : getDefaultSources(jurisdictionCode);
+
   return {
     name: cliOpts.name,
     neighborhoods: cliOpts.neighborhoods.split(',').map((n) => n.trim()).filter(Boolean),
-    rewUrl: cliOpts.rewUrl || `/properties/search/${toSlug(cliOpts.name)}?type=all&status=active`,
+    rewUrl: cliOpts.rewUrl || (sources.includes('rew') ? `/properties/search/${toSlug(cliOpts.name)}?type=all&status=active` : null),
     latMin: cliOpts.latMin || 49.0,
     latMax: cliOpts.latMax || 49.5,
     lngMin: cliOpts.lngMin || -123.0,
     lngMax: cliOpts.lngMax || -121.5,
     similarTo: cliOpts.similarTo || null,
     benchmarkPrices: null,
+    country,
+    province,
+    currency,
+    jurisdiction: jurisdictionCode,
+    sources,
   };
 }
 
@@ -454,8 +550,15 @@ async function main() {
   console.log('-'.repeat(60));
   console.log(`  Region name:        ${regionData.name}`);
   console.log(`  Slug:               ${toSlug(regionData.name)}`);
+  console.log(`  Jurisdiction:       ${regionData.jurisdiction}`);
+  console.log(`  Country:            ${regionData.country}`);
+  console.log(`  Province/State:     ${regionData.province}`);
+  console.log(`  Currency:           ${regionData.currency}`);
+  console.log(`  Sources:            ${regionData.sources.join(', ')}`);
   console.log(`  Neighborhoods:      ${regionData.neighborhoods.join(', ')}`);
-  console.log(`  REW URL:            ${regionData.rewUrl}`);
+  if (regionData.rewUrl) {
+    console.log(`  REW URL:            ${regionData.rewUrl}`);
+  }
   console.log(`  Coordinates:        lat [${regionData.latMin}, ${regionData.latMax}], lng [${regionData.lngMin}, ${regionData.lngMax}]`);
   console.log(`  Similar to:         ${regionData.similarTo || '(defaults)'}`);
   console.log('');
@@ -490,7 +593,9 @@ async function main() {
   console.log('\n  Region added successfully!');
   console.log('');
   console.log('  Next steps:');
-  console.log(`  1. Verify the REW.ca search URL works: https://www.rew.ca${regionData.rewUrl}`);
+  if (regionData.sources.includes('rew') && regionData.rewUrl) {
+    console.log(`  1. Verify the REW.ca search URL works: https://www.rew.ca${regionData.rewUrl}`);
+  }
   console.log(`  2. Run a test scrape: node tools/scraper/scraper.js --region "${regionData.name}" --dry-run`);
   console.log(`  3. Review and adjust benchmark prices in data/benchmarks.json`);
   console.log(`  4. Run validation: node tools/scraper/validator.js`);

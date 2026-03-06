@@ -43,9 +43,11 @@ function seed() {
   const insertListing = db.prepare(`
     INSERT INTO listings (addr, price, beds, baths, sqft, type, lot, agent,
       neighborhood, dom, year_built, water_view, latitude, longitude, region,
+      country, province_state, currency, jurisdiction,
       source, status)
     VALUES (@addr, @price, @beds, @baths, @sqft, @type, @lot, @agent,
       @neighborhood, @dom, @year_built, @water_view, @latitude, @longitude, @region,
+      @country, @province_state, @currency, @jurisdiction,
       'manual', 'active')
   `);
 
@@ -79,6 +81,10 @@ function seed() {
         latitude: listing.latitude || null,
         longitude: listing.longitude || null,
         region: listing.region || null,
+        country: listing.country || 'CA',
+        province_state: listing.provinceState || 'BC',
+        currency: listing.currency || 'CAD',
+        jurisdiction: listing.jurisdiction || 'CA-BC',
       };
 
       // Skip duplicates (same address and price)

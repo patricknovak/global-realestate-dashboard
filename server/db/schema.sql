@@ -19,6 +19,10 @@ CREATE TABLE IF NOT EXISTS listings (
     latitude REAL,
     longitude REAL,
     region TEXT,
+    country TEXT DEFAULT 'CA',
+    province_state TEXT DEFAULT 'BC',
+    currency TEXT DEFAULT 'CAD',
+    jurisdiction TEXT DEFAULT 'CA-BC',
     -- Data freshness fields
     source TEXT DEFAULT 'manual',
     source_url TEXT,
@@ -51,6 +55,10 @@ CREATE TABLE IF NOT EXISTS comparable_sales (
     type TEXT,
     neighborhood TEXT,
     region TEXT,
+    country TEXT DEFAULT 'CA',
+    province_state TEXT DEFAULT 'BC',
+    currency TEXT DEFAULT 'CAD',
+    jurisdiction TEXT DEFAULT 'CA-BC',
     sold_date TEXT,
     dom_at_sale INTEGER,
     latitude REAL,
@@ -162,6 +170,34 @@ CREATE TABLE IF NOT EXISTS neighborhood_data (
     restaurants_nearby INTEGER,
     updated_at TEXT DEFAULT (datetime('now'))
 );
+
+-- Jurisdictions reference table
+CREATE TABLE IF NOT EXISTS jurisdictions (
+    code TEXT PRIMARY KEY,
+    country TEXT NOT NULL,
+    province_state TEXT NOT NULL,
+    currency TEXT NOT NULL DEFAULT 'CAD',
+    display_name TEXT NOT NULL,
+    transfer_tax_name TEXT,
+    has_rescission BOOLEAN DEFAULT 0,
+    rescission_days INTEGER DEFAULT 0,
+    rescission_fee_pct REAL DEFAULT 0,
+    rescission_notes TEXT,
+    offer_template_type TEXT DEFAULT 'generic',
+    governing_law TEXT,
+    legal_notes TEXT
+);
+
+-- Seed jurisdictions
+INSERT OR IGNORE INTO jurisdictions (code, country, province_state, currency, display_name, transfer_tax_name, has_rescission, rescission_days, rescission_fee_pct, rescission_notes, offer_template_type, governing_law, legal_notes)
+VALUES
+    ('CA-BC', 'CA', 'BC', 'CAD', 'British Columbia', 'BC Property Transfer Tax', 1, 3, 0.25, '3 business days, 0.25% fee per HBRP', 'bc', 'Province of British Columbia', 'BCREA Contract of Purchase and Sale (Form B). Have a BC lawyer or notary review any offer.'),
+    ('CA-AB', 'CA', 'AB', 'CAD', 'Alberta', 'Land Title Registration Fee', 0, 0, 0, 'No statutory rescission period', 'ab', 'Province of Alberta', 'Alberta Real Estate Association standard forms. Have an Alberta lawyer review any offer.'),
+    ('CA-ON', 'CA', 'ON', 'CAD', 'Ontario', 'Ontario Land Transfer Tax', 1, 10, 0, '10-day cooling-off for pre-construction condos only', 'on', 'Province of Ontario', 'Ontario Real Estate Association Agreement of Purchase and Sale. Have an Ontario lawyer review any offer.'),
+    ('US-CA', 'US', 'CA', 'USD', 'California', 'County Transfer Tax', 0, 0, 0, 'No statutory rescission period', 'us-ca', 'State of California', 'California Association of Realtors Residential Purchase Agreement. Have a California attorney review any offer.');
+
+CREATE INDEX IF NOT EXISTS idx_listings_jurisdiction ON listings(jurisdiction);
+CREATE INDEX IF NOT EXISTS idx_listings_country ON listings(country);
 
 CREATE INDEX IF NOT EXISTS idx_listings_region ON listings(region);
 CREATE INDEX IF NOT EXISTS idx_listings_neighborhood ON listings(neighborhood);
