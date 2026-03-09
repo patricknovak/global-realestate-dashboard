@@ -1,0 +1,5 @@
+node_modules/
+data/
+uploads/
+server/db/dashboard.db
+*.min.js
