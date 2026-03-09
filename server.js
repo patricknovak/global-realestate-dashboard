@@ -167,39 +167,41 @@ app.use((err, req, res, _next) => {
 });
 
 // ---------------------------------------------------------------
-// Start server
+// Start server (only when run directly, not when imported by tests)
 // ---------------------------------------------------------------
-const server = app.listen(PORT, () => {
-  console.log(`
+if (require.main === module) {
+  const server = app.listen(PORT, () => {
+    console.log(`
   ==========================================
     Global Real Estate Dashboard
     Server running on http://localhost:${PORT}
     Environment: ${process.env.NODE_ENV || 'development'}
     Database: ${process.env.DB_PATH || './server/db/dashboard.db'}
   ==========================================
-  `);
-});
-
-// ---------------------------------------------------------------
-// Graceful shutdown
-// ---------------------------------------------------------------
-function shutdown(signal) {
-  console.log(`\n[SERVER] ${signal} received. Shutting down gracefully...`);
-  server.close(() => {
-    closeDatabase();
-    console.log('[SERVER] Server closed.');
-    process.exit(0);
+    `);
   });
 
-  // Force shutdown after 10 seconds
-  setTimeout(() => {
-    console.error('[SERVER] Forced shutdown after timeout.');
-    closeDatabase();
-    process.exit(1);
-  }, 10000);
-}
+  // -----------------------------------------------------------
+  // Graceful shutdown
+  // -----------------------------------------------------------
+  function shutdown(signal) {
+    console.log(`\n[SERVER] ${signal} received. Shutting down gracefully...`);
+    server.close(() => {
+      closeDatabase();
+      console.log('[SERVER] Server closed.');
+      process.exit(0);
+    });
 
-process.on('SIGTERM', () => shutdown('SIGTERM'));
-process.on('SIGINT', () => shutdown('SIGINT'));
+    // Force shutdown after 10 seconds
+    setTimeout(() => {
+      console.error('[SERVER] Forced shutdown after timeout.');
+      closeDatabase();
+      process.exit(1);
+    }, 10000);
+  }
+
+  process.on('SIGTERM', () => shutdown('SIGTERM'));
+  process.on('SIGINT', () => shutdown('SIGINT'));
+}
 
 module.exports = app;

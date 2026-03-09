@@ -7,3 +7,7 @@ uploads/
 data/backups/
 *.log
 tools/scraper/last-*.json
+__tests__/test-*.db
+__tests__/test-*.db-shm
+__tests__/test-*.db-wal
+coverage/
