@@ -19,6 +19,8 @@
  *   --fix             Attempt to auto-fix correctable issues
  *   --strict          Treat warnings as errors
  *   --json            Output report as JSON instead of formatted text
+ *   --region <name>   Only validate listings in a specific region
+ *   --jurisdiction <code> Only validate listings in a jurisdiction (e.g., "CA-BC")
  *   --verbose         Show details for every listing checked
  */
 
@@ -49,6 +51,8 @@ function parseArgs() {
     fix: false,
     strict: false,
     json: false,
+    region: null,
+    jurisdiction: null,
     verbose: false,
   };
   for (let i = 0; i < args.length; i++) {
@@ -64,6 +68,12 @@ function parseArgs() {
         break;
       case '--json':
         opts.json = true;
+        break;
+      case '--region':
+        opts.region = args[++i];
+        break;
+      case '--jurisdiction':
+        opts.jurisdiction = args[++i];
         break;
       case '--verbose':
         opts.verbose = true;
@@ -216,9 +226,25 @@ function checkRegion(listing, index, validRegions) {
 }
 
 /**
+ * Get broad coordinate sanity bounds for a jurisdiction.
+ * These are loose bounds to catch completely wrong coordinates.
+ */
+function getJurisdictionSanityBounds(jurisdiction) {
+  const bounds = {
+    'CA-BC': { latMin: 48, latMax: 60, lngMin: -140, lngMax: -114, label: 'British Columbia' },
+    'CA-AB': { latMin: 49, latMax: 60, lngMin: -120, lngMax: -110, label: 'Alberta' },
+    'CA-ON': { latMin: 41.5, latMax: 56.9, lngMin: -95.2, lngMax: -74.3, label: 'Ontario' },
+    'US-CA': { latMin: 32.5, latMax: 42, lngMin: -124.5, lngMax: -114, label: 'California' },
+  };
+  if (jurisdiction && bounds[jurisdiction]) return bounds[jurisdiction];
+  // Fallback: broad North America bounds
+  return { latMin: 24, latMax: 72, lngMin: -170, lngMax: -50, label: 'North America' };
+}
+
+/**
  * Validate coordinates are within the expected bounds for the listing's region.
  */
-function checkCoordinateBounds(listing, index, regionBounds) {
+function checkCoordinateBounds(listing, index, regionBounds, regionJurisdictionMap) {
   const issues = [];
   if (listing.latitude == null || listing.longitude == null) {
     issues.push({
@@ -251,16 +277,25 @@ function checkCoordinateBounds(listing, index, regionBounds) {
     });
   }
 
-  // Basic sanity check for BC
-  if (listing.latitude < 48 || listing.latitude > 60 || listing.longitude < -140 || listing.longitude > -114) {
-    issues.push({
-      index,
-      addr: listing.addr || `(listing #${index})`,
-      severity: 'error',
-      check: 'coordinate_sanity',
-      field: 'latitude/longitude',
-      message: `Coordinates (${listing.latitude}, ${listing.longitude}) are outside British Columbia entirely`,
-    });
+  // Jurisdiction-aware coordinate sanity check
+  const jurisdiction = listing.jurisdiction || regionJurisdictionMap?.[listing.region];
+  const sanityBounds = getJurisdictionSanityBounds(jurisdiction);
+  if (sanityBounds) {
+    if (
+      listing.latitude < sanityBounds.latMin ||
+      listing.latitude > sanityBounds.latMax ||
+      listing.longitude < sanityBounds.lngMin ||
+      listing.longitude > sanityBounds.lngMax
+    ) {
+      issues.push({
+        index,
+        addr: listing.addr || `(listing #${index})`,
+        severity: 'error',
+        check: 'coordinate_sanity',
+        field: 'latitude/longitude',
+        message: `Coordinates (${listing.latitude}, ${listing.longitude}) are outside ${sanityBounds.label} entirely`,
+      });
+    }
   }
 
   return issues;
@@ -461,10 +496,24 @@ function validateListings(listings, config, opts = {}) {
   const validation = config.validation;
   const allIssues = [];
   const fixesApplied = [];
+  const regionJurisdictionMap = config.regionJurisdictionMap || {};
 
   // Per-listing checks
   for (let i = 0; i < listings.length; i++) {
     const listing = listings[i];
+
+    // Region filter: skip listings not in the target region
+    if (opts.region && listing.region && !listing.region.toLowerCase().includes(opts.region.toLowerCase())) {
+      continue;
+    }
+
+    // Jurisdiction filter: skip listings not in the target jurisdiction
+    if (opts.jurisdiction) {
+      const listingJur = listing.jurisdiction || regionJurisdictionMap[listing.region];
+      if (listingJur && listingJur !== opts.jurisdiction) {
+        continue;
+      }
+    }
 
     const checks = [
       ...checkRequiredFields(listing, i, validation.requiredFields),
@@ -472,7 +521,7 @@ function validateListings(listings, config, opts = {}) {
       ...checkPriceRange(listing, i, validation.priceRange),
       ...checkPropertyType(listing, i, validation.validTypes),
       ...checkRegion(listing, i, validation.validRegions),
-      ...checkCoordinateBounds(listing, i, config.regionBounds || {}),
+      ...checkCoordinateBounds(listing, i, config.regionBounds || {}, regionJurisdictionMap),
       ...checkNeighborhoodRegion(listing, i, config.neighborhoodRegionMap || {}),
       ...checkStaleness(listing, i),
       ...checkReasonableValues(listing, i),
@@ -526,6 +575,15 @@ function generateReport(listings, issues, fixesApplied) {
     byField[issue.field] = (byField[issue.field] || 0) + 1;
   }
 
+  // Group by region
+  const byRegion = {};
+  for (const issue of issues) {
+    const listing = listings[issue.index];
+    const region = listing?.region || 'Unknown';
+    if (!byRegion[region]) byRegion[region] = { errors: 0, warnings: 0, info: 0 };
+    byRegion[region][issue.severity === 'error' ? 'errors' : issue.severity === 'warning' ? 'warnings' : 'info']++;
+  }
+
   // Listings with errors
   const errorListings = new Set(errors.map((e) => e.index));
   const warningListings = new Set(warnings.map((w) => w.index));
@@ -545,6 +603,7 @@ function generateReport(listings, issues, fixesApplied) {
     },
     byCheck,
     byField,
+    byRegion,
     errors: errors.slice(0, 50),
     warnings: warnings.slice(0, 50),
     fixes: fixesApplied,
@@ -590,6 +649,14 @@ function printReport(report) {
     console.log('  ISSUES BY FIELD');
     for (const [field, count] of Object.entries(report.byField).sort((a, b) => b[1] - a[1])) {
       console.log(`    ${field}: ${count}`);
+    }
+    console.log('');
+  }
+
+  if (Object.keys(report.byRegion).length > 1) {
+    console.log('  ISSUES BY REGION');
+    for (const [region, counts] of Object.entries(report.byRegion).sort((a, b) => (b[1].errors + b[1].warnings) - (a[1].errors + a[1].warnings))) {
+      console.log(`    ${region}: ${counts.errors} errors, ${counts.warnings} warnings, ${counts.info} info`);
     }
     console.log('');
   }
@@ -714,6 +781,7 @@ module.exports = {
   detectDuplicates,
   generateReport,
   normalizeAddress,
+  getJurisdictionSanityBounds,
 };
 
 if (require.main === module) {

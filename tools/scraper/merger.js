@@ -21,6 +21,7 @@
  *   --no-backup         Skip creating a backup before merge
  *   --mark-removed      Mark removed listings as "possibly sold/delisted" instead of dropping
  *   --keep-removed <n>  Keep removed listings for n days before dropping (default: 14)
+ *   --region <name>     Only merge listings in a specific region (scoped merge)
  *   --json              Output merge report as JSON
  *   --dry-run           Show what would change without writing
  *   --verbose           Detailed output
@@ -85,6 +86,7 @@ function parseArgs() {
     backup: true,
     markRemoved: false,
     keepRemovedDays: 14,
+    region: null,
     json: false,
     dryRun: false,
     verbose: false,
@@ -111,6 +113,9 @@ function parseArgs() {
         break;
       case '--keep-removed':
         opts.keepRemovedDays = parseInt(args[++i], 10) || 14;
+        break;
+      case '--region':
+        opts.region = args[++i];
         break;
       case '--json':
         opts.json = true;
@@ -221,6 +226,7 @@ function mergeListings(existingListings, incomingListings, opts) {
     removedListings: [],
     conflicts: [],
     unchanged: 0,
+    skippedByFilter: 0,
   };
 
   const existingIndex = buildAddressIndex(existingListings);
@@ -231,6 +237,11 @@ function mergeListings(existingListings, incomingListings, opts) {
 
   // Process each incoming listing
   for (const incoming of incomingListings) {
+    // Region filter: only merge listings in the target region
+    if (opts.region && incoming.region && !incoming.region.toLowerCase().includes(opts.region.toLowerCase())) {
+      changeLog.skippedByFilter++;
+      continue;
+    }
     const matchIdx = findMatch(incoming, existingListings, existingIndex);
 
     if (matchIdx === -1) {
@@ -336,6 +347,11 @@ function mergeListings(existingListings, incomingListings, opts) {
     if (!matchedExistingIndices.has(i)) {
       const existing = merged[i];
 
+      // When using a region filter, only flag removal for listings in the target region
+      if (opts.region && existing.region && !existing.region.toLowerCase().includes(opts.region.toLowerCase())) {
+        continue;
+      }
+
       if (opts.markRemoved) {
         // Mark as potentially removed instead of dropping
         if (!existing._removedAt) {
@@ -390,6 +406,13 @@ function mergeListings(existingListings, incomingListings, opts) {
 // ---------------------------------------------------------------------------
 
 function generateMergeReport(changeLog, existingCount, incomingCount, mergedCount) {
+  // Build region/jurisdiction breakdown of new listings
+  const byRegion = {};
+  for (const nl of changeLog.newListings) {
+    const region = nl.region || 'Unknown';
+    byRegion[region] = (byRegion[region] || 0) + 1;
+  }
+
   return {
     timestamp: new Date().toISOString(),
     input: {
@@ -406,7 +429,9 @@ function generateMergeReport(changeLog, existingCount, incomingCount, mergedCoun
       removed: changeLog.removedListings.length,
       conflicts: changeLog.conflicts.length,
       unchanged: changeLog.unchanged,
+      skippedByFilter: changeLog.skippedByFilter || 0,
     },
+    newByRegion: byRegion,
     newListings: changeLog.newListings,
     priceChanges: changeLog.priceChanges,
     removedListings: changeLog.removedListings,
@@ -434,7 +459,18 @@ function printReport(report) {
   console.log(`  Removed/missing:    ${report.changes.removed}`);
   console.log(`  Conflicts:          ${report.changes.conflicts}`);
   console.log(`  Unchanged:          ${report.changes.unchanged}`);
+  if (report.changes.skippedByFilter > 0) {
+    console.log(`  Skipped (filter):   ${report.changes.skippedByFilter}`);
+  }
   console.log('');
+
+  if (Object.keys(report.newByRegion || {}).length > 0) {
+    console.log('  NEW LISTINGS BY REGION:');
+    for (const [region, count] of Object.entries(report.newByRegion).sort((a, b) => b[1] - a[1])) {
+      console.log(`    ${region}: ${count}`);
+    }
+    console.log('');
+  }
 
   if (report.newListings.length > 0) {
     console.log('  NEW LISTINGS:');
@@ -530,6 +566,7 @@ function main() {
 
   log('Global Real Estate Dashboard - Data Merger');
   log(`Mode: ${opts.dryRun ? 'DRY RUN' : 'LIVE'}`);
+  if (opts.region) log(`Region filter: ${opts.region}`);
 
   // Resolve paths
   const existingPath = opts.existing

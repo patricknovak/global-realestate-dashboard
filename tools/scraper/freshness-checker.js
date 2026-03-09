@@ -16,6 +16,8 @@
  *   --json                 Output report as JSON
  *   --stale-threshold <n>  Days after which data is considered stale (default: 14)
  *   --verify-threshold <n> Days after which re-verification is needed (default: 7)
+ *   --region <name>        Only check listings in a specific region
+ *   --jurisdiction <code>  Only check listings in a jurisdiction (e.g., "CA-BC")
  *   --output <path>        Save report to file
  *   --verbose              Show per-listing details
  */
@@ -47,6 +49,8 @@ function parseArgs() {
     json: false,
     staleThreshold: 14,
     verifyThreshold: 7,
+    region: null,
+    jurisdiction: null,
     output: null,
     verbose: false,
   };
@@ -67,6 +71,12 @@ function parseArgs() {
       case '--threshold':
         // Backwards compatibility with old --threshold flag
         opts.staleThreshold = parseInt(args[++i], 10) || 14;
+        break;
+      case '--region':
+        opts.region = args[++i];
+        break;
+      case '--jurisdiction':
+        opts.jurisdiction = args[++i];
         break;
       case '--output':
         opts.output = args[++i];
@@ -361,15 +371,16 @@ function calculateHealthScore(ageBrackets, total) {
   if (effectiveTotal <= 0) return 0;
 
   const freshCount = ageBrackets['fresh (0-3d)'] || 0;
-  const recentCount = Object.values(ageBrackets).find((_, i) =>
-    Object.keys(ageBrackets)[i]?.startsWith('recent')
-  ) || 0;
-  const agingCount = Object.values(ageBrackets).find((_, i) =>
-    Object.keys(ageBrackets)[i]?.startsWith('aging')
-  ) || 0;
-  const staleCount = Object.values(ageBrackets).find((_, i) =>
-    Object.keys(ageBrackets)[i]?.startsWith('stale')
-  ) || 0;
+
+  // Find bracket values by key prefix (keys are dynamic based on thresholds)
+  const keys = Object.keys(ageBrackets);
+  const recentKey = keys.find((k) => k.startsWith('recent'));
+  const agingKey = keys.find((k) => k.startsWith('aging'));
+  const staleKey = keys.find((k) => k.startsWith('stale'));
+
+  const recentCount = recentKey ? ageBrackets[recentKey] : 0;
+  const agingCount = agingKey ? ageBrackets[agingKey] : 0;
+  const staleCount = staleKey ? ageBrackets[staleKey] : 0;
 
   const score = Math.round(
     (freshCount * 100 + recentCount * 75 + agingCount * 40 + staleCount * 10) / effectiveTotal
@@ -381,8 +392,23 @@ function calculateHealthScore(ageBrackets, total) {
 // Report generation
 // ---------------------------------------------------------------------------
 
-function generateReport(listings, metadataDate, opts) {
+function generateReport(listings, metadataDate, opts, config) {
   const now = new Date();
+  const regionJurisdictionMap = config?.regionJurisdictionMap || {};
+
+  // Apply region/jurisdiction filters
+  let filteredListings = listings;
+  if (opts.region) {
+    filteredListings = listings.filter(
+      (l) => l.region && l.region.toLowerCase().includes(opts.region.toLowerCase())
+    );
+  }
+  if (opts.jurisdiction) {
+    filteredListings = filteredListings.filter((l) => {
+      const jur = l.jurisdiction || regionJurisdictionMap[l.region];
+      return jur === opts.jurisdiction;
+    });
+  }
 
   // Overall age brackets
   const overall = {
@@ -395,8 +421,8 @@ function generateReport(listings, metadataDate, opts) {
 
   const listingsNeedingVerification = [];
 
-  for (let i = 0; i < listings.length; i++) {
-    const listing = listings[i];
+  for (let i = 0; i < filteredListings.length; i++) {
+    const listing = filteredListings[i];
     const ageDays = getDataAgeDays(listing, metadataDate, now);
     const bracket = getAgeBracket(ageDays, opts.verifyThreshold, opts.staleThreshold);
     overall[bracket]++;
@@ -417,11 +443,11 @@ function generateReport(listings, metadataDate, opts) {
   listingsNeedingVerification.sort((a, b) => b.ageDays - a.ageDays);
 
   // Frozen DOM detection
-  const frozenDom = detectFrozenDom(listings, metadataDate, now);
+  const frozenDom = detectFrozenDom(filteredListings, metadataDate, now);
 
   // Region and neighborhood stats
-  const regStats = regionStats(listings, metadataDate, now, opts.verifyThreshold, opts.staleThreshold);
-  const hoodStats = neighborhoodStats(listings, metadataDate, now, opts.verifyThreshold, opts.staleThreshold);
+  const regStats = regionStats(filteredListings, metadataDate, now, opts.verifyThreshold, opts.staleThreshold);
+  const hoodStats = neighborhoodStats(filteredListings, metadataDate, now, opts.verifyThreshold, opts.staleThreshold);
 
   // Priorities
   const priorities = generatePriorities(regStats, hoodStats);
@@ -435,8 +461,21 @@ function generateReport(listings, metadataDate, opts) {
     'unknown age': overall.unknown,
   };
 
+  // Jurisdiction breakdown
+  const jurisdictionBreakdown = {};
+  for (const listing of filteredListings) {
+    const jur = listing.jurisdiction || regionJurisdictionMap[listing.region] || 'unknown';
+    if (!jurisdictionBreakdown[jur]) {
+      jurisdictionBreakdown[jur] = { total: 0, fresh: 0, stale: 0 };
+    }
+    jurisdictionBreakdown[jur].total++;
+    const ageDays = getDataAgeDays(listing, metadataDate, now);
+    if (ageDays !== null && ageDays <= 3) jurisdictionBreakdown[jur].fresh++;
+    if (ageDays !== null && ageDays > opts.staleThreshold) jurisdictionBreakdown[jur].stale++;
+  }
+
   // Health score
-  const effectiveTotal = listings.length - overall.unknown;
+  const effectiveTotal = filteredListings.length - overall.unknown;
   const freshnessScore = effectiveTotal > 0
     ? Math.round(
         (overall.fresh * 100 + overall.recent * 75 + overall.aging * 40 + overall.stale * 10) / effectiveTotal
@@ -456,13 +495,19 @@ function generateReport(listings, metadataDate, opts) {
       verifyDays: opts.verifyThreshold,
       staleDays: opts.staleThreshold,
     },
-    totalListings: listings.length,
+    filters: {
+      region: opts.region || null,
+      jurisdiction: opts.jurisdiction || null,
+    },
+    totalListings: filteredListings.length,
+    totalUnfiltered: listings.length,
     ageBrackets,
     freshnessScore: Math.min(100, Math.max(0, freshnessScore)),
     regionStats: regStats,
     neighborhoodStats: hoodStats,
     priorities: priorities.regions,
     staleNeighborhoods: priorities.staleNeighborhoods,
+    jurisdictionBreakdown,
     frozenDomCount: frozenDom.length,
     frozenDomExamples: frozenDom.slice(0, 10),
     listingsNeedingVerification: listingsNeedingVerification.length,
@@ -482,6 +527,15 @@ function printReport(report) {
     console.log(`  Global data age:        ${report.globalDataAge} days`);
   }
   console.log(`  Total listings:         ${report.totalListings}`);
+  if (report.totalUnfiltered && report.totalUnfiltered !== report.totalListings) {
+    console.log(`  Total (unfiltered):     ${report.totalUnfiltered}`);
+  }
+  if (report.filters?.region) {
+    console.log(`  Region filter:          ${report.filters.region}`);
+  }
+  if (report.filters?.jurisdiction) {
+    console.log(`  Jurisdiction filter:    ${report.filters.jurisdiction}`);
+  }
   console.log(`  Freshness score:        ${report.freshnessScore}/100`);
   console.log(`  Verify threshold:       ${report.thresholds.verifyDays} days`);
   console.log(`  Stale threshold:        ${report.thresholds.staleDays} days`);
@@ -497,6 +551,15 @@ function printReport(report) {
     console.log(`    ${bracket.padEnd(22)} ${String(count).padStart(5)} (${String(pct).padStart(5)}%)  ${bar}`);
   }
   console.log('');
+
+  if (Object.keys(report.jurisdictionBreakdown || {}).length > 1) {
+    console.log('  JURISDICTION BREAKDOWN');
+    for (const [jur, data] of Object.entries(report.jurisdictionBreakdown)) {
+      const stalePercent = data.total > 0 ? ((data.stale / data.total) * 100).toFixed(1) : '0.0';
+      console.log(`    ${jur}: ${data.total} listings, ${data.fresh} fresh, ${data.stale} stale (${stalePercent}%)`);
+    }
+    console.log('');
+  }
 
   console.log('  REGION FRESHNESS');
   for (const [region, stats] of Object.entries(report.regionStats)) {
@@ -615,7 +678,7 @@ function main() {
   }
 
   // Generate report
-  const report = generateReport(listings, metadataDate, opts);
+  const report = generateReport(listings, metadataDate, opts, config);
 
   // Display
   if (opts.json) {
