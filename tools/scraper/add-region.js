@@ -26,6 +26,7 @@
  *   --currency <code>       Currency code: CAD or USD (default: CAD)
  *   --source <names>        Comma-separated sources to register with (default: rew,realtor for BC; realtor for other CA; zillow,redfin for US)
  *   --dry-run               Show changes without writing files
+ *   --validate              Validate an existing region's setup (checks bounds, neighborhoods, benchmarks)
  */
 
 'use strict';
@@ -75,6 +76,7 @@ function parseArgs() {
     currency: null,
     source: null,
     dryRun: false,
+    validate: false,
   };
   for (let i = 0; i < args.length; i++) {
     switch (args[i]) {
@@ -119,6 +121,9 @@ function parseArgs() {
         break;
       case '--dry-run':
         opts.dryRun = true;
+        break;
+      case '--validate':
+        opts.validate = true;
         break;
     }
   }
@@ -216,6 +221,136 @@ function defaultMarketTrend() {
 
 function defaultTrendBonus() {
   return 5;
+}
+
+// ---------------------------------------------------------------------------
+// Coordinate overlap detection
+// ---------------------------------------------------------------------------
+
+/**
+ * Check if two bounding boxes overlap.
+ */
+function boundsOverlap(a, b) {
+  return !(a.latMax < b.latMin || b.latMax < a.latMin || a.lngMax < b.lngMin || b.lngMax < a.lngMin);
+}
+
+/**
+ * Calculate the overlap area percentage between two bounding boxes.
+ */
+function overlapPercent(a, b) {
+  const overlapLatMin = Math.max(a.latMin, b.latMin);
+  const overlapLatMax = Math.min(a.latMax, b.latMax);
+  const overlapLngMin = Math.max(a.lngMin, b.lngMin);
+  const overlapLngMax = Math.min(a.lngMax, b.lngMax);
+
+  if (overlapLatMin >= overlapLatMax || overlapLngMin >= overlapLngMax) return 0;
+
+  const overlapArea = (overlapLatMax - overlapLatMin) * (overlapLngMax - overlapLngMin);
+  const aArea = (a.latMax - a.latMin) * (a.lngMax - a.lngMin);
+
+  return aArea > 0 ? Math.round((overlapArea / aArea) * 100) : 0;
+}
+
+/**
+ * Detect coordinate overlaps with existing regions in the same jurisdiction.
+ */
+function detectOverlaps(newBounds, existingBounds, regionJurisdictionMap, newRegionName, newJurisdiction) {
+  const overlaps = [];
+  for (const [region, bounds] of Object.entries(existingBounds)) {
+    if (region === newRegionName) continue;
+    // Only check overlaps within the same jurisdiction
+    const regionJur = regionJurisdictionMap[region];
+    if (regionJur && newJurisdiction && regionJur !== newJurisdiction) continue;
+
+    if (boundsOverlap(newBounds, bounds)) {
+      const pct = overlapPercent(newBounds, bounds);
+      overlaps.push({ region, overlapPercent: pct });
+    }
+  }
+  return overlaps;
+}
+
+/**
+ * Detect neighborhoods that already exist in another region.
+ */
+function detectDuplicateNeighborhoods(neighborhoods, neighborhoodRegionMap, regionName) {
+  const duplicates = [];
+  for (const hood of neighborhoods) {
+    const existingRegion = neighborhoodRegionMap[hood];
+    if (existingRegion && existingRegion !== regionName) {
+      duplicates.push({ neighborhood: hood, existingRegion });
+    }
+  }
+  return duplicates;
+}
+
+// ---------------------------------------------------------------------------
+// Region validation
+// ---------------------------------------------------------------------------
+
+/**
+ * Validate an existing region's setup for completeness and consistency.
+ */
+function validateRegionSetup(regionName, config, benchmarks) {
+  const issues = [];
+  const warnings = [];
+
+  // Check region exists in validRegions
+  if (!config.validation.validRegions.includes(regionName)) {
+    issues.push(`Region "${regionName}" not found in validation.validRegions`);
+    return { issues, warnings, valid: false };
+  }
+
+  // Check region bounds exist
+  if (!config.regionBounds[regionName]) {
+    issues.push(`No coordinate bounds defined in regionBounds`);
+  }
+
+  // Check jurisdiction mapping
+  const jur = config.regionJurisdictionMap?.[regionName];
+  if (!jur) {
+    warnings.push(`No jurisdiction mapping found in regionJurisdictionMap`);
+  }
+
+  // Check neighborhoods are mapped
+  const regionHoods = [];
+  for (const [hood, region] of Object.entries(config.neighborhoodRegionMap || {})) {
+    if (region === regionName) regionHoods.push(hood);
+  }
+  if (regionHoods.length === 0) {
+    issues.push(`No neighborhoods mapped to this region in neighborhoodRegionMap`);
+  }
+
+  // Check region is registered with at least one source
+  let registeredSources = 0;
+  for (const source of config.sources) {
+    const hasRegion = Object.values(source.regions || {}).some(
+      (r) => r.displayName === regionName
+    );
+    if (hasRegion) registeredSources++;
+  }
+  if (registeredSources === 0) {
+    issues.push(`Region not registered with any scraping source`);
+  }
+
+  // Check benchmarks
+  if (benchmarks) {
+    const missingBenchmarks = regionHoods.filter(
+      (h) => !benchmarks.neighborhoodBenchmarks?.[h]
+    );
+    if (missingBenchmarks.length > 0) {
+      warnings.push(`Missing benchmarks for: ${missingBenchmarks.join(', ')}`);
+    }
+
+    const missingTrends = regionHoods.filter(
+      (h) => !benchmarks.marketTrends?.[h]
+    );
+    if (missingTrends.length > 0) {
+      warnings.push(`Missing market trends for: ${missingTrends.join(', ')}`);
+    }
+  }
+
+  return { issues, warnings, valid: issues.length === 0, regionHoods, jurisdiction: jur, registeredSources };
 }
 
 // ---------------------------------------------------------------------------
@@ -529,6 +664,56 @@ function nonInteractiveArgs(cliOpts) {
 async function main() {
   const cliOpts = parseArgs();
 
+  // Validate mode: check an existing region's setup
+  if (cliOpts.validate) {
+    const config = JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf-8'));
+    let benchmarks = null;
+    if (fs.existsSync(BENCHMARKS_PATH)) {
+      benchmarks = JSON.parse(fs.readFileSync(BENCHMARKS_PATH, 'utf-8'));
+    }
+
+    const regionName = cliOpts.name;
+    if (!regionName) {
+      // Validate all regions
+      console.log('\n  VALIDATING ALL REGIONS\n');
+      let allValid = true;
+      for (const region of config.validation.validRegions) {
+        const result = validateRegionSetup(region, config, benchmarks);
+        const status = result.valid ? 'OK' : 'ISSUES';
+        const jur = result.jurisdiction || '??';
+        console.log(`  [${status}] ${region} (${jur}) - ${result.regionHoods?.length || 0} neighborhoods, ${result.registeredSources || 0} source(s)`);
+        for (const issue of result.issues) {
+          console.log(`        ERROR: ${issue}`);
+          allValid = false;
+        }
+        for (const w of result.warnings) {
+          console.log(`        WARN: ${w}`);
+        }
+      }
+      console.log(`\n  Overall: ${allValid ? 'All regions valid' : 'Some regions have issues'}\n`);
+    } else {
+      // Validate specific region
+      console.log(`\n  VALIDATING REGION: ${regionName}\n`);
+      const result = validateRegionSetup(regionName, config, benchmarks);
+      if (result.valid) {
+        console.log(`  Status: VALID`);
+        console.log(`  Jurisdiction: ${result.jurisdiction || 'N/A'}`);
+        console.log(`  Neighborhoods: ${result.regionHoods?.join(', ') || 'none'}`);
+        console.log(`  Registered sources: ${result.registeredSources}`);
+      } else {
+        console.log(`  Status: INVALID`);
+        for (const issue of result.issues) {
+          console.log(`  ERROR: ${issue}`);
+        }
+      }
+      for (const w of result.warnings) {
+        console.log(`  WARN: ${w}`);
+      }
+      console.log('');
+    }
+    return;
+  }
+
   let regionData;
   if (cliOpts.nonInteractive) {
     regionData = nonInteractiveArgs(cliOpts);
@@ -568,6 +753,29 @@ async function main() {
     console.log(`    - ${BENCHMARKS_PATH}`);
   }
   console.log('-'.repeat(60));
+
+  // Check for coordinate overlaps with existing regions
+  const newBounds = { latMin: regionData.latMin, latMax: regionData.latMax, lngMin: regionData.lngMin, lngMax: regionData.lngMax };
+  const overlaps = detectOverlaps(newBounds, config.regionBounds || {}, config.regionJurisdictionMap || {}, regionData.name, regionData.jurisdiction);
+  if (overlaps.length > 0) {
+    console.log('  COORDINATE OVERLAPS DETECTED:');
+    for (const ol of overlaps) {
+      console.log(`    - ${ol.region}: ${ol.overlapPercent}% overlap`);
+    }
+    console.log('  (Overlaps may cause duplicate listings across regions)');
+    console.log('');
+  }
+
+  // Check for duplicate neighborhoods
+  const dupHoods = detectDuplicateNeighborhoods(regionData.neighborhoods, config.neighborhoodRegionMap || {}, regionData.name);
+  if (dupHoods.length > 0) {
+    console.log('  DUPLICATE NEIGHBORHOODS DETECTED:');
+    for (const dh of dupHoods) {
+      console.log(`    - "${dh.neighborhood}" already belongs to "${dh.existingRegion}"`);
+    }
+    console.log('  (These neighborhoods will be reassigned to the new region)');
+    console.log('');
+  }
 
   if (cliOpts.dryRun) {
     log('[DRY RUN] No files modified.');
@@ -611,6 +819,10 @@ module.exports = {
   updateBenchmarks,
   toSlug,
   estimateBenchmarks,
+  detectOverlaps,
+  detectDuplicateNeighborhoods,
+  validateRegionSetup,
+  boundsOverlap,
 };
 
 if (require.main === module) {

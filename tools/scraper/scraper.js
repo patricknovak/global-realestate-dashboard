@@ -16,6 +16,7 @@
  *   --no-geocode           Skip geocoding step
  *   --verbose              Enable verbose logging
  *   --output <path>        Override output file path
+ *   --jurisdiction "<code>" Only scrape regions in a jurisdiction (e.g., "CA-BC", "US-CA")
  *   --api-push             Also push results to the dashboard API (POST /api/listings)
  *   --api-url <url>        Dashboard API base URL (default: http://localhost:3000)
  */
@@ -48,6 +49,7 @@ function parseArgs() {
     dryRun: false,
     region: null,
     source: null,
+    jurisdiction: null,
     geocode: true,
     verbose: false,
     output: null,
@@ -64,6 +66,9 @@ function parseArgs() {
         break;
       case '--source':
         opts.source = args[++i];
+        break;
+      case '--jurisdiction':
+        opts.jurisdiction = args[++i];
         break;
       case '--no-geocode':
         opts.geocode = false;
@@ -123,7 +128,7 @@ function verbose(msg, opts) {
 /**
  * Simple HTTP(S) GET that returns the response body as a string.
  */
-function httpGet(url, headers = {}, timeoutMs = 30000) {
+function httpGetOnce(url, headers = {}, timeoutMs = 30000) {
   return new Promise((resolve, reject) => {
     const parsed = new URL(url);
     const lib = parsed.protocol === 'https:' ? https : http;
@@ -150,7 +155,7 @@ function httpGet(url, headers = {}, timeoutMs = 30000) {
         const redirectUrl = res.headers.location.startsWith('http')
           ? res.headers.location
           : `${parsed.protocol}//${parsed.host}${res.headers.location}`;
-        return httpGet(redirectUrl, headers, timeoutMs).then(resolve).catch(reject);
+        return httpGetOnce(redirectUrl, headers, timeoutMs).then(resolve).catch(reject);
       }
       let body = '';
       res.setEncoding('utf-8');
@@ -171,6 +176,29 @@ function httpGet(url, headers = {}, timeoutMs = 30000) {
     req.on('error', reject);
     req.end();
   });
+}
+
+/**
+ * HTTP GET with retry logic and exponential backoff.
+ * Retries up to maxRetries times on network errors (not HTTP 4xx/5xx).
+ */
+async function httpGet(url, headers = {}, timeoutMs = 30000, maxRetries = 3) {
+  let lastError;
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await httpGetOnce(url, headers, timeoutMs);
+    } catch (err) {
+      lastError = err;
+      const isNetworkError = err.code === 'ECONNRESET' || err.code === 'ECONNREFUSED' ||
+        err.code === 'ETIMEDOUT' || err.code === 'ENOTFOUND' ||
+        err.message.includes('timed out') || err.code === 'EAI_AGAIN';
+      if (!isNetworkError || attempt === maxRetries) throw err;
+      const delay = Math.pow(2, attempt + 1) * 1000;
+      warn(`HTTP GET failed (attempt ${attempt + 1}/${maxRetries + 1}), retrying in ${delay / 1000}s: ${err.message}`);
+      await new Promise((resolve) => setTimeout(resolve, delay));
+    }
+  }
+  throw lastError;
 }
 
 /**
@@ -307,6 +335,7 @@ async function scrapeRew(source, config, opts) {
   const errors = [];
   const limiter = new RateLimiter(source.rateLimit.delayMs);
   const regionKeys = Object.keys(source.regions);
+  const sourceJurisdiction = source.jurisdiction || 'CA-BC';
 
   for (const regionKey of regionKeys) {
     const regionConfig = source.regions[regionKey];
@@ -316,6 +345,15 @@ async function scrapeRew(source, config, opts) {
     if (opts.region && !regionLabel.toLowerCase().includes(opts.region.toLowerCase())) {
       verbose(`Skipping REW region: ${regionLabel} (filter: ${opts.region})`, opts);
       continue;
+    }
+
+    // If a jurisdiction filter is specified, skip non-matching regions
+    if (opts.jurisdiction) {
+      const regionJur = config.regionJurisdictionMap?.[regionLabel] || sourceJurisdiction;
+      if (regionJur !== opts.jurisdiction) {
+        verbose(`Skipping REW region: ${regionLabel} (jurisdiction filter: ${opts.jurisdiction}, region is ${regionJur})`, opts);
+        continue;
+      }
     }
 
     const url = source.baseUrl + regionConfig.searchUrl;
@@ -347,7 +385,7 @@ async function scrapeRew(source, config, opts) {
 
         for (const block of blocks) {
           try {
-            const listing = parseRewBlock(block, source.selectors, regionLabel, regionConfig.neighborhoods);
+            const listing = parseRewBlock(block, source.selectors, regionLabel, regionConfig.neighborhoods, sourceJurisdiction);
             if (listing) {
               listings.push(listing);
             }
@@ -385,7 +423,7 @@ async function scrapeRew(source, config, opts) {
 /**
  * Parse a single REW listing HTML block into a normalized listing object.
  */
-function parseRewBlock(html, selectors, region, neighborhoods) {
+function parseRewBlock(html, selectors, region, neighborhoods, jurisdiction) {
   const get = (selector) => {
     const cls = selector.replace('.', '');
     const matches = extractByClass(html, cls);
@@ -425,6 +463,7 @@ function parseRewBlock(html, selectors, region, neighborhoods) {
     latitude: null,
     longitude: null,
     region,
+    jurisdiction: jurisdiction || 'CA-BC',
     source: 'rew',
     scraped_at: new Date().toISOString(),
   };
@@ -447,6 +486,15 @@ async function scrapeRealtor(source, config, opts) {
     if (opts.region && !regionLabel.toLowerCase().includes(opts.region.toLowerCase())) {
       verbose(`Skipping Realtor region: ${regionLabel} (filter: ${opts.region})`, opts);
       continue;
+    }
+
+    // If a jurisdiction filter is specified, skip non-matching regions
+    if (opts.jurisdiction) {
+      const regionJur = regionConfig.jurisdiction || config.regionJurisdictionMap?.[regionLabel] || source.jurisdiction;
+      if (regionJur !== opts.jurisdiction) {
+        verbose(`Skipping Realtor region: ${regionLabel} (jurisdiction filter: ${opts.jurisdiction}, region is ${regionJur})`, opts);
+        continue;
+      }
     }
 
     log(`[Realtor.ca] Fetching region "${regionLabel}"`);
@@ -508,15 +556,27 @@ async function scrapeRealtor(source, config, opts) {
           break;
         }
 
-        // Find the matching source region config for neighborhood lists
-        const sourceRegionConfig = Object.values(
-          config.sources.find((s) => s.name === 'rew')?.regions || {}
-        );
-        const allNeighborhoods = sourceRegionConfig.flatMap((r) => r.neighborhoods || []);
+        // Collect neighborhoods from all sources and the neighborhood-region map for this region
+        const allNeighborhoods = [];
+        for (const src of config.sources) {
+          const srcRegion = src.regions?.[regionKey];
+          if (srcRegion?.neighborhoods) {
+            allNeighborhoods.push(...srcRegion.neighborhoods);
+          }
+        }
+        // Also include neighborhoods from the neighborhood-region map for this region
+        if (config.neighborhoodRegionMap) {
+          for (const [hood, reg] of Object.entries(config.neighborhoodRegionMap)) {
+            if (reg === regionLabel && !allNeighborhoods.includes(hood)) {
+              allNeighborhoods.push(hood);
+            }
+          }
+        }
 
         for (const result of results) {
           try {
-            const listing = parseRealtorResult(result, regionLabel, allNeighborhoods);
+            const jurisdictionCode = regionConfig.jurisdiction || source.jurisdiction || 'CA';
+            const listing = parseRealtorResult(result, regionLabel, allNeighborhoods, jurisdictionCode);
             if (listing) {
               listings.push(listing);
             }
@@ -555,7 +615,7 @@ async function scrapeRealtor(source, config, opts) {
 /**
  * Parse a Realtor.ca API result into a normalized listing.
  */
-function parseRealtorResult(result, region, neighborhoods) {
+function parseRealtorResult(result, region, neighborhoods, jurisdiction) {
   const property = result.Property || {};
   const building = result.Building || {};
   const land = result.Land || {};
@@ -634,6 +694,7 @@ function parseRealtorResult(result, region, neighborhoods) {
     latitude: lat,
     longitude: lng,
     region,
+    jurisdiction: jurisdiction || 'CA',
     source: 'realtor',
     scraped_at: new Date().toISOString(),
   };
@@ -981,7 +1042,7 @@ function writeOutput(listings, outputPath, config) {
   const neighborhoods = [...new Set(listings.map((l) => l.neighborhood).filter(Boolean))].sort();
   const regions = [...new Set(listings.map((l) => l.region).filter(Boolean))].sort();
 
-  // Remove scraper-internal fields before output
+  // Remove scraper-internal fields before output (keep jurisdiction for downstream tools)
   const cleanListings = listings.map((l) => {
     const { source, scraped_at, ...rest } = l;
     return rest;
@@ -1077,6 +1138,7 @@ function generateReport(scrapedListings, existingData, deduplicationResult, erro
       errors: errors.length,
     },
     byRegion: {},
+    byJurisdiction: {},
     priceChanges: priceChanges.slice(0, 20), // Top 20 price changes
     errors: errors.slice(0, 50), // Top 50 errors
   };
@@ -1087,6 +1149,7 @@ function generateReport(scrapedListings, existingData, deduplicationResult, erro
     const regionListings = scrapedListings.filter((l) => l.region === region);
     report.byRegion[region] = {
       total: regionListings.length,
+      jurisdiction: regionListings[0]?.jurisdiction || 'unknown',
       byType: {},
       avgPrice: Math.round(
         regionListings
@@ -1098,6 +1161,20 @@ function generateReport(scrapedListings, existingData, deduplicationResult, erro
       const t = l.type || 'Unknown';
       report.byRegion[region].byType[t] = (report.byRegion[region].byType[t] || 0) + 1;
     }
+  }
+
+  // Breakdown by jurisdiction
+  const jurisdictions = [...new Set(scrapedListings.map((l) => l.jurisdiction).filter(Boolean))];
+  for (const jur of jurisdictions) {
+    const jurListings = scrapedListings.filter((l) => l.jurisdiction === jur);
+    const priced = jurListings.filter((l) => l.price);
+    report.byJurisdiction[jur] = {
+      total: jurListings.length,
+      regions: [...new Set(jurListings.map((l) => l.region).filter(Boolean))],
+      avgPrice: priced.length > 0
+        ? Math.round(priced.reduce((sum, l) => sum + l.price, 0) / priced.length)
+        : null,
+    };
   }
 
   return report;
@@ -1120,8 +1197,16 @@ function printReport(report) {
   console.log(`  Errors:             ${report.summary.errors}`);
   console.log('');
 
+  if (Object.keys(report.byJurisdiction).length > 1) {
+    console.log('  BY JURISDICTION');
+    for (const [jur, data] of Object.entries(report.byJurisdiction)) {
+      console.log(`    ${jur}: ${data.total} listings, avg $${data.avgPrice?.toLocaleString() || 'N/A'} (${data.regions.join(', ')})`);
+    }
+    console.log('');
+  }
+
   for (const [region, data] of Object.entries(report.byRegion)) {
-    console.log(`  REGION: ${region}`);
+    console.log(`  REGION: ${region} (${data.jurisdiction || 'N/A'})`);
     console.log(`    Total:     ${data.total}`);
     console.log(`    Avg Price: $${data.avgPrice?.toLocaleString() || 'N/A'}`);
     for (const [type, count] of Object.entries(data.byType)) {
@@ -1167,6 +1252,7 @@ async function main() {
   log(`Mode: ${opts.dryRun ? 'DRY RUN' : 'LIVE'}`);
   if (opts.region) log(`Region filter: ${opts.region}`);
   if (opts.source) log(`Source filter: ${opts.source}`);
+  if (opts.jurisdiction) log(`Jurisdiction filter: ${opts.jurisdiction}`);
   log('');
 
   const allListings = [];
@@ -1182,6 +1268,21 @@ async function main() {
     if (opts.source && source.name !== opts.source) {
       verbose(`Skipping source: ${source.displayName} (filter: ${opts.source})`, opts);
       continue;
+    }
+
+    // Jurisdiction filter: skip sources that don't serve the requested jurisdiction
+    if (opts.jurisdiction && source.jurisdiction) {
+      const sourceJur = source.jurisdiction;
+      if (sourceJur !== opts.jurisdiction && !opts.jurisdiction.startsWith(sourceJur)) {
+        // Check if any region within this source matches the jurisdiction
+        const hasMatchingRegion = Object.values(source.regions || {}).some(
+          (r) => r.jurisdiction === opts.jurisdiction
+        );
+        if (!hasMatchingRegion) {
+          verbose(`Skipping source: ${source.displayName} (jurisdiction filter: ${opts.jurisdiction})`, opts);
+          continue;
+        }
+      }
     }
 
     log(`--- Processing source: ${source.displayName} (${source.type}) ---`);
