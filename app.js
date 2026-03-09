@@ -4710,6 +4710,104 @@ Competitive: ${formatPrice(offers.competitive)}`;
                 phtml += '</div>';
                 document.getElementById('dashProfileSummary').innerHTML = phtml;
             }
+
+            renderLocationListings();
+        }
+
+        function renderLocationListings() {
+            var container = document.getElementById('dashLocationListings');
+            if (!container || rawListings.length === 0) return;
+
+            var searchTerm = (document.getElementById('locationSearchInput').value || '').toLowerCase().trim();
+            var sortBy = (document.getElementById('locationSortBy') || {}).value || 'count';
+
+            // Group listings by neighborhood
+            var locationMap = {};
+            rawListings.forEach(function(l, idx) {
+                var nbr = l.neighborhood || 'Unknown';
+                if (!locationMap[nbr]) {
+                    locationMap[nbr] = { name: nbr, region: l.region || '', listings: [], totalPrice: 0, totalDOM: 0, totalScore: 0 };
+                }
+                var entry = locationMap[nbr];
+                entry.listings.push(l);
+                entry.totalPrice += l.price;
+                entry.totalDOM += l.dom;
+                entry.totalScore += calculateScore(l);
+            });
+
+            var locations = Object.values(locationMap).map(function(loc) {
+                var count = loc.listings.length;
+                return {
+                    name: loc.name,
+                    region: loc.region,
+                    count: count,
+                    avgPrice: Math.round(loc.totalPrice / count),
+                    avgDOM: Math.round(loc.totalDOM / count),
+                    avgScore: Math.round(loc.totalScore / count),
+                    minPrice: Math.min.apply(null, loc.listings.map(function(l) { return l.price; })),
+                    maxPrice: Math.max.apply(null, loc.listings.map(function(l) { return l.price; })),
+                    types: [...new Set(loc.listings.map(function(l) { return l.type; }))],
+                    trend: marketTrends[loc.name] || null
+                };
+            });
+
+            // Filter by search
+            if (searchTerm) {
+                locations = locations.filter(function(loc) {
+                    return loc.name.toLowerCase().indexOf(searchTerm) >= 0 || loc.region.toLowerCase().indexOf(searchTerm) >= 0;
+                });
+            }
+
+            // Sort
+            if (sortBy === 'count') locations.sort(function(a, b) { return b.count - a.count; });
+            else if (sortBy === 'name') locations.sort(function(a, b) { return a.name.localeCompare(b.name); });
+            else if (sortBy === 'price') locations.sort(function(a, b) { return b.avgPrice - a.avgPrice; });
+            else if (sortBy === 'dom') locations.sort(function(a, b) { return b.avgDOM - a.avgDOM; });
+            else if (sortBy === 'score') locations.sort(function(a, b) { return b.avgScore - a.avgScore; });
+
+            var html = '';
+            locations.forEach(function(loc) {
+                var trendHtml = '';
+                if (loc.trend) {
+                    var yoy = loc.trend.yoyChange;
+                    var yoyColor = yoy < 0 ? 'var(--success)' : yoy > 0 ? 'var(--danger)' : '#888';
+                    var yoyArrow = yoy < 0 ? '&#9660;' : yoy > 0 ? '&#9650;' : '&#9644;';
+                    var invLabel = loc.trend.inventory === 'high' ? "Buyer's" : loc.trend.inventory === 'low' ? "Seller's" : 'Balanced';
+                    var invColor = loc.trend.inventory === 'high' ? 'var(--success)' : loc.trend.inventory === 'low' ? 'var(--danger)' : '#fd7e14';
+                    trendHtml = '<div style="display:flex;gap:8px;margin-top:6px;font-size:10px;">' +
+                        '<span style="color:' + yoyColor + ';font-weight:600;" title="Year-over-year change">' + yoyArrow + ' ' + Math.abs(yoy) + '% YoY</span>' +
+                        '<span style="color:' + invColor + ';" title="Market type">' + escapeHtml(invLabel) + '</span>' +
+                        '<span style="color:#888;" title="Sale-to-list ratio">' + Math.round(loc.trend.avgSaleToList * 100) + '% S/L</span>' +
+                        '</div>';
+                }
+
+                var scoreColor = loc.avgScore >= 70 ? 'var(--success)' : loc.avgScore >= 50 ? 'var(--warning)' : '#888';
+
+                html += '<div onclick="switchTabDirect(\'listings\');document.getElementById(\'searchBox\').value=\'' + escapeHtml(loc.name) + '\';applyFilters();" ' +
+                    'style="background:white;border:1px solid #e0e0e0;border-radius:8px;padding:14px 16px;cursor:pointer;transition:all 0.2s;" ' +
+                    'onmouseover="this.style.borderColor=\'var(--secondary)\';this.style.boxShadow=\'0 2px 8px rgba(0,0,0,0.08)\'" ' +
+                    'onmouseout="this.style.borderColor=\'#e0e0e0\';this.style.boxShadow=\'none\'">';
+                html += '<div style="display:flex;justify-content:space-between;align-items:flex-start;">';
+                html += '<div><strong style="color:var(--primary);font-size:14px;">' + escapeHtml(loc.name) + '</strong>';
+                html += '<div style="font-size:11px;color:#888;margin-top:2px;">' + escapeHtml(loc.region) + '</div></div>';
+                html += '<div style="background:var(--primary);color:white;padding:3px 10px;border-radius:12px;font-size:12px;font-weight:700;">' + loc.count + '</div>';
+                html += '</div>';
+                html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:10px;font-size:11px;">';
+                html += '<div><span style="color:#888;">Avg Price</span><div style="font-weight:600;color:var(--primary);">' + formatPrice(loc.avgPrice) + '</div></div>';
+                html += '<div><span style="color:#888;">Avg DOM</span><div style="font-weight:600;">' + loc.avgDOM + ' days</div></div>';
+                html += '<div><span style="color:#888;">Avg Score</span><div style="font-weight:600;color:' + scoreColor + ';">' + loc.avgScore + '/100</div></div>';
+                html += '</div>';
+                html += '<div style="font-size:10px;color:#888;margin-top:6px;">Range: ' + formatPrice(loc.minPrice) + ' &ndash; ' + formatPrice(loc.maxPrice) + '</div>';
+                html += '<div style="font-size:10px;color:#888;margin-top:2px;">Types: ' + loc.types.map(function(t) { return escapeHtml(t); }).join(', ') + '</div>';
+                html += trendHtml;
+                html += '</div>';
+            });
+
+            if (locations.length === 0) {
+                html = '<div style="text-align:center;color:#888;padding:20px;grid-column:1/-1;">No locations match your search.</div>';
+            }
+
+            container.innerHTML = html;
         }
 
         function renderBuyerQuickStats() {

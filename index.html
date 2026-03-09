@@ -433,6 +433,29 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Listings by Location -->
+                <div style="margin-bottom: 24px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+                        <h3 style="color: var(--primary); font-size: 16px; margin: 0;">
+                            Listings by Location
+                            <span style="font-size: 12px; color: #888; font-weight: normal; margin-left: 8px;">
+                                All neighborhoods with active listings
+                            </span>
+                        </h3>
+                        <div style="display:flex;gap:8px;align-items:center;">
+                            <input type="text" id="locationSearchInput" placeholder="Filter locations..." oninput="renderLocationListings()" style="font-size:12px;padding:5px 10px;border:1px solid #ccc;border-radius:4px;width:160px;">
+                            <select id="locationSortBy" onchange="renderLocationListings()" style="font-size:12px;padding:4px 8px;border-radius:4px;border:1px solid #ccc;">
+                                <option value="count">Most Listings</option>
+                                <option value="name">Name A-Z</option>
+                                <option value="price">Highest Avg Price</option>
+                                <option value="dom">Highest Avg DOM</option>
+                                <option value="score">Highest Avg Score</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="dashLocationListings" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px;"></div>
+                </div>
             </div>
 
             <!-- Tab 1: All Listings -->
