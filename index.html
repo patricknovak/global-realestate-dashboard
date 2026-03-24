@@ -31,6 +31,42 @@
         <div style="font-size: 13px; color: #888;">Fetching listings and market data...</div>
     </div>
 
+    <!-- Membership Gate -->
+    <div id="memberGate" class="member-gate-overlay" style="display:none;">
+        <div class="member-gate-card">
+            <div class="gate-logo">
+                <h2>Members-Only Offer Tool</h2>
+                <p>Make professional property offers without a realtor. Sign up free to get started.</p>
+            </div>
+            <div class="gate-benefits">
+                <div class="gate-benefit"><span class="gate-benefit-icon">&#128221;</span> Generate PDF offers</div>
+                <div class="gate-benefit"><span class="gate-benefit-icon">&#128200;</span> Smart pricing engine</div>
+                <div class="gate-benefit"><span class="gate-benefit-icon">&#128231;</span> Email offers to agents</div>
+                <div class="gate-benefit"><span class="gate-benefit-icon">&#128222;</span> Call scripts &amp; coaching</div>
+                <div class="gate-benefit"><span class="gate-benefit-icon">&#128203;</span> Track all your offers</div>
+                <div class="gate-benefit"><span class="gate-benefit-icon">&#9878;&#65039;</span> Jurisdiction-aware legal</div>
+            </div>
+            <div class="gate-tabs">
+                <button class="gate-tab active" onclick="showGateForm('signup')">Sign Up</button>
+                <button class="gate-tab" onclick="showGateForm('login')">Log In</button>
+            </div>
+            <div id="gateError" class="gate-error"></div>
+            <form id="gateSignupForm" onsubmit="handleMemberSignup(event)">
+                <input class="gate-input" type="text" id="gateSignupName" placeholder="Full name" required autocomplete="name">
+                <input class="gate-input" type="email" id="gateSignupEmail" placeholder="Email address" required autocomplete="email">
+                <input class="gate-input" type="password" id="gateSignupPassword" placeholder="Create password (6+ characters)" required minlength="6" autocomplete="new-password">
+                <button type="submit" class="gate-submit">Create Free Account</button>
+            </form>
+            <form id="gateLoginForm" style="display:none;" onsubmit="handleMemberLogin(event)">
+                <input class="gate-input" type="email" id="gateLoginEmail" placeholder="Email address" required autocomplete="email">
+                <input class="gate-input" type="password" id="gateLoginPassword" placeholder="Password" required autocomplete="current-password">
+                <button type="submit" class="gate-submit">Log In</button>
+            </form>
+            <div class="gate-divider">or</div>
+            <button class="gate-skip" onclick="dismissMemberGate()">Continue browsing without an account</button>
+        </div>
+    </div>
+
     <!-- Fallback Data Warning -->
     <div id="fallbackWarning" class="fallback-warning">
         <button class="dismiss-btn" onclick="this.parentElement.style.display='none'">&times;</button>
@@ -45,7 +81,25 @@
             <h1>Real Estate Investment Dashboard</h1>
             <p>Find deals, analyze neighborhoods, compare mortgage rates, and generate offers — connect directly with sellers and lenders, no realtor required <span id="streetViewIndicator" style="margin-left:12px;"></span></p>
         </div>
-        <button id="darkModeToggle" class="dark-mode-toggle" onclick="toggleDarkMode()" title="Toggle dark mode" aria-label="Toggle dark mode">Dark Mode</button>
+        <div style="display:flex;align-items:center;gap:8px;position:relative;">
+            <div id="memberBadgeWrap" style="display:none;position:relative;">
+                <button class="member-badge" onclick="toggleMemberMenu()">
+                    <span style="font-size:14px;">&#128100;</span>
+                    <span class="member-name" id="memberDisplayName">Member</span>
+                </button>
+                <div class="member-menu" id="memberMenu">
+                    <button class="member-menu-item" onclick="switchTabDirect('buyerprofile');closeMemberMenu();">My Profile</button>
+                    <button class="member-menu-item" onclick="switchTabDirect('myoffers');closeMemberMenu();">My Offers</button>
+                    <button class="member-menu-item" onclick="switchTabDirect('documents');closeMemberMenu();">Documents</button>
+                    <button class="member-menu-item danger" onclick="handleMemberLogout()">Log Out</button>
+                </div>
+            </div>
+            <button id="memberLoginBtn" class="member-badge" onclick="showMemberGate()" style="display:none;">
+                <span style="font-size:14px;">&#128274;</span>
+                <span>Sign In</span>
+            </button>
+            <button id="darkModeToggle" class="dark-mode-toggle" onclick="toggleDarkMode()" title="Toggle dark mode" aria-label="Toggle dark mode">Dark Mode</button>
+        </div>
     </header>
     
     <!-- Stats Bar -->
@@ -593,9 +647,52 @@
                 </div>
             </div>
             
-            <!-- Tab 5: Offer Generator -->
+            <!-- Tab 5: Offer Generator (Members-Only Tool) -->
             <div id="offers" class="tab-content">
-                <h2 style="margin-bottom: 20px; color: var(--primary);">Generate Offer</h2>
+                <!-- Members-only lock (shown to non-members) -->
+                <div id="offerLockOverlay" style="display:none;min-height:60vh;position:relative;">
+                    <div style="filter:blur(3px);opacity:0.4;pointer-events:none;">
+                        <div class="offer-tool-header">
+                            <h2>Property Offer Tool</h2>
+                            <p>Generate professional offers, negotiate directly with listing agents, and save thousands in commission.</p>
+                        </div>
+                        <div class="offer-section-card">
+                            <h4><span class="step-num">1</span> Select Property</h4>
+                            <div style="height:48px;background:var(--light-gray);border-radius:8px;"></div>
+                        </div>
+                        <div class="offer-section-card">
+                            <h4><span class="step-num">2</span> Choose Offer Strategy</h4>
+                            <div class="offer-tier-touch">
+                                <div class="tier-card"><div class="tier-label" style="color:#dc3545;">Aggressive</div><div class="tier-price">$---,---</div></div>
+                                <div class="tier-card"><div class="tier-label" style="color:#fd7e14;">Strategic</div><div class="tier-price">$---,---</div></div>
+                                <div class="tier-card"><div class="tier-label" style="color:#28a745;">Competitive</div><div class="tier-price">$---,---</div></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;z-index:11;padding:32px;max-width:420px;width:90%;background:white;border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,0.15);">
+                        <div style="font-size:48px;margin-bottom:12px;">&#128274;</div>
+                        <h3 style="color:var(--primary);margin:0 0 8px;font-size:20px;">Members-Only Tool</h3>
+                        <p style="color:#666;font-size:14px;margin:0 0 8px;">Create professional property offers, get smart pricing recommendations, and email offers directly to listing agents.</p>
+                        <p style="color:#888;font-size:12px;margin:0 0 20px;">Free sign-up. No credit card required.</p>
+                        <button onclick="showMemberGate()" style="padding:14px 32px;background:var(--primary);color:white;border:none;border-radius:10px;font-size:16px;font-weight:700;cursor:pointer;width:100%;text-transform:none;margin-bottom:8px;">Sign Up Free</button>
+                        <button onclick="showMemberGate()" style="padding:10px;background:none;border:none;color:var(--secondary);font-size:13px;cursor:pointer;text-decoration:underline;width:100%;text-transform:none;">Already a member? Log in</button>
+                    </div>
+                </div>
+
+                <!-- Actual offer tool (shown to members) -->
+                <div id="offerToolContent">
+                <div class="offer-tool-header">
+                    <h2>Property Offer Tool</h2>
+                    <p>Generate professional offers, negotiate directly with listing agents, and save thousands in commission.</p>
+                </div>
+                <div id="offerStepIndicator" class="offer-step-indicator">
+                    <div class="offer-step active"></div>
+                    <div class="offer-step"></div>
+                    <div class="offer-step"></div>
+                    <div class="offer-step"></div>
+                    <div class="offer-step"></div>
+                </div>
+                <h2 style="display:none; margin-bottom: 20px; color: var(--primary);">Generate Offer</h2>
                 <div class="offer-form">
                     <div class="form-group">
                         <label>Select Property</label>
@@ -649,6 +746,7 @@
                         </div>
                     </div>
                 </div>
+                </div><!-- end offerToolContent -->
             </div>
 
             <!-- Tab 6: Shortlist -->
@@ -993,6 +1091,13 @@
 
             <!-- Tab: My Offers Tracking -->
             <div id="myoffers" class="tab-content">
+                <div id="myOffersLock" style="display:none;text-align:center;padding:60px 20px;">
+                    <div style="font-size:48px;margin-bottom:12px;">&#128274;</div>
+                    <h3 style="color:var(--primary);margin:0 0 8px;font-size:18px;">Members-Only Feature</h3>
+                    <p style="color:#666;font-size:13px;margin:0 0 16px;">Sign up to track your offers, monitor negotiations, and manage your deal pipeline.</p>
+                    <button onclick="showMemberGate()" style="padding:12px 24px;background:var(--primary);color:white;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;text-transform:none;">Sign Up Free</button>
+                </div>
+                <div id="myOffersContent">
                 <h2 style="margin-bottom: 8px; color: var(--primary);">My Offers</h2>
                 <p style="color: #666; margin-bottom: 16px;">Track all offers you've generated. Update statuses as negotiations progress.</p>
                 <div style="display: flex; gap: 12px; margin-bottom: 20px;">
@@ -1033,6 +1138,7 @@
                     <div class="empty-state-title">No Offers Yet</div>
                     <p>Go to the Offer Generator tab to create your first offer. All offers will be tracked here automatically.</p>
                 </div>
+                </div><!-- end myOffersContent -->
             </div>
 
             <!-- Tab: Investment ROI Calculator -->
