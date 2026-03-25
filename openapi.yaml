@@ -1,0 +1,981 @@
+openapi: 3.0.3
+info:
+  title: Global Real Estate Dashboard API
+  version: 1.0.0
+  description: REST API for managing global real estate listings, viewings, documents, and market data.
+
+servers:
+  - url: /api/v1
+
+paths:
+  /health:
+    get:
+      tags: [System]
+      summary: Health check
+      operationId: getHealth
+      responses:
+        "200":
+          description: Service health status
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/HealthStatus"
+
+  # ── Listings ──────────────────────────────────────────────
+
+  /listings:
+    get:
+      tags: [Listings]
+      summary: List and filter listings
+      operationId: getListings
+      parameters:
+        - name: region
+          in: query
+          schema: { type: string }
+        - name: neighborhood
+          in: query
+          schema: { type: string }
+        - name: type
+          in: query
+          schema: { $ref: "#/components/schemas/PropertyType" }
+        - name: status
+          in: query
+          schema: { $ref: "#/components/schemas/ListingStatus" }
+        - name: min_price
+          in: query
+          schema: { type: number }
+        - name: max_price
+          in: query
+          schema: { type: number }
+        - name: min_beds
+          in: query
+          schema: { type: integer }
+        - name: max_beds
+          in: query
+          schema: { type: integer }
+        - name: min_baths
+          in: query
+          schema: { type: integer }
+        - name: max_baths
+          in: query
+          schema: { type: integer }
+        - name: water_view
+          in: query
+          schema: { type: boolean }
+        - name: sort_by
+          in: query
+          schema: { type: string }
+        - name: sort_order
+          in: query
+          schema: { type: string, enum: [asc, desc] }
+        - name: search
+          in: query
+          schema: { type: string }
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        "200":
+          description: Paginated listing results
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - properties:
+                      data:
+                        type: array
+                        items: { $ref: "#/components/schemas/Listing" }
+                      meta:
+                        $ref: "#/components/schemas/PaginationMeta"
+
+    post:
+      tags: [Listings]
+      summary: Create a listing
+      operationId: createListing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ListingInput" }
+      responses:
+        "201":
+          description: Listing created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - properties:
+                      data: { $ref: "#/components/schemas/Listing" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+
+  /listings/stats:
+    get:
+      tags: [Listings]
+      summary: Aggregate listing statistics
+      operationId: getListingStats
+      responses:
+        "200":
+          description: Listing statistics
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - properties:
+                      data: { type: object }
+
+  /listings/stale:
+    get:
+      tags: [Listings]
+      summary: Get stale listings
+      operationId: getStaleListings
+      parameters:
+        - name: days
+          in: query
+          schema: { type: integer, default: 7 }
+          description: Number of days since last update to consider stale
+      responses:
+        "200":
+          description: Stale listings
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - properties:
+                      data:
+                        type: array
+                        items: { $ref: "#/components/schemas/Listing" }
+
+  /listings/bulk:
+    post:
+      tags: [Listings]
+      summary: Bulk create listings
+      operationId: bulkCreateListings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [listings]
+              properties:
+                listings:
+                  type: array
+                  items: { $ref: "#/components/schemas/ListingInput" }
+      responses:
+        "201":
+          description: Listings created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - properties:
+                      data:
+                        type: array
+                        items: { $ref: "#/components/schemas/Listing" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+
+  /listings/{id}:
+    parameters:
+      - $ref: "#/components/parameters/ListingId"
+
+    get:
+      tags: [Listings]
+      summary: Get a listing by ID
+      operationId: getListing
+      responses:
+        "200":
+          description: Listing details
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - properties:
+                      data: { $ref: "#/components/schemas/Listing" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+    put:
+      tags: [Listings]
+      summary: Replace a listing
+      operationId: replaceListing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ListingInput" }
+      responses:
+        "200":
+          description: Listing replaced
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - properties:
+                      data: { $ref: "#/components/schemas/Listing" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+    patch:
+      tags: [Listings]
+      summary: Partially update a listing
+      operationId: patchListing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ListingPatch" }
+      responses:
+        "200":
+          description: Listing updated
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - properties:
+                      data: { $ref: "#/components/schemas/Listing" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+    delete:
+      tags: [Listings]
+      summary: Delete a listing
+      operationId: deleteListing
+      responses:
+        "200":
+          description: Listing deleted
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiResponse" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /listings/{id}/price-history:
+    get:
+      tags: [Listings]
+      summary: Get price history for a listing
+      operationId: getListingPriceHistory
+      parameters:
+        - $ref: "#/components/parameters/ListingId"
+      responses:
+        "200":
+          description: Price history records
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - properties:
+                      data:
+                        type: array
+                        items: { $ref: "#/components/schemas/PriceHistoryEntry" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /listings/{id}/comparables:
+    get:
+      tags: [Listings]
+      summary: Find comparable listings
+      operationId: getComparables
+      parameters:
+        - $ref: "#/components/parameters/ListingId"
+        - name: price_range
+          in: query
+          description: Fractional price tolerance (e.g. 0.2 = +/- 20%)
+          schema: { type: number, default: 0.2 }
+      responses:
+        "200":
+          description: Comparable listings
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - properties:
+                      data:
+                        type: array
+                        items: { $ref: "#/components/schemas/Listing" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /listings/{id}/flag:
+    post:
+      tags: [Listings]
+      summary: Flag a listing for review
+      operationId: flagListing
+      parameters:
+        - $ref: "#/components/parameters/ListingId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/FlagInput" }
+      responses:
+        "201":
+          description: Flag created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiResponse" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  # ── Viewings ──────────────────────────────────────────────
+
+  /viewings:
+    get:
+      tags: [Viewings]
+      summary: List viewings
+      operationId: getViewings
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        "200":
+          description: Viewing list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - properties:
+                      data:
+                        type: array
+                        items: { $ref: "#/components/schemas/Viewing" }
+
+    post:
+      tags: [Viewings]
+      summary: Schedule a viewing
+      operationId: createViewing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ViewingInput" }
+      responses:
+        "201":
+          description: Viewing scheduled
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - properties:
+                      data: { $ref: "#/components/schemas/Viewing" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+
+  /viewings/calendar:
+    get:
+      tags: [Viewings]
+      summary: Get viewings calendar
+      operationId: getViewingsCalendar
+      parameters:
+        - name: year
+          in: query
+          schema: { type: integer }
+        - name: month
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 12 }
+      responses:
+        "200":
+          description: Calendar view of viewings
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - properties:
+                      data: { type: object }
+
+  /viewings/{id}:
+    parameters:
+      - $ref: "#/components/parameters/ViewingId"
+
+    put:
+      tags: [Viewings]
+      summary: Update a viewing
+      operationId: updateViewing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ViewingInput" }
+      responses:
+        "200":
+          description: Viewing updated
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - properties:
+                      data: { $ref: "#/components/schemas/Viewing" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+    delete:
+      tags: [Viewings]
+      summary: Cancel a viewing
+      operationId: deleteViewing
+      responses:
+        "200":
+          description: Viewing cancelled
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiResponse" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  # ── Documents ─────────────────────────────────────────────
+
+  /documents:
+    get:
+      tags: [Documents]
+      summary: List documents
+      operationId: getDocuments
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        "200":
+          description: Document list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - properties:
+                      data:
+                        type: array
+                        items: { $ref: "#/components/schemas/Document" }
+
+    post:
+      tags: [Documents]
+      summary: Upload a document
+      operationId: uploadDocument
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+                listing_id:
+                  type: string
+                description:
+                  type: string
+      responses:
+        "201":
+          description: Document uploaded
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - properties:
+                      data: { $ref: "#/components/schemas/Document" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+
+  /documents/{id}:
+    parameters:
+      - $ref: "#/components/parameters/DocumentId"
+
+    get:
+      tags: [Documents]
+      summary: Get a document
+      operationId: getDocument
+      responses:
+        "200":
+          description: Document details
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - properties:
+                      data: { $ref: "#/components/schemas/Document" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+    delete:
+      tags: [Documents]
+      summary: Delete a document
+      operationId: deleteDocument
+      responses:
+        "200":
+          description: Document deleted
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiResponse" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  # ── Data ──────────────────────────────────────────────────
+
+  /data/benchmarks:
+    get:
+      tags: [Data]
+      summary: Get market benchmarks
+      operationId: getBenchmarks
+      responses:
+        "200":
+          description: Benchmark data
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - properties:
+                      data: { type: object }
+
+  /data/neighborhoods:
+    get:
+      tags: [Data]
+      summary: Get neighborhood data
+      operationId: getNeighborhoods
+      responses:
+        "200":
+          description: Neighborhood list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - properties:
+                      data:
+                        type: array
+                        items: { type: object }
+
+  /data/freshness:
+    get:
+      tags: [Data]
+      summary: Get data freshness metrics
+      operationId: getDataFreshness
+      responses:
+        "200":
+          description: Freshness report
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - properties:
+                      data: { type: object }
+
+  /data/export:
+    get:
+      tags: [Data]
+      summary: Export data
+      operationId: exportData
+      responses:
+        "200":
+          description: Exported data
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - properties:
+                      data: { type: object }
+
+  # ── Scraper ───────────────────────────────────────────────
+
+  /scraper/run:
+    post:
+      tags: [Scraper]
+      summary: Trigger a scraper run
+      operationId: runScraper
+      responses:
+        "202":
+          description: Scraper job queued
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - properties:
+                      data: { $ref: "#/components/schemas/ScraperJob" }
+
+  /scraper/jobs:
+    get:
+      tags: [Scraper]
+      summary: List scraper jobs
+      operationId: getScraperJobs
+      responses:
+        "200":
+          description: Job list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - properties:
+                      data:
+                        type: array
+                        items: { $ref: "#/components/schemas/ScraperJob" }
+
+  /scraper/jobs/{id}:
+    get:
+      tags: [Scraper]
+      summary: Get scraper job status
+      operationId: getScraperJob
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Job details
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - properties:
+                      data: { $ref: "#/components/schemas/ScraperJob" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  # ── Auth ──────────────────────────────────────────────────
+
+  /auth/register:
+    post:
+      tags: [Auth]
+      summary: Register a new user
+      operationId: register
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/RegisterInput" }
+      responses:
+        "201":
+          description: User registered
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - properties:
+                      data: { $ref: "#/components/schemas/AuthPayload" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Log in
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string, format: email }
+                password: { type: string }
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - properties:
+                      data: { $ref: "#/components/schemas/AuthPayload" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /auth/me:
+    get:
+      tags: [Auth]
+      summary: Get current user profile
+      operationId: getMe
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - properties:
+                      data: { $ref: "#/components/schemas/User" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+    put:
+      tags: [Auth]
+      summary: Update current user profile
+      operationId: updateMe
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+                email: { type: string, format: email }
+                password: { type: string }
+      responses:
+        "200":
+          description: Profile updated
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - properties:
+                      data: { $ref: "#/components/schemas/User" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    Page:
+      name: page
+      in: query
+      schema: { type: integer, minimum: 1, default: 1 }
+    Limit:
+      name: limit
+      in: query
+      schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+    ListingId:
+      name: id
+      in: path
+      required: true
+      schema: { type: string }
+    ViewingId:
+      name: id
+      in: path
+      required: true
+      schema: { type: string }
+    DocumentId:
+      name: id
+      in: path
+      required: true
+      schema: { type: string }
+
+  responses:
+    BadRequest:
+      description: Validation error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Unauthorized:
+      description: Authentication required
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+
+  schemas:
+    # ── Envelope ────────────────────────────────────────────
+
+    ApiResponse:
+      type: object
+      required: [success]
+      properties:
+        success: { type: boolean }
+        data: {}
+        meta: { type: object }
+        message: { type: string }
+        error: { type: string }
+
+    ErrorResponse:
+      type: object
+      properties:
+        success: { type: boolean, example: false }
+        error: { type: string }
+
+    PaginationMeta:
+      type: object
+      properties:
+        page: { type: integer }
+        limit: { type: integer }
+        total: { type: integer }
+        total_pages: { type: integer }
+
+    # ── Enums ───────────────────────────────────────────────
+
+    PropertyType:
+      type: string
+      enum: [House, Apt/Condo, Townhouse, Land/Lot, Duplex, Mfd Home]
+
+    ListingStatus:
+      type: string
+      enum: [active, sold, delisted, price_changed, flagged]
+
+    Jurisdiction:
+      type: string
+      enum: [CA-BC, CA-AB, CA-ON, US-CA]
+
+    # ── Listings ────────────────────────────────────────────
+
+    Listing:
+      type: object
+      properties:
+        id: { type: string }
+        address: { type: string }
+        price: { type: number }
+        beds: { type: integer }
+        baths: { type: integer }
+        sqft: { type: number }
+        type: { $ref: "#/components/schemas/PropertyType" }
+        status: { $ref: "#/components/schemas/ListingStatus" }
+        neighborhood: { type: string }
+        region: { type: string }
+        jurisdiction: { $ref: "#/components/schemas/Jurisdiction" }
+        water_view: { type: boolean }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+
+    ListingInput:
+      type: object
+      required: [address, price]
+      properties:
+        address: { type: string }
+        price: { type: number }
+        beds: { type: integer }
+        baths: { type: integer }
+        sqft: { type: number }
+        type: { $ref: "#/components/schemas/PropertyType" }
+        status: { $ref: "#/components/schemas/ListingStatus" }
+        neighborhood: { type: string }
+        region: { type: string }
+        jurisdiction: { $ref: "#/components/schemas/Jurisdiction" }
+        water_view: { type: boolean }
+
+    ListingPatch:
+      type: object
+      description: Any subset of listing fields to update.
+      properties:
+        address: { type: string }
+        price: { type: number }
+        beds: { type: integer }
+        baths: { type: integer }
+        sqft: { type: number }
+        type: { $ref: "#/components/schemas/PropertyType" }
+        status: { $ref: "#/components/schemas/ListingStatus" }
+        neighborhood: { type: string }
+        region: { type: string }
+        jurisdiction: { $ref: "#/components/schemas/Jurisdiction" }
+        water_view: { type: boolean }
+
+    PriceHistoryEntry:
+      type: object
+      properties:
+        price: { type: number }
+        date: { type: string, format: date-time }
+        event: { type: string }
+
+    FlagInput:
+      type: object
+      required: [flag_type]
+      properties:
+        flag_type: { type: string }
+        reported_value: { type: string }
+        notes: { type: string }
+        reporter_id: { type: string }
+
+    # ── Viewings ────────────────────────────────────────────
+
+    Viewing:
+      type: object
+      properties:
+        id: { type: string }
+        listing_id: { type: string }
+        scheduled_at: { type: string, format: date-time }
+        notes: { type: string }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+
+    ViewingInput:
+      type: object
+      properties:
+        listing_id: { type: string }
+        scheduled_at: { type: string, format: date-time }
+        notes: { type: string }
+
+    # ── Documents ───────────────────────────────────────────
+
+    Document:
+      type: object
+      properties:
+        id: { type: string }
+        listing_id: { type: string }
+        filename: { type: string }
+        mime_type: { type: string }
+        size: { type: integer }
+        description: { type: string }
+        created_at: { type: string, format: date-time }
+
+    # ── Health ──────────────────────────────────────────────
+
+    HealthStatus:
+      type: object
+      properties:
+        status: { type: string }
+        database: { type: string }
+        uptime: { type: number }
+        timestamp: { type: string, format: date-time }
+        environment: { type: string }
+
+    # ── Scraper ─────────────────────────────────────────────
+
+    ScraperJob:
+      type: object
+      properties:
+        id: { type: string }
+        status: { type: string }
+        started_at: { type: string, format: date-time }
+        completed_at: { type: string, format: date-time }
+        listings_found: { type: integer }
+        errors: { type: integer }
+
+    # ── Auth ────────────────────────────────────────────────
+
+    User:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        email: { type: string, format: email }
+        created_at: { type: string, format: date-time }
+
+    RegisterInput:
+      type: object
+      required: [name, email, password]
+      properties:
+        name: { type: string }
+        email: { type: string, format: email }
+        password: { type: string, minLength: 8 }
+
+    AuthPayload:
+      type: object
+      properties:
+        token: { type: string }
+        user: { $ref: "#/components/schemas/User" }

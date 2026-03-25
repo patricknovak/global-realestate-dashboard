@@ -22,13 +22,13 @@
 </head>
 <body>
     <!-- Skip Link -->
-    <a href="#mainContent" class="skip-link" style="position:absolute;top:-40px;left:0;background:var(--primary);color:white;padding:8px 16px;z-index:10000;font-weight:600;transition:top 0.2s;" onfocus="this.style.top='0'" onblur="this.style.top='-40px'">Skip to main content</a>
+    <a href="#mainContent" class="skip-link">Skip to main content</a>
 
     <!-- Loading Overlay -->
     <div id="loadingOverlay" class="loading-overlay">
         <div class="loading-spinner"></div>
-        <div style="font-size: 16px; font-weight: 600; color: var(--primary); margin-bottom: 8px;">Loading Dashboard</div>
-        <div style="font-size: 13px; color: #888;">Fetching listings and market data...</div>
+        <div class="loading-title">Loading Dashboard</div>
+        <div class="loading-subtitle">Fetching listings and market data...</div>
     </div>
 
     <!-- Membership Gate -->
@@ -57,7 +57,7 @@
                 <input class="gate-input" type="password" id="gateSignupPassword" placeholder="Create password (6+ characters)" required minlength="6" autocomplete="new-password">
                 <button type="submit" class="gate-submit">Create Free Account</button>
             </form>
-            <form id="gateLoginForm" style="display:none;" onsubmit="handleMemberLogin(event)">
+            <form id="gateLoginForm" onsubmit="handleMemberLogin(event)">
                 <input class="gate-input" type="email" id="gateLoginEmail" placeholder="Email address" required autocomplete="email">
                 <input class="gate-input" type="password" id="gateLoginPassword" placeholder="Password" required autocomplete="current-password">
                 <button type="submit" class="gate-submit">Log In</button>
@@ -74,7 +74,7 @@
     </div>
 
     <!-- Staleness Warning (populated by JS) -->
-    <div id="stalenessWarning" style="display:none;"></div>
+    <div id="stalenessWarning"></div>
     <!-- Header -->
     <header class="header" role="banner">
         <div>
@@ -650,32 +650,32 @@
             <!-- Tab 5: Offer Generator (Members-Only Tool) -->
             <div id="offers" class="tab-content">
                 <!-- Members-only lock (shown to non-members) -->
-                <div id="offerLockOverlay" style="display:none;min-height:60vh;position:relative;">
-                    <div style="filter:blur(3px);opacity:0.4;pointer-events:none;">
+                <div id="offerLockOverlay">
+                    <div class="offer-lock-blur">
                         <div class="offer-tool-header">
                             <h2>Property Offer Tool</h2>
                             <p>Generate professional offers, negotiate directly with listing agents, and save thousands in commission.</p>
                         </div>
                         <div class="offer-section-card">
                             <h4><span class="step-num">1</span> Select Property</h4>
-                            <div style="height:48px;background:var(--light-gray);border-radius:8px;"></div>
+                            <div class="offer-lock-placeholder"></div>
                         </div>
                         <div class="offer-section-card">
                             <h4><span class="step-num">2</span> Choose Offer Strategy</h4>
                             <div class="offer-tier-touch">
-                                <div class="tier-card"><div class="tier-label" style="color:#dc3545;">Aggressive</div><div class="tier-price">$---,---</div></div>
-                                <div class="tier-card"><div class="tier-label" style="color:#fd7e14;">Strategic</div><div class="tier-price">$---,---</div></div>
-                                <div class="tier-card"><div class="tier-label" style="color:#28a745;">Competitive</div><div class="tier-price">$---,---</div></div>
+                                <div class="tier-card"><div class="tier-label tier-label-aggressive">Aggressive</div><div class="tier-price">$---,---</div></div>
+                                <div class="tier-card"><div class="tier-label tier-label-strategic">Strategic</div><div class="tier-price">$---,---</div></div>
+                                <div class="tier-card"><div class="tier-label tier-label-competitive">Competitive</div><div class="tier-price">$---,---</div></div>
                             </div>
                         </div>
                     </div>
-                    <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;z-index:11;padding:32px;max-width:420px;width:90%;background:white;border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,0.15);">
-                        <div style="font-size:48px;margin-bottom:12px;">&#128274;</div>
-                        <h3 style="color:var(--primary);margin:0 0 8px;font-size:20px;">Members-Only Tool</h3>
-                        <p style="color:#666;font-size:14px;margin:0 0 8px;">Create professional property offers, get smart pricing recommendations, and email offers directly to listing agents.</p>
-                        <p style="color:#888;font-size:12px;margin:0 0 20px;">Free sign-up. No credit card required.</p>
-                        <button onclick="showMemberGate()" style="padding:14px 32px;background:var(--primary);color:white;border:none;border-radius:10px;font-size:16px;font-weight:700;cursor:pointer;width:100%;text-transform:none;margin-bottom:8px;">Sign Up Free</button>
-                        <button onclick="showMemberGate()" style="padding:10px;background:none;border:none;color:var(--secondary);font-size:13px;cursor:pointer;text-decoration:underline;width:100%;text-transform:none;">Already a member? Log in</button>
+                    <div class="offer-lock-prompt">
+                        <div class="offer-lock-icon">&#128274;</div>
+                        <h3>Members-Only Tool</h3>
+                        <p>Create professional property offers, get smart pricing recommendations, and email offers directly to listing agents.</p>
+                        <p class="subtle">Free sign-up. No credit card required.</p>
+                        <button onclick="showMemberGate()" class="offer-lock-btn-primary">Sign Up Free</button>
+                        <button onclick="showMemberGate()" class="offer-lock-btn-link">Already a member? Log in</button>
                     </div>
                 </div>
 
@@ -2253,7 +2253,16 @@
     <!-- External Scripts -->
     <!-- Libraries lazy-loaded on first use: Chart.js, Leaflet, jsPDF -->
     
-    <script src="app.js"></script>
+    <script src="dist/app.js" onerror="var s=document.createElement('script');s.src='app.js';document.body.appendChild(s);"></script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+          navigator.serviceWorker.register('/sw.js', { scope: '/' })
+            .then(function(reg) { console.log('[SW] Registered:', reg.scope); })
+            .catch(function(err) { console.log('[SW] Registration failed:', err); });
+        });
+      }
+    </script>
 
     <!-- Mobile filter toggle button -->
     <button class="filter-toggle" id="filterToggle" onclick="openMobileSidebar()" aria-label="Open filter panel">&#9776; Filters</button>

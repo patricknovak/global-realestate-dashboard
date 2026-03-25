@@ -95,6 +95,11 @@ app.use(express.static(path.join(__dirname), {
 // Serve data directory explicitly for direct JSON access
 app.use('/data', express.static(path.join(__dirname, 'data')));
 
+// Serve service worker from root scope
+app.get('/sw.js', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'sw.js'));
+});
+
 // Serve public directory for additional static assets
 app.use('/public', express.static(path.join(__dirname, 'public')));
 
@@ -106,12 +111,14 @@ const viewingsRoutes = require('./server/routes/viewings');
 const documentsRoutes = require('./server/routes/documents');
 const dataRoutes = require('./server/routes/data');
 const scraperRoutes = require('./server/routes/scraper');
+const authRoutes = require('./server/routes/auth');
 
 app.use('/api/v1/listings', listingsRoutes(db));
 app.use('/api/v1/viewings', viewingsRoutes(db));
 app.use('/api/v1/documents', documentsRoutes(db));
 app.use('/api/v1/data', dataRoutes(db));
 app.use('/api/v1/scraper', scraperRoutes(db));
+app.use('/api/v1/auth', authRoutes(db));
 
 // ---------------------------------------------------------------
 // API health check

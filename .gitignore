@@ -11,3 +11,4 @@ __tests__/test-*.db
 __tests__/test-*.db-shm
 __tests__/test-*.db-wal
 coverage/
+dist/

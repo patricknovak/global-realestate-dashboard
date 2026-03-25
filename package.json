@@ -6,6 +6,9 @@
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
+    "build": "node esbuild.config.mjs",
+    "build:dev": "node esbuild.config.mjs --dev",
+    "watch": "node esbuild.config.mjs --watch",
     "seed": "node server/db/seed.js",
     "scrape": "node server/scraper/run.js",
     "test": "jest --forceExit --detectOpenHandles",
@@ -34,6 +37,7 @@
     "node-cron": "^3.0.3"
   },
   "devDependencies": {
+    "esbuild": "^0.27.4",
     "eslint": "^10.0.3",
     "jest": "^30.2.0",
     "nodemon": "^3.1.9",

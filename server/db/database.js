@@ -36,7 +36,36 @@ function getDatabase() {
   // Run schema to create tables if they don't exist
   const schemaPath = path.join(__dirname, 'schema.sql');
   const schema = fs.readFileSync(schemaPath, 'utf-8');
-  db.exec(schema);
+
+  // Split schema into individual statements and execute each separately.
+  // This prevents a single failing statement (e.g., index on a column
+  // that hasn't been migrated yet) from blocking the entire schema.
+  const statements = schema
+    .split(';')
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
+
+  for (const stmt of statements) {
+    try {
+      db.exec(stmt);
+    } catch (err) {
+      // Log but don't crash — allows server to start even with pending migrations
+      if (!err.message.includes('already exists')) {
+        console.warn(`[DB] Schema statement skipped: ${err.message}`);
+      }
+    }
+  }
+
+  // Run migration for jurisdiction columns if needed
+  try {
+    const { migrate } = require('./migrate-001-jurisdiction');
+    const info = db.pragma('table_info(listings)');
+    if (!info.some((col) => col.name === 'jurisdiction')) {
+      migrate();
+    }
+  } catch {
+    // Migration already applied or not needed
+  }
 
   console.log(`[DB] SQLite database initialized at ${DB_PATH}`);
   return db;
