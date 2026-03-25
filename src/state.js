@@ -52,7 +52,7 @@ async function loadExternalData() {
 var externalLenders = null;
 var externalBrokers = null;
 
-document.addEventListener('DOMContentLoaded', async () => {
+async function initApp() {
     await loadExternalData();
     document.getElementById('loadingOverlay').classList.add('hidden');
     if (window._usingFallbackData) {
@@ -81,7 +81,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     updateGitHubConfigStatus();
     showWelcomeBanner();
     checkStalenessWarning();
-});
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initApp);
+} else {
+    initApp();
+}
 
 function loadShortlist() {
     const saved = localStorage.getItem('shortlist');
