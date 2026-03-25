@@ -336,6 +336,141 @@ describe('DELETE /api/v1/listings/:id', () => {
   });
 });
 
+// ---------------------------------------------------------------
+// GET /api/v1/listings/:id/comparables - Comparable sales
+// ---------------------------------------------------------------
+describe('GET /api/v1/listings/:id/comparables', () => {
+  it('should return 400 for invalid id', async () => {
+    const res = await request(app).get('/api/v1/listings/abc/comparables');
+    expect(res.status).toBe(400);
+    expect(res.body.success).toBe(false);
+  });
+
+  it('should return 404 for non-existent listing', async () => {
+    const res = await request(app).get('/api/v1/listings/999999/comparables');
+    expect(res.status).toBe(404);
+    expect(res.body.success).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------
+// POST /api/v1/listings/:id/flag - Valid flag & invalid flag_type
+// ---------------------------------------------------------------
+describe('POST /api/v1/listings/:id/flag (extended)', () => {
+  let flagListingId;
+
+  beforeAll(async () => {
+    const res = await request(app)
+      .post('/api/v1/listings')
+      .send({ addr: '500 Flag Test Ave', price: 650000, type: 'Townhouse' });
+    flagListingId = res.body.data.id;
+  });
+
+  it('should accept a valid flag and create it', async () => {
+    const res = await request(app)
+      .post(`/api/v1/listings/${flagListingId}/flag`)
+      .send({ flag_type: 'sold', notes: 'Appears sold on MLS' });
+    expect(res.status).toBe(201);
+    expect(res.body.success).toBe(true);
+    expect(res.body.data.flag_type).toBe('sold');
+    expect(res.body.data.listing_id).toBe(flagListingId);
+    expect(res.body.data.status).toBe('pending');
+  });
+
+  it('should reject an invalid flag_type', async () => {
+    const res = await request(app)
+      .post(`/api/v1/listings/${flagListingId}/flag`)
+      .send({ flag_type: 'bogus_type' });
+    expect(res.status).toBe(400);
+    expect(res.body.success).toBe(false);
+    expect(res.body.error).toMatch(/flag_type/i);
+  });
+});
+
+// ---------------------------------------------------------------
+// Community auto-flagging: 3 flags triggers status = 'flagged'
+// ---------------------------------------------------------------
+describe('Community auto-flagging', () => {
+  let autoFlagListingId;
+
+  beforeAll(async () => {
+    const res = await request(app)
+      .post('/api/v1/listings')
+      .send({ addr: '600 AutoFlag Blvd', price: 900000, type: 'House' });
+    autoFlagListingId = res.body.data.id;
+  });
+
+  it('should auto-flag a listing after 3 community flags', async () => {
+    // Submit 3 flags
+    await request(app)
+      .post(`/api/v1/listings/${autoFlagListingId}/flag`)
+      .send({ flag_type: 'price_wrong', reporter_id: 'user-1' });
+    await request(app)
+      .post(`/api/v1/listings/${autoFlagListingId}/flag`)
+      .send({ flag_type: 'info_incorrect', reporter_id: 'user-2' });
+    await request(app)
+      .post(`/api/v1/listings/${autoFlagListingId}/flag`)
+      .send({ flag_type: 'sold', reporter_id: 'user-3' });
+
+    // Verify the listing status is now 'flagged'
+    const getRes = await request(app).get(`/api/v1/listings/${autoFlagListingId}`);
+    expect(getRes.status).toBe(200);
+    expect(getRes.body.data.status).toBe('flagged');
+  });
+});
+
+// ---------------------------------------------------------------
+// PATCH /api/v1/listings/:id - Partial update
+// ---------------------------------------------------------------
+describe('PATCH /api/v1/listings/:id', () => {
+  let patchListingId;
+
+  beforeAll(async () => {
+    const res = await request(app)
+      .post('/api/v1/listings')
+      .send({ addr: '700 Patch Test Rd', price: 500000, type: 'House', beds: 2, baths: 1 });
+    patchListingId = res.body.data.id;
+  });
+
+  it('should update a listing with PATCH', async () => {
+    const res = await request(app)
+      .patch(`/api/v1/listings/${patchListingId}`)
+      .send({ beds: 4, price: 550000 });
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.data.beds).toBe(4);
+    expect(res.body.data.price).toBe(550000);
+    // Original fields should be preserved
+    expect(res.body.data.baths).toBe(1);
+    expect(res.body.data.addr).toBe('700 Patch Test Rd');
+  });
+
+  it('should return 404 for non-existent listing', async () => {
+    const res = await request(app)
+      .patch('/api/v1/listings/999999')
+      .send({ price: 100000 });
+    expect(res.status).toBe(404);
+    expect(res.body.success).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------
+// Input sanitization - addr longer than 500 chars
+// ---------------------------------------------------------------
+describe('Input sanitization', () => {
+  it('should return 400 for addr longer than 500 characters', async () => {
+    const longAddr = 'A'.repeat(501);
+    const res = await request(app)
+      .post('/api/v1/listings')
+      .send({ addr: longAddr, price: 100000 });
+    expect(res.status).toBe(400);
+    expect(res.body.errors).toBeDefined();
+    expect(res.body.errors.length).toBeGreaterThan(0);
+    const addrError = res.body.errors.find((e) => e.includes('addr'));
+    expect(addrError).toBeDefined();
+  });
+});
+
 describe('404 handler', () => {
   it('should return 404 for unknown API routes', async () => {
     const res = await request(app).get('/api/v1/nonexistent');

@@ -2213,3 +2213,134 @@ body.dark-mode .members-only-prompt p { color: #a0aec0; }
     .member-gate-card { padding: 24px 16px; }
     .offer-tier-touch .tier-price { font-size: 18px; }
 }
+
+/* ---- Extracted inline styles ---- */
+
+/* Skip link (accessibility) */
+.skip-link {
+    position: absolute;
+    top: -40px;
+    left: 0;
+    background: var(--primary);
+    color: white;
+    padding: 8px 16px;
+    z-index: 10000;
+    font-weight: 600;
+    transition: top 0.2s;
+}
+.skip-link:focus {
+    top: 0;
+}
+
+/* Loading overlay text */
+.loading-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--primary);
+    margin-bottom: 8px;
+}
+.loading-subtitle {
+    font-size: 13px;
+    color: #888;
+}
+
+/* Staleness warning (hidden by default, toggled by JS) */
+#stalenessWarning {
+    display: none;
+}
+
+/* Offer lock overlay */
+#offerLockOverlay {
+    display: none;
+    min-height: 60vh;
+    position: relative;
+}
+.offer-lock-blur {
+    filter: blur(3px);
+    opacity: 0.4;
+    pointer-events: none;
+}
+.offer-lock-placeholder {
+    height: 48px;
+    background: var(--light-gray);
+    border-radius: 8px;
+}
+.offer-lock-prompt {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    z-index: 11;
+    padding: 32px;
+    max-width: 420px;
+    width: 90%;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+}
+.offer-lock-icon {
+    font-size: 48px;
+    margin-bottom: 12px;
+}
+.offer-lock-prompt h3 {
+    color: var(--primary);
+    margin: 0 0 8px;
+    font-size: 20px;
+}
+.offer-lock-prompt p {
+    color: #666;
+    font-size: 14px;
+    margin: 0 0 8px;
+}
+.offer-lock-prompt p.subtle {
+    color: #888;
+    font-size: 12px;
+    margin: 0 0 20px;
+}
+.offer-lock-btn-primary {
+    padding: 14px 32px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    width: 100%;
+    text-transform: none;
+    margin-bottom: 8px;
+}
+.offer-lock-btn-link {
+    padding: 10px;
+    background: none;
+    border: none;
+    color: var(--secondary);
+    font-size: 13px;
+    cursor: pointer;
+    text-decoration: underline;
+    width: 100%;
+    text-transform: none;
+}
+
+/* Tier label colors */
+.tier-label-aggressive { color: #dc3545; }
+.tier-label-strategic { color: #fd7e14; }
+.tier-label-competitive { color: #28a745; }
+
+/* Member gate form toggle */
+#gateLoginForm {
+    display: none;
+}
+
+/* Hidden by default elements */
+.hidden-default {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    .offer-lock-prompt {
+        padding: 24px;
+        max-width: 90%;
+    }
+}

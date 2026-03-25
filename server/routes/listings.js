@@ -7,7 +7,8 @@
  * POST   /api/v1/listings              - Create a new listing
  * POST   /api/v1/listings/bulk         - Bulk import multiple listings
  * GET    /api/v1/listings/:id          - Single listing with price history
- * PUT    /api/v1/listings/:id          - Update a listing
+ * PUT    /api/v1/listings/:id          - Update a listing (full)
+ * PATCH  /api/v1/listings/:id          - Update a listing (partial)
  * DELETE /api/v1/listings/:id          - Delete a listing
  * GET    /api/v1/listings/:id/price-history  - Price history for a listing
  * GET    /api/v1/listings/:id/comparables    - Comparable sales nearby
@@ -119,6 +120,27 @@ module.exports = function (db) {
   const VALID_STATUSES = ['active', 'sold', 'delisted', 'price_changed', 'flagged'];
   const VALID_JURISDICTIONS = ['CA-BC', 'CA-AB', 'CA-ON', 'US-CA'];
 
+  const MAX_FIELD_LENGTHS = {
+    addr: 500,
+    type: 50,
+    lot: 100,
+    agent: 200,
+    neighborhood: 200,
+    region: 200,
+    country: 10,
+    province_state: 50,
+    currency: 10,
+    jurisdiction: 20,
+    source: 100,
+    source_url: 2000,
+    status: 20,
+  };
+
+  function sanitizeString(value, maxLength) {
+    if (value === null || value === undefined) return value;
+    return String(value).trim().substring(0, maxLength);
+  }
+
   function validateListing(body) {
     const errors = [];
     if (!body.addr || typeof body.addr !== 'string' || body.addr.trim().length === 0) {
@@ -148,33 +170,38 @@ module.exports = function (db) {
     if (body.longitude != null && (body.longitude < -180 || body.longitude > 180)) {
       errors.push('longitude must be between -180 and 180.');
     }
+    for (const [field, maxLen] of Object.entries(MAX_FIELD_LENGTHS)) {
+      if (body[field] && typeof body[field] === 'string' && body[field].length > maxLen) {
+        errors.push(`${field} exceeds maximum length of ${maxLen} characters.`);
+      }
+    }
     return errors;
   }
 
   function toListingParams(body) {
     return {
-      addr: body.addr.trim(),
+      addr: sanitizeString(body.addr, MAX_FIELD_LENGTHS.addr),
       price: body.price,
       beds: body.beds ?? null,
       baths: body.baths ?? null,
       sqft: body.sqft ?? null,
-      type: body.type || null,
-      lot: body.lot || null,
-      agent: body.agent || null,
-      neighborhood: body.neighborhood || null,
+      type: sanitizeString(body.type, MAX_FIELD_LENGTHS.type) || null,
+      lot: sanitizeString(body.lot, MAX_FIELD_LENGTHS.lot) || null,
+      agent: sanitizeString(body.agent, MAX_FIELD_LENGTHS.agent) || null,
+      neighborhood: sanitizeString(body.neighborhood, MAX_FIELD_LENGTHS.neighborhood) || null,
       dom: body.dom ?? null,
       year_built: body.year_built ?? body.yearBuilt ?? null,
       water_view: body.water_view ?? body.waterView ? 1 : 0,
       latitude: body.latitude ?? null,
       longitude: body.longitude ?? null,
-      region: body.region || null,
-      country: body.country || 'CA',
-      province_state: body.province_state ?? body.provinceState ?? 'BC',
-      currency: body.currency || 'CAD',
-      jurisdiction: body.jurisdiction || 'CA-BC',
-      source: body.source || 'manual',
-      source_url: body.source_url ?? body.sourceUrl ?? null,
-      status: body.status || 'active',
+      region: sanitizeString(body.region, MAX_FIELD_LENGTHS.region) || null,
+      country: sanitizeString(body.country, MAX_FIELD_LENGTHS.country) || 'CA',
+      province_state: sanitizeString(body.province_state ?? body.provinceState, MAX_FIELD_LENGTHS.province_state) || 'BC',
+      currency: sanitizeString(body.currency, MAX_FIELD_LENGTHS.currency) || 'CAD',
+      jurisdiction: sanitizeString(body.jurisdiction, MAX_FIELD_LENGTHS.jurisdiction) || 'CA-BC',
+      source: sanitizeString(body.source, MAX_FIELD_LENGTHS.source) || 'manual',
+      source_url: sanitizeString(body.source_url ?? body.sourceUrl, MAX_FIELD_LENGTHS.source_url) || null,
+      status: sanitizeString(body.status, MAX_FIELD_LENGTHS.status) || 'active',
     };
   }
 
@@ -525,6 +552,89 @@ module.exports = function (db) {
       });
     } catch (err) {
       console.error('[LISTINGS] Update error:', err.message);
+      res.status(500).json({ success: false, error: 'Failed to update listing.' });
+    }
+  });
+
+  // ---------------------------------------------------------------
+  // PATCH /listings/:id - Semantically correct partial update
+  // ---------------------------------------------------------------
+  router.patch('/:id', (req, res) => {
+    try {
+      const id = parseInt(req.params.id, 10);
+      if (isNaN(id)) {
+        return res.status(400).json({ success: false, error: 'Invalid listing ID.' });
+      }
+
+      const existing = db.prepare('SELECT * FROM listings WHERE id = ?').get(id);
+      if (!existing) {
+        return res.status(404).json({ success: false, error: 'Listing not found.' });
+      }
+
+      const body = req.body;
+
+      if (body.type && !VALID_TYPES.includes(body.type)) {
+        return res.status(400).json({ success: false, error: `type must be one of: ${VALID_TYPES.join(', ')}` });
+      }
+      if (body.status && !VALID_STATUSES.includes(body.status)) {
+        return res.status(400).json({ success: false, error: `status must be one of: ${VALID_STATUSES.join(', ')}` });
+      }
+      if (body.price != null && (typeof body.price !== 'number' || body.price <= 0)) {
+        return res.status(400).json({ success: false, error: 'price must be a positive number.' });
+      }
+
+      const updatable = [
+        'addr', 'price', 'beds', 'baths', 'sqft', 'type', 'lot', 'agent',
+        'neighborhood', 'dom', 'year_built', 'water_view', 'latitude', 'longitude',
+        'region', 'country', 'province_state', 'currency', 'jurisdiction',
+        'source', 'source_url', 'status',
+      ];
+
+      const setClauses = [];
+      const params = { id };
+
+      for (const field of updatable) {
+        const camelAliases = { year_built: 'yearBuilt', water_view: 'waterView', province_state: 'provinceState', source_url: 'sourceUrl' };
+        const alias = camelAliases[field];
+        const value = body[field] !== undefined ? body[field] : (alias && body[alias] !== undefined ? body[alias] : undefined);
+
+        if (value !== undefined) {
+          setClauses.push(`${field} = @${field}`);
+          if (field === 'water_view') {
+            params[field] = value ? 1 : 0;
+          } else if (MAX_FIELD_LENGTHS[field] && typeof value === 'string') {
+            params[field] = sanitizeString(value, MAX_FIELD_LENGTHS[field]);
+          } else {
+            params[field] = value;
+          }
+        }
+      }
+
+      if (setClauses.length === 0) {
+        return res.status(400).json({ success: false, error: 'No valid fields to update.' });
+      }
+
+      setClauses.push("updated_at = datetime('now')");
+
+      db.prepare(`UPDATE listings SET ${setClauses.join(', ')} WHERE id = @id`).run(params);
+
+      if (body.price != null && body.price !== existing.price) {
+        const changeType = body.price > existing.price ? 'increase' : 'decrease';
+        db.prepare(`
+          INSERT INTO price_history (listing_id, price, change_type)
+          VALUES (@listing_id, @price, @change_type)
+        `).run({ listing_id: id, price: body.price, change_type: changeType });
+      }
+
+      const updated = db.prepare('SELECT * FROM listings WHERE id = ?').get(id);
+
+      res.json({
+        success: true,
+        data: updated,
+        message: 'Listing updated successfully.',
+      });
+    } catch (err) {
+      console.error('[LISTINGS] Patch error:', err.message);
       res.status(500).json({ success: false, error: 'Failed to update listing.' });
     }
   });
